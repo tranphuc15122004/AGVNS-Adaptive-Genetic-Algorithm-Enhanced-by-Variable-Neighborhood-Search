@@ -1,0 +1,896 @@
+2025-03-03 14:56:51,974 [main.py         | 48] INFO: Start to run instance_3
+2025-03-03 14:56:51,974 [simulate_api.py | 60] INFO: Start time of the simulator: 2025-03-03 00:00:00, time interval:  600.00
+2025-03-03 14:56:51,981 [input_utils.py  | 48] INFO: Get 154 factories
+2025-03-03 14:56:52,742 [input_utils.py  | 52] INFO: Get 23562 routes
+2025-03-03 14:56:52,756 [input_utils.py  | 57] INFO: Get 5 vehicles
+2025-03-03 14:56:52,775 [input_utils.py  | 61] INFO: Get 50 orders
+2025-03-03 14:56:52,776 [simulate_api.py | 87] INFO: Initial position of V_1 is e2d5093fbe36431f8986ddb0e1c586be
+2025-03-03 14:56:52,776 [simulate_api.py | 87] INFO: Initial position of V_2 is 7fe14b93f0f04ee7a994ef5b2c1fdb72
+2025-03-03 14:56:52,776 [simulate_api.py | 87] INFO: Initial position of V_3 is fa366fc87a124d32926daa5bb093129f
+2025-03-03 14:56:52,776 [simulate_api.py | 87] INFO: Initial position of V_4 is e47399648fa842b2b8f80094343d8091
+2025-03-03 14:56:52,777 [simulate_api.py | 87] INFO: Initial position of V_5 is becb4f85393540b287e7329758b8d832
+2025-03-03 14:56:52,777 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:52,777 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 00:10:00, pre time: 2025-03-03 00:00:00
+2025-03-03 14:56:52,777 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 00:10:00
+2025-03-03 14:56:52,778 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 0 ongoing order items, 0 completed order items
+2025-03-03 14:56:52,780 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:52,993 [simulate_environment.py | 254] INFO: 2025-03-03 00:10:00, Item 0018200001-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:52,993 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:52,994 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 00:20:00, pre time: 2025-03-03 00:10:00
+2025-03-03 14:56:52,994 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 00:20:00
+2025-03-03 14:56:52,994 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 0 ongoing order items, 0 completed order items
+2025-03-03 14:56:52,996 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:53,234 [simulate_environment.py | 254] INFO: 2025-03-03 00:20:00, Item 0018200001-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:53,235 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:53,235 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 00:30:00, pre time: 2025-03-03 00:20:00
+2025-03-03 14:56:53,235 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 00:30:00
+2025-03-03 14:56:53,249 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 1 ongoing order items, 0 completed order items
+2025-03-03 14:56:53,251 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:53,451 [simulate_environment.py | 254] INFO: 2025-03-03 00:30:00, Item 0018200001-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:53,451 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:53,451 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 00:40:00, pre time: 2025-03-03 00:30:00
+2025-03-03 14:56:53,452 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 00:40:00
+2025-03-03 14:56:53,468 [simulate_environment.py | 167] INFO: Get 10 unallocated order items, 1 ongoing order items, 0 completed order items
+2025-03-03 14:56:53,471 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:53,686 [simulate_environment.py | 254] INFO: 2025-03-03 00:40:00, Item 0018200001-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:53,687 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:53,687 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 00:50:00, pre time: 2025-03-03 00:40:00
+2025-03-03 14:56:53,688 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 00:50:00
+2025-03-03 14:56:53,702 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 9 ongoing order items, 0 completed order items
+2025-03-03 14:56:53,704 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:53,934 [simulate_environment.py | 254] INFO: 2025-03-03 00:50:00, Item 0018200001-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:53,934 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:53,935 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 01:00:00, pre time: 2025-03-03 00:50:00
+2025-03-03 14:56:53,935 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 01:00:00
+2025-03-03 14:56:53,937 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 9 ongoing order items, 0 completed order items
+2025-03-03 14:56:53,938 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:54,133 [simulate_environment.py | 254] INFO: 2025-03-03 01:00:00, Item 0018200001-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:54,134 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:54,134 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 01:10:00, pre time: 2025-03-03 01:00:00
+2025-03-03 14:56:54,134 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 01:10:00
+2025-03-03 14:56:54,140 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 11 ongoing order items, 0 completed order items
+2025-03-03 14:56:54,142 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:54,339 [simulate_environment.py | 254] INFO: 2025-03-03 01:10:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:54,340 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:54,340 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 01:20:00, pre time: 2025-03-03 01:10:00
+2025-03-03 14:56:54,340 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 01:20:00
+2025-03-03 14:56:54,343 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 11 ongoing order items, 0 completed order items
+2025-03-03 14:56:54,344 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:54,540 [simulate_environment.py | 254] INFO: 2025-03-03 01:20:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:54,541 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:54,541 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 01:30:00, pre time: 2025-03-03 01:20:00
+2025-03-03 14:56:54,541 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 01:30:00
+2025-03-03 14:56:54,546 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 11 ongoing order items, 0 completed order items
+2025-03-03 14:56:54,547 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:54,742 [simulate_environment.py | 254] INFO: 2025-03-03 01:30:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:54,743 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:54,743 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 01:40:00, pre time: 2025-03-03 01:30:00
+2025-03-03 14:56:54,743 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 01:40:00
+2025-03-03 14:56:54,749 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 11 ongoing order items, 0 completed order items
+2025-03-03 14:56:54,751 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:54,951 [simulate_environment.py | 254] INFO: 2025-03-03 01:40:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:54,952 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:54,952 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 01:50:00, pre time: 2025-03-03 01:40:00
+2025-03-03 14:56:54,952 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 01:50:00
+2025-03-03 14:56:54,968 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 11 ongoing order items, 0 completed order items
+2025-03-03 14:56:54,971 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:55,181 [simulate_environment.py | 254] INFO: 2025-03-03 01:50:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:55,181 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:55,182 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 02:00:00, pre time: 2025-03-03 01:50:00
+2025-03-03 14:56:55,182 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 02:00:00
+2025-03-03 14:56:55,187 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 8 ongoing order items, 3 completed order items
+2025-03-03 14:56:55,188 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:55,412 [simulate_environment.py | 254] INFO: 2025-03-03 02:00:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:55,413 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:55,413 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 02:10:00, pre time: 2025-03-03 02:00:00
+2025-03-03 14:56:55,413 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 02:10:00
+2025-03-03 14:56:55,421 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 8 ongoing order items, 3 completed order items
+2025-03-03 14:56:55,424 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:55,616 [simulate_environment.py | 254] INFO: 2025-03-03 02:10:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:55,616 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:55,616 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 02:20:00, pre time: 2025-03-03 02:10:00
+2025-03-03 14:56:55,616 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 02:20:00
+2025-03-03 14:56:55,625 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 0 ongoing order items, 11 completed order items
+2025-03-03 14:56:55,627 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:55,802 [simulate_environment.py | 254] INFO: 2025-03-03 02:20:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:55,803 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:55,803 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 02:30:00, pre time: 2025-03-03 02:20:00
+2025-03-03 14:56:55,803 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 02:30:00
+2025-03-03 14:56:55,812 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 0 ongoing order items, 11 completed order items
+2025-03-03 14:56:55,813 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:56,004 [simulate_environment.py | 254] INFO: 2025-03-03 02:30:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:56,004 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:56,004 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 02:40:00, pre time: 2025-03-03 02:30:00
+2025-03-03 14:56:56,004 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 02:40:00
+2025-03-03 14:56:56,015 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 0 ongoing order items, 11 completed order items
+2025-03-03 14:56:56,016 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:56,223 [simulate_environment.py | 254] INFO: 2025-03-03 02:40:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:56,224 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:56,224 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 02:50:00, pre time: 2025-03-03 02:40:00
+2025-03-03 14:56:56,224 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 02:50:00
+2025-03-03 14:56:56,234 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 0 ongoing order items, 11 completed order items
+2025-03-03 14:56:56,235 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:56,426 [simulate_environment.py | 254] INFO: 2025-03-03 02:50:00, Item 0254090004-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:56,426 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:56,427 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 03:00:00, pre time: 2025-03-03 02:50:00
+2025-03-03 14:56:56,427 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 03:00:00
+2025-03-03 14:56:56,437 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 0 ongoing order items, 11 completed order items
+2025-03-03 14:56:56,438 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:56,631 [simulate_environment.py | 254] INFO: 2025-03-03 03:00:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:56,631 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:56,631 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 03:10:00, pre time: 2025-03-03 03:00:00
+2025-03-03 14:56:56,632 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 03:10:00
+2025-03-03 14:56:56,640 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 0 ongoing order items, 11 completed order items
+2025-03-03 14:56:56,641 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:56,848 [simulate_environment.py | 254] INFO: 2025-03-03 03:10:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:56,849 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:56,849 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 03:20:00, pre time: 2025-03-03 03:10:00
+2025-03-03 14:56:56,849 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 03:20:00
+2025-03-03 14:56:56,859 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 0 ongoing order items, 11 completed order items
+2025-03-03 14:56:56,860 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:57,057 [simulate_environment.py | 254] INFO: 2025-03-03 03:20:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:57,057 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:57,057 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 03:30:00, pre time: 2025-03-03 03:20:00
+2025-03-03 14:56:57,057 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 03:30:00
+2025-03-03 14:56:57,072 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 0 ongoing order items, 11 completed order items
+2025-03-03 14:56:57,074 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:57,284 [simulate_environment.py | 254] INFO: 2025-03-03 03:30:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:57,285 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:57,285 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 03:40:00, pre time: 2025-03-03 03:30:00
+2025-03-03 14:56:57,285 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 03:40:00
+2025-03-03 14:56:57,296 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 1 ongoing order items, 11 completed order items
+2025-03-03 14:56:57,297 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:57,496 [simulate_environment.py | 254] INFO: 2025-03-03 03:40:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:57,497 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:57,497 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 03:50:00, pre time: 2025-03-03 03:40:00
+2025-03-03 14:56:57,497 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 03:50:00
+2025-03-03 14:56:57,499 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 1 ongoing order items, 11 completed order items
+2025-03-03 14:56:57,501 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:57,690 [simulate_environment.py | 254] INFO: 2025-03-03 03:50:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:57,691 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:57,691 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 04:00:00, pre time: 2025-03-03 03:50:00
+2025-03-03 14:56:57,691 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 04:00:00
+2025-03-03 14:56:57,702 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 1 ongoing order items, 11 completed order items
+2025-03-03 14:56:57,704 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:57,893 [simulate_environment.py | 254] INFO: 2025-03-03 04:00:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:57,894 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:57,894 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 04:10:00, pre time: 2025-03-03 04:00:00
+2025-03-03 14:56:57,894 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 04:10:00
+2025-03-03 14:56:57,906 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 1 ongoing order items, 11 completed order items
+2025-03-03 14:56:57,907 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:58,097 [simulate_environment.py | 254] INFO: 2025-03-03 04:10:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:58,097 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:58,097 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 04:20:00, pre time: 2025-03-03 04:10:00
+2025-03-03 14:56:58,098 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 04:20:00
+2025-03-03 14:56:58,109 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 1 ongoing order items, 11 completed order items
+2025-03-03 14:56:58,110 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:58,302 [simulate_environment.py | 254] INFO: 2025-03-03 04:20:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:58,302 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:58,303 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 04:30:00, pre time: 2025-03-03 04:20:00
+2025-03-03 14:56:58,303 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 04:30:00
+2025-03-03 14:56:58,312 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 1 ongoing order items, 11 completed order items
+2025-03-03 14:56:58,313 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:58,552 [simulate_environment.py | 254] INFO: 2025-03-03 04:30:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:58,553 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:58,553 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 04:40:00, pre time: 2025-03-03 04:30:00
+2025-03-03 14:56:58,553 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 04:40:00
+2025-03-03 14:56:58,562 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 1 ongoing order items, 11 completed order items
+2025-03-03 14:56:58,563 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:58,766 [simulate_environment.py | 254] INFO: 2025-03-03 04:40:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:58,767 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:58,767 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 04:50:00, pre time: 2025-03-03 04:40:00
+2025-03-03 14:56:58,767 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 04:50:00
+2025-03-03 14:56:58,780 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 4 ongoing order items, 11 completed order items
+2025-03-03 14:56:58,782 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:58,982 [simulate_environment.py | 254] INFO: 2025-03-03 04:50:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:58,983 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:58,983 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 05:00:00, pre time: 2025-03-03 04:50:00
+2025-03-03 14:56:58,983 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 05:00:00
+2025-03-03 14:56:58,984 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 4 ongoing order items, 11 completed order items
+2025-03-03 14:56:58,986 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:59,178 [simulate_environment.py | 254] INFO: 2025-03-03 05:00:00, Item 0254090004-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:59,178 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:59,178 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 05:10:00, pre time: 2025-03-03 05:00:00
+2025-03-03 14:56:59,178 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 05:10:00
+2025-03-03 14:56:59,187 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 5 ongoing order items, 11 completed order items
+2025-03-03 14:56:59,189 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:59,402 [simulate_environment.py | 254] INFO: 2025-03-03 05:10:00, Item 0517480008-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:56:59,403 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:59,404 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 05:20:00, pre time: 2025-03-03 05:10:00
+2025-03-03 14:56:59,404 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 05:20:00
+2025-03-03 14:56:59,406 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 5 ongoing order items, 11 completed order items
+2025-03-03 14:56:59,407 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:59,608 [simulate_environment.py | 254] INFO: 2025-03-03 05:20:00, Item 0517480008-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:59,609 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:59,609 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 05:30:00, pre time: 2025-03-03 05:20:00
+2025-03-03 14:56:59,609 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 05:30:00
+2025-03-03 14:56:59,624 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 2 ongoing order items, 14 completed order items
+2025-03-03 14:56:59,626 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:56:59,829 [simulate_environment.py | 254] INFO: 2025-03-03 05:30:00, Item 0517480008-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:56:59,830 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:56:59,830 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 05:40:00, pre time: 2025-03-03 05:30:00
+2025-03-03 14:56:59,830 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 05:40:00
+2025-03-03 14:56:59,843 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 2 ongoing order items, 14 completed order items
+2025-03-03 14:56:59,845 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:00,056 [simulate_environment.py | 254] INFO: 2025-03-03 05:40:00, Item 0517480008-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:00,056 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:00,056 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 05:50:00, pre time: 2025-03-03 05:40:00
+2025-03-03 14:57:00,057 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 05:50:00
+2025-03-03 14:57:00,062 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 0 ongoing order items, 16 completed order items
+2025-03-03 14:57:00,063 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:00,272 [simulate_environment.py | 254] INFO: 2025-03-03 05:50:00, Item 0517480008-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:00,272 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:00,272 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 06:00:00, pre time: 2025-03-03 05:50:00
+2025-03-03 14:57:00,272 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 06:00:00
+2025-03-03 14:57:00,280 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 0 ongoing order items, 16 completed order items
+2025-03-03 14:57:00,281 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:00,464 [simulate_environment.py | 254] INFO: 2025-03-03 06:00:00, Item 0517480008-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:00,465 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:00,465 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 06:10:00, pre time: 2025-03-03 06:00:00
+2025-03-03 14:57:00,465 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 06:10:00
+2025-03-03 14:57:00,468 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 1 ongoing order items, 16 completed order items
+2025-03-03 14:57:00,469 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:00,677 [simulate_environment.py | 254] INFO: 2025-03-03 06:10:00, Item 0525160009-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:00,678 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:00,678 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 06:20:00, pre time: 2025-03-03 06:10:00
+2025-03-03 14:57:00,678 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 06:20:00
+2025-03-03 14:57:00,687 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 2 ongoing order items, 16 completed order items
+2025-03-03 14:57:00,689 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:00,900 [simulate_environment.py | 254] INFO: 2025-03-03 06:20:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:00,901 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:00,901 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 06:30:00, pre time: 2025-03-03 06:20:00
+2025-03-03 14:57:00,901 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 06:30:00
+2025-03-03 14:57:00,906 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 2 ongoing order items, 16 completed order items
+2025-03-03 14:57:00,908 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:01,104 [simulate_environment.py | 254] INFO: 2025-03-03 06:30:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:01,104 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:01,105 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 06:40:00, pre time: 2025-03-03 06:30:00
+2025-03-03 14:57:01,105 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 06:40:00
+2025-03-03 14:57:01,109 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 1 ongoing order items, 17 completed order items
+2025-03-03 14:57:01,110 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:01,311 [simulate_environment.py | 254] INFO: 2025-03-03 06:40:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:01,312 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:01,312 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 06:50:00, pre time: 2025-03-03 06:40:00
+2025-03-03 14:57:01,312 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 06:50:00
+2025-03-03 14:57:01,328 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 1 ongoing order items, 17 completed order items
+2025-03-03 14:57:01,329 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:01,510 [simulate_environment.py | 254] INFO: 2025-03-03 06:50:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:01,511 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:01,511 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 07:00:00, pre time: 2025-03-03 06:50:00
+2025-03-03 14:57:01,511 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 07:00:00
+2025-03-03 14:57:01,515 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 3 ongoing order items, 18 completed order items
+2025-03-03 14:57:01,516 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:01,739 [simulate_environment.py | 254] INFO: 2025-03-03 07:00:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:01,740 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:01,740 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 07:10:00, pre time: 2025-03-03 07:00:00
+2025-03-03 14:57:01,740 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 07:10:00
+2025-03-03 14:57:01,750 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 3 ongoing order items, 18 completed order items
+2025-03-03 14:57:01,752 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:01,946 [simulate_environment.py | 254] INFO: 2025-03-03 07:10:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:01,946 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:01,946 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 07:20:00, pre time: 2025-03-03 07:10:00
+2025-03-03 14:57:01,947 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 07:20:00
+2025-03-03 14:57:01,952 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 3 ongoing order items, 18 completed order items
+2025-03-03 14:57:01,954 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:02,149 [simulate_environment.py | 254] INFO: 2025-03-03 07:20:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:02,150 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:02,150 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 07:30:00, pre time: 2025-03-03 07:20:00
+2025-03-03 14:57:02,150 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 07:30:00
+2025-03-03 14:57:02,156 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 3 ongoing order items, 18 completed order items
+2025-03-03 14:57:02,157 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:02,351 [simulate_environment.py | 254] INFO: 2025-03-03 07:30:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:02,353 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:02,353 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 07:40:00, pre time: 2025-03-03 07:30:00
+2025-03-03 14:57:02,353 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 07:40:00
+2025-03-03 14:57:02,359 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 3 ongoing order items, 18 completed order items
+2025-03-03 14:57:02,360 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:02,554 [simulate_environment.py | 254] INFO: 2025-03-03 07:40:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:02,555 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:02,555 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 07:50:00, pre time: 2025-03-03 07:40:00
+2025-03-03 14:57:02,555 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 07:50:00
+2025-03-03 14:57:02,562 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 4 ongoing order items, 18 completed order items
+2025-03-03 14:57:02,563 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:02,801 [simulate_environment.py | 254] INFO: 2025-03-03 07:50:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:02,802 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:02,802 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 08:00:00, pre time: 2025-03-03 07:50:00
+2025-03-03 14:57:02,803 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 08:00:00
+2025-03-03 14:57:02,812 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 5 ongoing order items, 18 completed order items
+2025-03-03 14:57:02,814 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:03,034 [simulate_environment.py | 254] INFO: 2025-03-03 08:00:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:03,035 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:03,035 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 08:10:00, pre time: 2025-03-03 08:00:00
+2025-03-03 14:57:03,035 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 08:10:00
+2025-03-03 14:57:03,046 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 5 ongoing order items, 18 completed order items
+2025-03-03 14:57:03,048 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:03,234 [simulate_environment.py | 254] INFO: 2025-03-03 08:10:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:03,235 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:03,235 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 08:20:00, pre time: 2025-03-03 08:10:00
+2025-03-03 14:57:03,235 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 08:20:00
+2025-03-03 14:57:03,249 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 5 ongoing order items, 18 completed order items
+2025-03-03 14:57:03,251 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:03,450 [simulate_environment.py | 254] INFO: 2025-03-03 08:20:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:03,450 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:03,451 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 08:30:00, pre time: 2025-03-03 08:20:00
+2025-03-03 14:57:03,451 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 08:30:00
+2025-03-03 14:57:03,452 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 4 ongoing order items, 19 completed order items
+2025-03-03 14:57:03,453 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:03,642 [simulate_environment.py | 254] INFO: 2025-03-03 08:30:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:03,642 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:03,642 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 08:40:00, pre time: 2025-03-03 08:30:00
+2025-03-03 14:57:03,643 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 08:40:00
+2025-03-03 14:57:03,655 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 20 completed order items
+2025-03-03 14:57:03,656 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:03,865 [simulate_environment.py | 254] INFO: 2025-03-03 08:40:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:03,866 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:03,866 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 08:50:00, pre time: 2025-03-03 08:40:00
+2025-03-03 14:57:03,866 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 08:50:00
+2025-03-03 14:57:03,874 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 20 completed order items
+2025-03-03 14:57:03,875 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:04,074 [simulate_environment.py | 254] INFO: 2025-03-03 08:50:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:04,075 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:04,075 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 09:00:00, pre time: 2025-03-03 08:50:00
+2025-03-03 14:57:04,075 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 09:00:00
+2025-03-03 14:57:04,077 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 20 completed order items
+2025-03-03 14:57:04,078 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:04,278 [simulate_environment.py | 254] INFO: 2025-03-03 09:00:00, Item 0604100010-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:04,278 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:04,278 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 09:10:00, pre time: 2025-03-03 09:00:00
+2025-03-03 14:57:04,279 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 09:10:00
+2025-03-03 14:57:04,281 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 5 ongoing order items, 20 completed order items
+2025-03-03 14:57:04,282 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:04,476 [simulate_environment.py | 254] INFO: 2025-03-03 09:10:00, Item 0942590014-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:57:04,477 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:04,477 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 09:20:00, pre time: 2025-03-03 09:10:00
+2025-03-03 14:57:04,477 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 09:20:00
+2025-03-03 14:57:04,484 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 5 ongoing order items, 20 completed order items
+2025-03-03 14:57:04,486 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:04,669 [simulate_environment.py | 254] INFO: 2025-03-03 09:20:00, Item 0942590014-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:57:04,669 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:04,669 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 09:30:00, pre time: 2025-03-03 09:20:00
+2025-03-03 14:57:04,669 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 09:30:00
+2025-03-03 14:57:04,671 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 5 ongoing order items, 20 completed order items
+2025-03-03 14:57:04,672 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:04,858 [simulate_environment.py | 254] INFO: 2025-03-03 09:30:00, Item 0942590014-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:57:04,858 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:04,858 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 09:40:00, pre time: 2025-03-03 09:30:00
+2025-03-03 14:57:04,858 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 09:40:00
+2025-03-03 14:57:04,859 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 3 ongoing order items, 22 completed order items
+2025-03-03 14:57:04,861 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:05,085 [simulate_environment.py | 254] INFO: 2025-03-03 09:40:00, Item 0942590014-1: state = 0 < 2, we can not finish the simulation
+2025-03-03 14:57:05,085 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:05,086 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 09:50:00, pre time: 2025-03-03 09:40:00
+2025-03-03 14:57:05,086 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 09:50:00
+2025-03-03 14:57:05,093 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 22 completed order items
+2025-03-03 14:57:05,095 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:05,309 [simulate_environment.py | 254] INFO: 2025-03-03 09:50:00, Item 0942590014-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:05,310 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:05,310 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 10:00:00, pre time: 2025-03-03 09:50:00
+2025-03-03 14:57:05,311 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 10:00:00
+2025-03-03 14:57:05,312 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 22 completed order items
+2025-03-03 14:57:05,313 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:05,510 [simulate_environment.py | 254] INFO: 2025-03-03 10:00:00, Item 0942590014-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:05,510 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:05,511 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 10:10:00, pre time: 2025-03-03 10:00:00
+2025-03-03 14:57:05,511 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 10:10:00
+2025-03-03 14:57:05,515 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 4 ongoing order items, 22 completed order items
+2025-03-03 14:57:05,517 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:05,746 [simulate_environment.py | 254] INFO: 2025-03-03 10:10:00, Item 0945290015-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:05,746 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:05,747 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 10:20:00, pre time: 2025-03-03 10:10:00
+2025-03-03 14:57:05,747 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 10:20:00
+2025-03-03 14:57:05,749 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 2 ongoing order items, 25 completed order items
+2025-03-03 14:57:05,750 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:05,982 [simulate_environment.py | 254] INFO: 2025-03-03 10:20:00, Item 0945290015-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:05,983 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:05,983 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 10:30:00, pre time: 2025-03-03 10:20:00
+2025-03-03 14:57:05,983 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 10:30:00
+2025-03-03 14:57:05,984 [simulate_environment.py | 167] INFO: Get 5 unallocated order items, 2 ongoing order items, 25 completed order items
+2025-03-03 14:57:05,986 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:06,188 [simulate_environment.py | 254] INFO: 2025-03-03 10:30:00, Item 0945290015-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:06,189 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:06,189 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 10:40:00, pre time: 2025-03-03 10:30:00
+2025-03-03 14:57:06,189 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 10:40:00
+2025-03-03 14:57:06,203 [simulate_environment.py | 167] INFO: Get 5 unallocated order items, 2 ongoing order items, 25 completed order items
+2025-03-03 14:57:06,204 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:06,390 [simulate_environment.py | 254] INFO: 2025-03-03 10:40:00, Item 0945290015-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:06,391 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:06,391 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 10:50:00, pre time: 2025-03-03 10:40:00
+2025-03-03 14:57:06,391 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 10:50:00
+2025-03-03 14:57:06,406 [simulate_environment.py | 167] INFO: Get 5 unallocated order items, 2 ongoing order items, 25 completed order items
+2025-03-03 14:57:06,408 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:06,602 [simulate_environment.py | 254] INFO: 2025-03-03 10:50:00, Item 0945290015-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:06,602 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:06,602 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 11:00:00, pre time: 2025-03-03 10:50:00
+2025-03-03 14:57:06,603 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 11:00:00
+2025-03-03 14:57:06,609 [simulate_environment.py | 167] INFO: Get 11 unallocated order items, 3 ongoing order items, 25 completed order items
+2025-03-03 14:57:06,611 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:06,824 [simulate_environment.py | 254] INFO: 2025-03-03 11:00:00, Item 1010460017-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:06,824 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:06,824 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 11:10:00, pre time: 2025-03-03 11:00:00
+2025-03-03 14:57:06,824 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 11:10:00
+2025-03-03 14:57:06,827 [simulate_environment.py | 167] INFO: Get 9 unallocated order items, 5 ongoing order items, 25 completed order items
+2025-03-03 14:57:06,828 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:07,042 [simulate_environment.py | 254] INFO: 2025-03-03 11:10:00, Item 1010460017-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:07,042 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:07,042 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 11:20:00, pre time: 2025-03-03 11:10:00
+2025-03-03 14:57:07,043 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 11:20:00
+2025-03-03 14:57:07,046 [simulate_environment.py | 167] INFO: Get 11 unallocated order items, 5 ongoing order items, 25 completed order items
+2025-03-03 14:57:07,047 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:07,287 [simulate_environment.py | 254] INFO: 2025-03-03 11:20:00, Item 1010460017-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:07,288 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:07,289 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 11:30:00, pre time: 2025-03-03 11:20:00
+2025-03-03 14:57:07,289 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 11:30:00
+2025-03-03 14:57:07,296 [simulate_environment.py | 167] INFO: Get 10 unallocated order items, 4 ongoing order items, 27 completed order items
+2025-03-03 14:57:07,298 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:07,510 [simulate_environment.py | 254] INFO: 2025-03-03 11:30:00, Item 1010460017-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:07,511 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:07,511 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 11:40:00, pre time: 2025-03-03 11:30:00
+2025-03-03 14:57:07,511 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 11:40:00
+2025-03-03 14:57:07,515 [simulate_environment.py | 167] INFO: Get 11 unallocated order items, 4 ongoing order items, 27 completed order items
+2025-03-03 14:57:07,517 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:07,759 [simulate_environment.py | 254] INFO: 2025-03-03 11:40:00, Item 1010460017-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:07,760 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:07,760 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 11:50:00, pre time: 2025-03-03 11:40:00
+2025-03-03 14:57:07,761 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 11:50:00
+2025-03-03 14:57:07,765 [simulate_environment.py | 167] INFO: Get 12 unallocated order items, 4 ongoing order items, 27 completed order items
+2025-03-03 14:57:07,767 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:08,041 [simulate_environment.py | 254] INFO: 2025-03-03 11:50:00, Item 1010460017-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:08,042 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:08,042 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 12:00:00, pre time: 2025-03-03 11:50:00
+2025-03-03 14:57:08,042 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 12:00:00
+2025-03-03 14:57:08,046 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 9 ongoing order items, 29 completed order items
+2025-03-03 14:57:08,048 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:08,310 [simulate_environment.py | 254] INFO: 2025-03-03 12:00:00, Item 1010460017-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:08,311 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:08,311 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 12:10:00, pre time: 2025-03-03 12:00:00
+2025-03-03 14:57:08,312 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 12:10:00
+2025-03-03 14:57:08,327 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 8 ongoing order items, 30 completed order items
+2025-03-03 14:57:08,329 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:08,561 [simulate_environment.py | 254] INFO: 2025-03-03 12:10:00, Item 1010460017-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:08,562 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:08,562 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 12:20:00, pre time: 2025-03-03 12:10:00
+2025-03-03 14:57:08,562 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 12:20:00
+2025-03-03 14:57:08,577 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 8 ongoing order items, 30 completed order items
+2025-03-03 14:57:08,580 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:08,800 [simulate_environment.py | 254] INFO: 2025-03-03 12:20:00, Item 1010460017-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:08,801 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:08,801 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 12:30:00, pre time: 2025-03-03 12:20:00
+2025-03-03 14:57:08,801 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 12:30:00
+2025-03-03 14:57:08,812 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 8 ongoing order items, 30 completed order items
+2025-03-03 14:57:08,814 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:09,052 [simulate_environment.py | 254] INFO: 2025-03-03 12:30:00, Item 1010460017-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:09,052 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:09,053 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 12:40:00, pre time: 2025-03-03 12:30:00
+2025-03-03 14:57:09,053 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 12:40:00
+2025-03-03 14:57:09,062 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 9 ongoing order items, 31 completed order items
+2025-03-03 14:57:09,063 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:09,289 [simulate_environment.py | 254] INFO: 2025-03-03 12:40:00, Item 1118580021-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:09,289 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:09,289 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 12:50:00, pre time: 2025-03-03 12:40:00
+2025-03-03 14:57:09,289 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 12:50:00
+2025-03-03 14:57:09,296 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 2 ongoing order items, 38 completed order items
+2025-03-03 14:57:09,298 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:09,503 [simulate_environment.py | 254] INFO: 2025-03-03 12:50:00, Item 1118580021-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:09,504 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:09,504 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 13:00:00, pre time: 2025-03-03 12:50:00
+2025-03-03 14:57:09,505 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 13:00:00
+2025-03-03 14:57:09,515 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 2 ongoing order items, 38 completed order items
+2025-03-03 14:57:09,516 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:09,731 [simulate_environment.py | 254] INFO: 2025-03-03 13:00:00, Item 1118580021-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:09,731 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:09,731 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 13:10:00, pre time: 2025-03-03 13:00:00
+2025-03-03 14:57:09,731 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 13:10:00
+2025-03-03 14:57:09,734 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 1 ongoing order items, 39 completed order items
+2025-03-03 14:57:09,735 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:09,955 [simulate_environment.py | 254] INFO: 2025-03-03 13:10:00, Item 1118580021-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:09,955 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:09,956 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 13:20:00, pre time: 2025-03-03 13:10:00
+2025-03-03 14:57:09,956 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 13:20:00
+2025-03-03 14:57:09,968 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 1 ongoing order items, 39 completed order items
+2025-03-03 14:57:09,970 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:10,183 [simulate_environment.py | 254] INFO: 2025-03-03 13:20:00, Item 1118580021-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:10,185 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:10,185 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 13:30:00, pre time: 2025-03-03 13:20:00
+2025-03-03 14:57:10,185 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 13:30:00
+2025-03-03 14:57:10,187 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 39 completed order items
+2025-03-03 14:57:10,188 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:10,394 [simulate_environment.py | 254] INFO: 2025-03-03 13:30:00, Item 1137210023-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:10,395 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:10,395 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 13:40:00, pre time: 2025-03-03 13:30:00
+2025-03-03 14:57:10,395 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 13:40:00
+2025-03-03 14:57:10,406 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 4 ongoing order items, 39 completed order items
+2025-03-03 14:57:10,407 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:10,644 [simulate_environment.py | 254] INFO: 2025-03-03 13:40:00, Item 1137210023-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:10,644 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:10,644 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 13:50:00, pre time: 2025-03-03 13:40:00
+2025-03-03 14:57:10,644 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 13:50:00
+2025-03-03 14:57:10,656 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 4 ongoing order items, 39 completed order items
+2025-03-03 14:57:10,658 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:10,854 [simulate_environment.py | 254] INFO: 2025-03-03 13:50:00, Item 1137210023-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:10,855 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:10,855 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 14:00:00, pre time: 2025-03-03 13:50:00
+2025-03-03 14:57:10,855 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 14:00:00
+2025-03-03 14:57:10,859 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 4 ongoing order items, 39 completed order items
+2025-03-03 14:57:10,861 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:11,060 [simulate_environment.py | 254] INFO: 2025-03-03 14:00:00, Item 1137210023-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:11,060 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:11,061 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 14:10:00, pre time: 2025-03-03 14:00:00
+2025-03-03 14:57:11,061 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 14:10:00
+2025-03-03 14:57:11,062 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 4 ongoing order items, 39 completed order items
+2025-03-03 14:57:11,063 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:11,263 [simulate_environment.py | 254] INFO: 2025-03-03 14:10:00, Item 1137210023-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:11,264 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:11,264 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 14:20:00, pre time: 2025-03-03 14:10:00
+2025-03-03 14:57:11,265 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 14:20:00
+2025-03-03 14:57:11,280 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 4 ongoing order items, 39 completed order items
+2025-03-03 14:57:11,283 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:11,498 [simulate_environment.py | 254] INFO: 2025-03-03 14:20:00, Item 1137210023-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:11,499 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:11,499 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 14:30:00, pre time: 2025-03-03 14:20:00
+2025-03-03 14:57:11,499 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 14:30:00
+2025-03-03 14:57:11,500 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 4 ongoing order items, 39 completed order items
+2025-03-03 14:57:11,501 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:11,702 [simulate_environment.py | 254] INFO: 2025-03-03 14:30:00, Item 1137210023-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:11,702 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:11,702 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 14:40:00, pre time: 2025-03-03 14:30:00
+2025-03-03 14:57:11,702 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 14:40:00
+2025-03-03 14:57:11,703 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 2 ongoing order items, 42 completed order items
+2025-03-03 14:57:11,705 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:11,917 [simulate_environment.py | 254] INFO: 2025-03-03 14:40:00, Item 1423460026-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:11,918 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:11,918 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 14:50:00, pre time: 2025-03-03 14:40:00
+2025-03-03 14:57:11,918 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 14:50:00
+2025-03-03 14:57:11,921 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 2 ongoing order items, 42 completed order items
+2025-03-03 14:57:11,923 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:12,147 [simulate_environment.py | 254] INFO: 2025-03-03 14:50:00, Item 1423460026-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:12,147 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:12,147 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 15:00:00, pre time: 2025-03-03 14:50:00
+2025-03-03 14:57:12,148 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 15:00:00
+2025-03-03 14:57:12,156 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 4 ongoing order items, 42 completed order items
+2025-03-03 14:57:12,157 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:12,356 [simulate_environment.py | 254] INFO: 2025-03-03 15:00:00, Item 1430050027-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:12,356 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:12,357 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 15:10:00, pre time: 2025-03-03 15:00:00
+2025-03-03 14:57:12,357 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 15:10:00
+2025-03-03 14:57:12,359 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 4 ongoing order items, 42 completed order items
+2025-03-03 14:57:12,359 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:12,556 [simulate_environment.py | 254] INFO: 2025-03-03 15:10:00, Item 1430050027-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:12,556 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:12,557 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 15:20:00, pre time: 2025-03-03 15:10:00
+2025-03-03 14:57:12,557 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 15:20:00
+2025-03-03 14:57:12,562 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 3 ongoing order items, 43 completed order items
+2025-03-03 14:57:12,563 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:12,777 [simulate_environment.py | 254] INFO: 2025-03-03 15:20:00, Item 1430050027-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:12,778 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:12,778 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 15:30:00, pre time: 2025-03-03 15:20:00
+2025-03-03 14:57:12,778 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 15:30:00
+2025-03-03 14:57:12,780 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 3 ongoing order items, 43 completed order items
+2025-03-03 14:57:12,782 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:12,992 [simulate_environment.py | 254] INFO: 2025-03-03 15:30:00, Item 1430050027-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:12,992 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:12,993 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 15:40:00, pre time: 2025-03-03 15:30:00
+2025-03-03 14:57:12,993 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 15:40:00
+2025-03-03 14:57:12,999 [simulate_environment.py | 167] INFO: Get 5 unallocated order items, 3 ongoing order items, 43 completed order items
+2025-03-03 14:57:13,001 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:13,230 [simulate_environment.py | 254] INFO: 2025-03-03 15:40:00, Item 1430050027-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:13,230 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:13,231 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 15:50:00, pre time: 2025-03-03 15:40:00
+2025-03-03 14:57:13,231 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 15:50:00
+2025-03-03 14:57:13,234 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 2 ongoing order items, 44 completed order items
+2025-03-03 14:57:13,235 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:13,499 [simulate_environment.py | 254] INFO: 2025-03-03 15:50:00, Item 1430050027-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:13,499 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:13,500 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 16:00:00, pre time: 2025-03-03 15:50:00
+2025-03-03 14:57:13,500 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 16:00:00
+2025-03-03 14:57:13,515 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 1 ongoing order items, 45 completed order items
+2025-03-03 14:57:13,517 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:13,735 [simulate_environment.py | 254] INFO: 2025-03-03 16:00:00, Item 1430050027-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:13,735 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:13,735 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 16:10:00, pre time: 2025-03-03 16:00:00
+2025-03-03 14:57:13,736 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 16:10:00
+2025-03-03 14:57:13,749 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 1 ongoing order items, 45 completed order items
+2025-03-03 14:57:13,750 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:13,975 [simulate_environment.py | 254] INFO: 2025-03-03 16:10:00, Item 1430050027-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:13,975 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:13,976 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 16:20:00, pre time: 2025-03-03 16:10:00
+2025-03-03 14:57:13,976 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 16:20:00
+2025-03-03 14:57:13,984 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 1 ongoing order items, 45 completed order items
+2025-03-03 14:57:13,985 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:14,194 [simulate_environment.py | 254] INFO: 2025-03-03 16:20:00, Item 1430050027-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:14,194 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:14,194 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 16:30:00, pre time: 2025-03-03 16:20:00
+2025-03-03 14:57:14,195 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 16:30:00
+2025-03-03 14:57:14,203 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 3 ongoing order items, 46 completed order items
+2025-03-03 14:57:14,204 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:14,406 [simulate_environment.py | 254] INFO: 2025-03-03 16:30:00, Item 1508300029-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:14,406 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:14,407 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 16:40:00, pre time: 2025-03-03 16:30:00
+2025-03-03 14:57:14,407 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 16:40:00
+2025-03-03 14:57:14,421 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 4 ongoing order items, 46 completed order items
+2025-03-03 14:57:14,423 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:14,642 [simulate_environment.py | 254] INFO: 2025-03-03 16:40:00, Item 1508300029-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:14,643 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:14,643 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 16:50:00, pre time: 2025-03-03 16:40:00
+2025-03-03 14:57:14,643 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 16:50:00
+2025-03-03 14:57:14,656 [simulate_environment.py | 167] INFO: Get 6 unallocated order items, 4 ongoing order items, 46 completed order items
+2025-03-03 14:57:14,658 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:14,874 [simulate_environment.py | 254] INFO: 2025-03-03 16:50:00, Item 1508300029-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:14,875 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:14,875 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 17:00:00, pre time: 2025-03-03 16:50:00
+2025-03-03 14:57:14,875 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 17:00:00
+2025-03-03 14:57:14,890 [simulate_environment.py | 167] INFO: Get 5 unallocated order items, 5 ongoing order items, 46 completed order items
+2025-03-03 14:57:14,893 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:15,135 [simulate_environment.py | 254] INFO: 2025-03-03 17:00:00, Item 1530010032-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:15,135 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:15,136 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 17:10:00, pre time: 2025-03-03 17:00:00
+2025-03-03 14:57:15,136 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 17:10:00
+2025-03-03 14:57:15,140 [simulate_environment.py | 167] INFO: Get 4 unallocated order items, 5 ongoing order items, 47 completed order items
+2025-03-03 14:57:15,142 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:15,400 [simulate_environment.py | 254] INFO: 2025-03-03 17:10:00, Item 1530010032-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:15,400 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:15,401 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 17:20:00, pre time: 2025-03-03 17:10:00
+2025-03-03 14:57:15,401 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 17:20:00
+2025-03-03 14:57:15,405 [simulate_environment.py | 167] INFO: Get 5 unallocated order items, 5 ongoing order items, 47 completed order items
+2025-03-03 14:57:15,407 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:15,620 [simulate_environment.py | 254] INFO: 2025-03-03 17:20:00, Item 1530010032-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:15,620 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:15,620 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 17:30:00, pre time: 2025-03-03 17:20:00
+2025-03-03 14:57:15,621 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 17:30:00
+2025-03-03 14:57:15,625 [simulate_environment.py | 167] INFO: Get 7 unallocated order items, 5 ongoing order items, 47 completed order items
+2025-03-03 14:57:15,627 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:15,875 [simulate_environment.py | 254] INFO: 2025-03-03 17:30:00, Item 1530010032-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:15,876 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:15,876 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 17:40:00, pre time: 2025-03-03 17:30:00
+2025-03-03 14:57:15,877 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 17:40:00
+2025-03-03 14:57:15,890 [simulate_environment.py | 167] INFO: Get 12 unallocated order items, 4 ongoing order items, 48 completed order items
+2025-03-03 14:57:15,892 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:16,141 [simulate_environment.py | 254] INFO: 2025-03-03 17:40:00, Item 1530010032-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:16,142 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:16,142 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 17:50:00, pre time: 2025-03-03 17:40:00
+2025-03-03 14:57:16,142 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 17:50:00
+2025-03-03 14:57:16,156 [simulate_environment.py | 167] INFO: Get 12 unallocated order items, 6 ongoing order items, 48 completed order items
+2025-03-03 14:57:16,157 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:16,406 [simulate_environment.py | 254] INFO: 2025-03-03 17:50:00, Item 1635370035-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:16,407 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:16,407 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 18:00:00, pre time: 2025-03-03 17:50:00
+2025-03-03 14:57:16,408 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 18:00:00
+2025-03-03 14:57:16,421 [simulate_environment.py | 167] INFO: Get 12 unallocated order items, 6 ongoing order items, 48 completed order items
+2025-03-03 14:57:16,423 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:16,644 [simulate_environment.py | 254] INFO: 2025-03-03 18:00:00, Item 1635370035-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:16,644 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:16,644 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 18:10:00, pre time: 2025-03-03 18:00:00
+2025-03-03 14:57:16,644 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 18:10:00
+2025-03-03 14:57:16,655 [simulate_environment.py | 167] INFO: Get 8 unallocated order items, 8 ongoing order items, 50 completed order items
+2025-03-03 14:57:16,657 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:16,907 [simulate_environment.py | 254] INFO: 2025-03-03 18:10:00, Item 1723330037-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:16,908 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:16,909 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 18:20:00, pre time: 2025-03-03 18:10:00
+2025-03-03 14:57:16,909 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 18:20:00
+2025-03-03 14:57:16,921 [simulate_environment.py | 167] INFO: Get 8 unallocated order items, 7 ongoing order items, 51 completed order items
+2025-03-03 14:57:16,922 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:17,143 [simulate_environment.py | 254] INFO: 2025-03-03 18:20:00, Item 1723330037-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:17,144 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:17,144 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 18:30:00, pre time: 2025-03-03 18:20:00
+2025-03-03 14:57:17,144 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 18:30:00
+2025-03-03 14:57:17,155 [simulate_environment.py | 167] INFO: Get 8 unallocated order items, 7 ongoing order items, 51 completed order items
+2025-03-03 14:57:17,157 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:17,351 [simulate_environment.py | 254] INFO: 2025-03-03 18:30:00, Item 1723330037-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:17,351 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:17,351 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 18:40:00, pre time: 2025-03-03 18:30:00
+2025-03-03 14:57:17,352 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 18:40:00
+2025-03-03 14:57:17,359 [simulate_environment.py | 167] INFO: Get 8 unallocated order items, 7 ongoing order items, 51 completed order items
+2025-03-03 14:57:17,360 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:17,553 [simulate_environment.py | 254] INFO: 2025-03-03 18:40:00, Item 1723330037-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:17,553 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:17,553 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 18:50:00, pre time: 2025-03-03 18:40:00
+2025-03-03 14:57:17,554 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 18:50:00
+2025-03-03 14:57:17,562 [simulate_environment.py | 167] INFO: Get 8 unallocated order items, 2 ongoing order items, 56 completed order items
+2025-03-03 14:57:17,563 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:17,781 [simulate_environment.py | 254] INFO: 2025-03-03 18:50:00, Item 1723330037-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:17,783 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:17,783 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 19:00:00, pre time: 2025-03-03 18:50:00
+2025-03-03 14:57:17,783 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 19:00:00
+2025-03-03 14:57:17,796 [simulate_environment.py | 167] INFO: Get 8 unallocated order items, 2 ongoing order items, 56 completed order items
+2025-03-03 14:57:17,798 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:17,990 [simulate_environment.py | 254] INFO: 2025-03-03 19:00:00, Item 1723330037-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:17,990 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:17,990 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 19:10:00, pre time: 2025-03-03 19:00:00
+2025-03-03 14:57:17,990 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 19:10:00
+2025-03-03 14:57:17,999 [simulate_environment.py | 167] INFO: Get 7 unallocated order items, 3 ongoing order items, 56 completed order items
+2025-03-03 14:57:18,001 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:18,237 [simulate_environment.py | 254] INFO: 2025-03-03 19:10:00, Item 1723330037-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:18,238 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:18,238 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 19:20:00, pre time: 2025-03-03 19:10:00
+2025-03-03 14:57:18,238 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 19:20:00
+2025-03-03 14:57:18,250 [simulate_environment.py | 167] INFO: Get 7 unallocated order items, 3 ongoing order items, 56 completed order items
+2025-03-03 14:57:18,252 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:18,455 [simulate_environment.py | 254] INFO: 2025-03-03 19:20:00, Item 1723330037-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:18,455 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:18,456 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 19:30:00, pre time: 2025-03-03 19:20:00
+2025-03-03 14:57:18,456 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 19:30:00
+2025-03-03 14:57:18,468 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 7 ongoing order items, 57 completed order items
+2025-03-03 14:57:18,469 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:18,671 [simulate_environment.py | 254] INFO: 2025-03-03 19:30:00, Item 1723330037-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:18,671 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:18,671 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 19:40:00, pre time: 2025-03-03 19:30:00
+2025-03-03 14:57:18,671 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 19:40:00
+2025-03-03 14:57:18,687 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 7 ongoing order items, 57 completed order items
+2025-03-03 14:57:18,689 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:18,885 [simulate_environment.py | 254] INFO: 2025-03-03 19:40:00, Item 1723330037-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:18,886 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:18,886 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 19:50:00, pre time: 2025-03-03 19:40:00
+2025-03-03 14:57:18,886 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 19:50:00
+2025-03-03 14:57:18,890 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 8 ongoing order items, 57 completed order items
+2025-03-03 14:57:18,891 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:19,105 [simulate_environment.py | 254] INFO: 2025-03-03 19:50:00, Item 1725250038-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:19,105 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:19,106 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 20:00:00, pre time: 2025-03-03 19:50:00
+2025-03-03 14:57:19,106 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 20:00:00
+2025-03-03 14:57:19,109 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 9 ongoing order items, 57 completed order items
+2025-03-03 14:57:19,110 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:19,327 [simulate_environment.py | 254] INFO: 2025-03-03 20:00:00, Item 1930080042-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:19,328 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:19,328 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 20:10:00, pre time: 2025-03-03 20:00:00
+2025-03-03 14:57:19,328 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 20:10:00
+2025-03-03 14:57:19,343 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 4 ongoing order items, 62 completed order items
+2025-03-03 14:57:19,345 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:19,574 [simulate_environment.py | 254] INFO: 2025-03-03 20:10:00, Item 1930080042-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:19,575 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:19,575 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 20:20:00, pre time: 2025-03-03 20:10:00
+2025-03-03 14:57:19,576 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 20:20:00
+2025-03-03 14:57:19,578 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 4 ongoing order items, 62 completed order items
+2025-03-03 14:57:19,579 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:19,781 [simulate_environment.py | 254] INFO: 2025-03-03 20:20:00, Item 1930080042-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:19,782 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:19,782 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 20:30:00, pre time: 2025-03-03 20:20:00
+2025-03-03 14:57:19,782 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 20:30:00
+2025-03-03 14:57:19,796 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 4 ongoing order items, 62 completed order items
+2025-03-03 14:57:19,798 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:20,002 [simulate_environment.py | 254] INFO: 2025-03-03 20:30:00, Item 1930080042-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:20,003 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:20,003 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 20:40:00, pre time: 2025-03-03 20:30:00
+2025-03-03 14:57:20,003 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 20:40:00
+2025-03-03 14:57:20,015 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 64 completed order items
+2025-03-03 14:57:20,017 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:20,247 [simulate_environment.py | 254] INFO: 2025-03-03 20:40:00, Item 1945160043-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:20,248 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:20,248 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 20:50:00, pre time: 2025-03-03 20:40:00
+2025-03-03 14:57:20,248 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 20:50:00
+2025-03-03 14:57:20,249 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 64 completed order items
+2025-03-03 14:57:20,250 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:20,437 [simulate_environment.py | 254] INFO: 2025-03-03 20:50:00, Item 1945160043-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:20,438 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:20,438 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 21:00:00, pre time: 2025-03-03 20:50:00
+2025-03-03 14:57:20,438 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 21:00:00
+2025-03-03 14:57:20,452 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 64 completed order items
+2025-03-03 14:57:20,454 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:20,640 [simulate_environment.py | 254] INFO: 2025-03-03 21:00:00, Item 1945160043-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:20,641 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:20,641 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 21:10:00, pre time: 2025-03-03 21:00:00
+2025-03-03 14:57:20,641 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 21:10:00
+2025-03-03 14:57:20,655 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 1 ongoing order items, 66 completed order items
+2025-03-03 14:57:20,656 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:20,854 [simulate_environment.py | 254] INFO: 2025-03-03 21:10:00, Item 1945160043-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:20,854 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:20,855 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 21:20:00, pre time: 2025-03-03 21:10:00
+2025-03-03 14:57:20,855 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 21:20:00
+2025-03-03 14:57:20,859 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 1 ongoing order items, 67 completed order items
+2025-03-03 14:57:20,860 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:21,074 [simulate_environment.py | 254] INFO: 2025-03-03 21:20:00, Item 2007420044-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:21,074 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:21,074 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 21:30:00, pre time: 2025-03-03 21:20:00
+2025-03-03 14:57:21,074 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 21:30:00
+2025-03-03 14:57:21,078 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 1 ongoing order items, 67 completed order items
+2025-03-03 14:57:21,079 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:21,304 [simulate_environment.py | 254] INFO: 2025-03-03 21:30:00, Item 2007420044-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:21,305 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:21,305 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 21:40:00, pre time: 2025-03-03 21:30:00
+2025-03-03 14:57:21,305 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 21:40:00
+2025-03-03 14:57:21,312 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 1 ongoing order items, 67 completed order items
+2025-03-03 14:57:21,314 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:21,500 [simulate_environment.py | 254] INFO: 2025-03-03 21:40:00, Item 2007420044-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:21,501 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:21,501 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 21:50:00, pre time: 2025-03-03 21:40:00
+2025-03-03 14:57:21,501 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 21:50:00
+2025-03-03 14:57:21,515 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 0 ongoing order items, 68 completed order items
+2025-03-03 14:57:21,516 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:21,712 [simulate_environment.py | 254] INFO: 2025-03-03 21:50:00, Item 2007420044-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:21,713 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:21,713 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 22:00:00, pre time: 2025-03-03 21:50:00
+2025-03-03 14:57:21,714 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 22:00:00
+2025-03-03 14:57:21,718 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 0 ongoing order items, 68 completed order items
+2025-03-03 14:57:21,719 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:21,906 [simulate_environment.py | 254] INFO: 2025-03-03 22:00:00, Item 2007420044-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:21,906 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:21,906 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 22:10:00, pre time: 2025-03-03 22:00:00
+2025-03-03 14:57:21,907 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 22:10:00
+2025-03-03 14:57:21,921 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 1 ongoing order items, 68 completed order items
+2025-03-03 14:57:21,923 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:22,136 [simulate_environment.py | 254] INFO: 2025-03-03 22:10:00, Item 2110320045-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:22,136 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:22,136 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 22:20:00, pre time: 2025-03-03 22:10:00
+2025-03-03 14:57:22,136 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 22:20:00
+2025-03-03 14:57:22,140 [simulate_environment.py | 167] INFO: Get 7 unallocated order items, 1 ongoing order items, 68 completed order items
+2025-03-03 14:57:22,141 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:22,356 [simulate_environment.py | 254] INFO: 2025-03-03 22:20:00, Item 2110320045-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:22,357 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:22,357 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 22:30:00, pre time: 2025-03-03 22:20:00
+2025-03-03 14:57:22,357 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 22:30:00
+2025-03-03 14:57:22,359 [simulate_environment.py | 167] INFO: Get 5 unallocated order items, 4 ongoing order items, 68 completed order items
+2025-03-03 14:57:22,360 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:22,577 [simulate_environment.py | 254] INFO: 2025-03-03 22:30:00, Item 2110320045-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:22,577 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:22,577 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 22:40:00, pre time: 2025-03-03 22:30:00
+2025-03-03 14:57:22,577 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 22:40:00
+2025-03-03 14:57:22,594 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 6 ongoing order items, 68 completed order items
+2025-03-03 14:57:22,595 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:22,806 [simulate_environment.py | 254] INFO: 2025-03-03 22:40:00, Item 2214000048-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:22,806 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:22,807 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 22:50:00, pre time: 2025-03-03 22:40:00
+2025-03-03 14:57:22,807 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 22:50:00
+2025-03-03 14:57:22,812 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 6 ongoing order items, 68 completed order items
+2025-03-03 14:57:22,813 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:23,012 [simulate_environment.py | 254] INFO: 2025-03-03 22:50:00, Item 2214000048-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:23,012 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:23,014 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 23:00:00, pre time: 2025-03-03 22:50:00
+2025-03-03 14:57:23,014 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 23:00:00
+2025-03-03 14:57:23,015 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 3 ongoing order items, 71 completed order items
+2025-03-03 14:57:23,016 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:23,221 [simulate_environment.py | 254] INFO: 2025-03-03 23:00:00, Item 2214000048-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:23,222 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:23,222 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 23:10:00, pre time: 2025-03-03 23:00:00
+2025-03-03 14:57:23,222 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 23:10:00
+2025-03-03 14:57:23,234 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 2 ongoing order items, 72 completed order items
+2025-03-03 14:57:23,236 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:23,439 [simulate_environment.py | 254] INFO: 2025-03-03 23:10:00, Item 2214000048-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:23,439 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:23,439 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 23:20:00, pre time: 2025-03-03 23:10:00
+2025-03-03 14:57:23,439 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 23:20:00
+2025-03-03 14:57:23,452 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 2 ongoing order items, 72 completed order items
+2025-03-03 14:57:23,454 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:23,654 [simulate_environment.py | 254] INFO: 2025-03-03 23:20:00, Item 2214000048-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:23,654 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:23,654 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 23:30:00, pre time: 2025-03-03 23:20:00
+2025-03-03 14:57:23,655 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 23:30:00
+2025-03-03 14:57:23,656 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 73 completed order items
+2025-03-03 14:57:23,657 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:23,870 [simulate_environment.py | 254] INFO: 2025-03-03 23:30:00, Item 2226480049-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:23,870 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:23,870 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 23:40:00, pre time: 2025-03-03 23:30:00
+2025-03-03 14:57:23,870 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 23:40:00
+2025-03-03 14:57:23,874 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 73 completed order items
+2025-03-03 14:57:23,876 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:24,065 [simulate_environment.py | 254] INFO: 2025-03-03 23:40:00, Item 2226480049-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:24,065 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:24,065 [simulate_environment.py | 103] INFO: cur time: 2025-03-03 23:50:00, pre time: 2025-03-03 23:40:00
+2025-03-03 14:57:24,065 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-03 23:50:00
+2025-03-03 14:57:24,078 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 73 completed order items
+2025-03-03 14:57:24,080 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:24,278 [simulate_environment.py | 254] INFO: 2025-03-03 23:50:00, Item 2226480049-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:24,278 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:24,278 [simulate_environment.py | 103] INFO: cur time: 2025-03-04 00:00:00, pre time: 2025-03-03 23:50:00
+2025-03-03 14:57:24,279 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-04 00:00:00
+2025-03-03 14:57:24,281 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 3 ongoing order items, 74 completed order items
+2025-03-03 14:57:24,282 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:24,491 [simulate_environment.py | 254] INFO: 2025-03-04 00:00:00, Item 2226480049-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:24,492 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:24,492 [simulate_environment.py | 103] INFO: cur time: 2025-03-04 00:10:00, pre time: 2025-03-04 00:00:00
+2025-03-03 14:57:24,492 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-04 00:10:00
+2025-03-03 14:57:24,499 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 3 ongoing order items, 74 completed order items
+2025-03-03 14:57:24,501 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:24,683 [simulate_environment.py | 254] INFO: 2025-03-04 00:10:00, Item 2226480049-1: state = 1 < 2, we can not finish the simulation
+2025-03-03 14:57:24,683 [simulate_environment.py | 99] INFO: **************************************************
+2025-03-03 14:57:24,683 [simulate_environment.py | 103] INFO: cur time: 2025-03-04 00:20:00, pre time: 2025-03-04 00:10:00
+2025-03-03 14:57:24,683 [simulate_environment.py | 140] INFO: Start to update the input of 2025-03-04 00:20:00
+2025-03-03 14:57:24,687 [simulate_environment.py | 167] INFO: Get 0 unallocated order items, 4 ongoing order items, 74 completed order items
+2025-03-03 14:57:24,688 [simulate_environment.py | 231] INFO: java main_algorithm
+2025-03-03 14:57:24,882 [simulate_environment.py | 257] INFO: 2025-03-04 00:20:00, the status of all items is greater than 1, we could finish the simulation
+2025-03-03 14:57:24,890 [evaluator.py    | 52] INFO: Traveling Distance of Vehicle V_1 is  99.500, visited node list: 126
+2025-03-03 14:57:24,890 [evaluator.py    | 52] INFO: Traveling Distance of Vehicle V_2 is  72.400, visited node list: 110
+2025-03-03 14:57:24,890 [evaluator.py    | 52] INFO: Traveling Distance of Vehicle V_3 is  185.500, visited node list: 38
+2025-03-03 14:57:24,891 [evaluator.py    | 52] INFO: Traveling Distance of Vehicle V_4 is  0.000, visited node list: 148
+2025-03-03 14:57:24,891 [evaluator.py    | 52] INFO: Traveling Distance of Vehicle V_5 is  129.800, visited node list: 63
+2025-03-03 14:57:24,891 [evaluator.py    | 33] INFO: Total distance:  487.200
+2025-03-03 14:57:24,892 [evaluator.py    | 35] INFO: Sum over time:  0.000
+2025-03-03 14:57:24,892 [evaluator.py    | 37] INFO: Total score:  97.440
+2025-03-03 14:57:24,894 [main.py         | 53] INFO: Score of instance_3: 97.44

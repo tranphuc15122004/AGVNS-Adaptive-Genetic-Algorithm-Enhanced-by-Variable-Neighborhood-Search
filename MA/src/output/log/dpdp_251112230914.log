@@ -1,0 +1,615 @@
+2025-11-12 23:09:14,997 [main.py         | 48] INFO: Start to run instance_9
+2025-11-12 23:09:14,997 [simulate_api.py | 60] INFO: Start time of the simulator: 2025-11-12 00:00:00, time interval:  600.00
+2025-11-12 23:09:15,012 [input_utils.py  | 28] INFO: Get 154 factories
+2025-11-12 23:09:16,014 [input_utils.py  | 32] INFO: Get 23562 routes
+2025-11-12 23:09:16,014 [input_utils.py  | 37] INFO: Get 5 vehicles
+2025-11-12 23:09:16,035 [input_utils.py  | 41] INFO: Get 100 orders
+2025-11-12 23:09:16,036 [simulate_api.py | 87] INFO: Initial position of V_1 is e2d5093fbe36431f8986ddb0e1c586be
+2025-11-12 23:09:16,037 [simulate_api.py | 87] INFO: Initial position of V_2 is 7fe14b93f0f04ee7a994ef5b2c1fdb72
+2025-11-12 23:09:16,037 [simulate_api.py | 87] INFO: Initial position of V_3 is fa366fc87a124d32926daa5bb093129f
+2025-11-12 23:09:16,037 [simulate_api.py | 87] INFO: Initial position of V_4 is e47399648fa842b2b8f80094343d8091
+2025-11-12 23:09:16,037 [simulate_api.py | 87] INFO: Initial position of V_5 is becb4f85393540b287e7329758b8d832
+2025-11-12 23:09:16,038 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:16,038 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 00:10:00, pre time: 2025-11-12 00:00:00
+2025-11-12 23:09:16,038 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 00:10:00
+2025-11-12 23:09:16,039 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 0 ongoing order items, 0 completed order items
+2025-11-12 23:09:17,821 [simulate_environment.py | 234] INFO: 
+V_1:[] V_2:[] V_3:[] V_4:[] V_5:[]
+
+
+Pre GA Generation : Best = 7.32, Worst = 16.12, Avg = 11.60, 
+Generation 1: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.08011603355407715
+Generation 2: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.0
+Generation 3: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.0
+Generation 4: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.0
+Generation 5: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.0
+Generation 6: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.0
+Generation 7: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.0
+Generation 8: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.0
+Generation 9: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.015860795974731445
+Generation 10: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.0
+Generation 11: Best = 6.46, Worst = 16.12, Avg = 9.03, Time: 0.0
+Stopping early due to lack of improvement.
+Total runtime: 0.97s (0.0 minutes)
+Total GA runtime: 0.10s (0.0 minutes)
+
+V_1:[] V_2:[] V_3:[] V_4:[] V_5:[]
+
+V_1:[] V_2:[] V_3:[] V_4:[] V_5:[p1_0009380001-1 p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 6.459999999999999
+
+Thoi gian thuc hien thuat toan:  0.9695496559143066
+SUCCESS
+
+2025-11-12 23:09:17,821 [simulate_environment.py | 256] INFO: 2025-11-12 00:10:00, Item 0009380001-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:17,821 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:17,821 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 00:20:00, pre time: 2025-11-12 00:10:00
+2025-11-12 23:09:17,821 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 00:20:00
+2025-11-12 23:09:17,826 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 1 ongoing order items, 0 completed order items
+2025-11-12 23:09:19,342 [simulate_environment.py | 234] INFO: ['']
+['p1_0009500002-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Pre GA Generation : Best = 7.00, Worst = 14.04, Avg = 9.74, 
+
+V_1:[] V_2:[] V_3:[] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[p1_0018190003-1 d1_0018190003-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 7.0
+
+Thoi gian thuc hien thuat toan:  0.8664660453796387
+SUCCESS
+
+2025-11-12 23:09:19,342 [simulate_environment.py | 256] INFO: 2025-11-12 00:20:00, Item 0009500002-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:19,342 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:19,342 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 00:30:00, pre time: 2025-11-12 00:20:00
+2025-11-12 23:09:19,342 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 00:30:00
+2025-11-12 23:09:19,358 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 2 ongoing order items, 0 completed order items
+2025-11-12 23:09:20,779 [simulate_environment.py | 234] INFO: ['']
+['d1_0018190003-1']
+0018190003-1
+['0018190003', '1']
+0018190003-1
+['p1_0009500002-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[d1_0018190003-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[] V_3:[d1_0018190003-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[d1_0018190003-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 6.720000000000001
+
+Thoi gian thuc hien thuat toan:  0.8093087673187256
+SUCCESS
+
+2025-11-12 23:09:20,795 [simulate_environment.py | 256] INFO: 2025-11-12 00:30:00, Item 0009500002-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:20,795 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:20,795 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 00:40:00, pre time: 2025-11-12 00:30:00
+2025-11-12 23:09:20,795 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 00:40:00
+2025-11-12 23:09:20,811 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 2 ongoing order items, 0 completed order items
+2025-11-12 23:09:22,167 [simulate_environment.py | 234] INFO: ['']
+['d1_0018190003-1']
+0018190003-1
+['0018190003', '1']
+0018190003-1
+['p1_0009500002-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[d1_0018190003-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[] V_3:[d1_0018190003-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[d1_0018190003-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 6.720000000000001
+
+Thoi gian thuc hien thuat toan:  0.7779214382171631
+SUCCESS
+
+2025-11-12 23:09:22,167 [simulate_environment.py | 256] INFO: 2025-11-12 00:40:00, Item 0009500002-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:22,167 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:22,183 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 00:50:00, pre time: 2025-11-12 00:40:00
+2025-11-12 23:09:22,183 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 00:50:00
+2025-11-12 23:09:22,186 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 2 ongoing order items, 0 completed order items
+2025-11-12 23:09:23,810 [simulate_environment.py | 234] INFO: ['']
+['d1_0018190003-1']
+0018190003-1
+['0018190003', '1']
+0018190003-1
+['p1_0009500002-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[d1_0018190003-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Pre GA Generation : Best = 7.48, Worst = 4887.96, Avg = 254.18, 
+Generation 1: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.12335014343261719
+Generation 2: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.0
+Generation 3: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.0
+Generation 4: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.0
+Generation 5: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.0
+Generation 6: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.0
+Generation 7: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.0
+Generation 8: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.015872478485107422
+Generation 9: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.0
+Generation 10: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.0
+Generation 11: Best = 5.30, Worst = 4887.96, Avg = 130.21, Time: 0.0
+Stopping early due to lack of improvement.
+Total runtime: 1.00s (0.0 minutes)
+Total GA runtime: 0.14s (0.0 minutes)
+
+V_1:[] V_2:[] V_3:[d1_0018190003-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[d1_0018190003-1 p1_0047070005-1 d1_0047070005-1] V_4:[] V_5:[p1_0009500002-1 p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 5.299999999999999
+
+Thoi gian thuc hien thuat toan:  0.9999518394470215
+SUCCESS
+
+2025-11-12 23:09:23,810 [simulate_environment.py | 256] INFO: 2025-11-12 00:50:00, Item 0009500002-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:23,810 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:23,810 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 01:00:00, pre time: 2025-11-12 00:50:00
+2025-11-12 23:09:23,810 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 01:00:00
+2025-11-12 23:09:23,817 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 1 ongoing order items, 1 completed order items
+2025-11-12 23:09:25,222 [simulate_environment.py | 234] INFO: ['0018190003-1']
+['p1_0047070005-1', 'd1_0047070005-1']
+0047070005-1
+['0047070005', '1']
+0047070005-1
+0047070005-1
+['0047070005', '1']
+0047070005-1
+['p1_0009500002-1', 'p1_0047010004-1', 'd1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[p1_0047070005-1 d1_0047070005-1] V_4:[] V_5:[p1_0009500002-1 p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[] V_3:[p1_0047070005-1 d1_0047070005-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[p1_0047070005-1 d1_0047070005-1] V_4:[] V_5:[p1_0009500002-1 p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 5.04
+
+Thoi gian thuc hien thuat toan:  0.7994859218597412
+SUCCESS
+
+2025-11-12 23:09:25,250 [simulate_environment.py | 256] INFO: 2025-11-12 01:00:00, Item 0009500002-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:25,251 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:25,251 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 01:10:00, pre time: 2025-11-12 01:00:00
+2025-11-12 23:09:25,251 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 01:10:00
+2025-11-12 23:09:25,264 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 1 ongoing order items, 1 completed order items
+2025-11-12 23:09:26,831 [simulate_environment.py | 234] INFO: ['']
+['p1_0047070005-1', 'd1_0047070005-1']
+0047070005-1
+['0047070005', '1']
+0047070005-1
+0047070005-1
+['0047070005', '1']
+0047070005-1
+['p1_0009500002-1', 'p1_0047010004-1', 'd1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[p1_0047070005-1 d1_0047070005-1] V_4:[] V_5:[p1_0009500002-1 p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[] V_3:[p1_0047070005-1 d1_0047070005-1] V_4:[] V_5:[p1_0009500002-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[p1_0047070005-1 d1_0047070005-1] V_4:[] V_5:[p1_0009500002-1 p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 5.04
+
+Thoi gian thuc hien thuat toan:  0.8698093891143799
+SUCCESS
+
+2025-11-12 23:09:26,831 [simulate_environment.py | 256] INFO: 2025-11-12 01:10:00, Item 0009500002-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:26,831 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:26,831 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 01:20:00, pre time: 2025-11-12 01:10:00
+2025-11-12 23:09:26,831 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 01:20:00
+2025-11-12 23:09:26,843 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 2 ongoing order items, 1 completed order items
+2025-11-12 23:09:28,311 [simulate_environment.py | 234] INFO: ['']
+['p1_0047070005-1', 'd1_0047070005-1']
+0047070005-1
+['0047070005', '1']
+0047070005-1
+0047070005-1
+['0047070005', '1']
+0047070005-1
+['p1_0047010004-1', 'd1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[p1_0047070005-1 d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[] V_3:[p1_0047070005-1 d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[p1_0047070005-1 d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 5.04
+
+Thoi gian thuc hien thuat toan:  0.8491973876953125
+SUCCESS
+
+2025-11-12 23:09:28,333 [simulate_environment.py | 256] INFO: 2025-11-12 01:20:00, Item 0047010004-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:28,334 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:28,334 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 01:30:00, pre time: 2025-11-12 01:20:00
+2025-11-12 23:09:28,334 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 01:30:00
+2025-11-12 23:09:28,343 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 3 ongoing order items, 1 completed order items
+2025-11-12 23:09:29,798 [simulate_environment.py | 234] INFO: ['']
+['d1_0047070005-1']
+0047070005-1
+['0047070005', '1']
+0047070005-1
+['p1_0047010004-1', 'd1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 4.8
+
+Thoi gian thuc hien thuat toan:  0.840038537979126
+SUCCESS
+
+2025-11-12 23:09:29,832 [simulate_environment.py | 256] INFO: 2025-11-12 01:30:00, Item 0047010004-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:29,833 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:29,833 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 01:40:00, pre time: 2025-11-12 01:30:00
+2025-11-12 23:09:29,833 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 01:40:00
+2025-11-12 23:09:29,843 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 3 ongoing order items, 1 completed order items
+2025-11-12 23:09:31,297 [simulate_environment.py | 234] INFO: ['']
+['d1_0047070005-1']
+0047070005-1
+['0047070005', '1']
+0047070005-1
+['p1_0047010004-1', 'd1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 4.8
+
+Thoi gian thuc hien thuat toan:  0.8196232318878174
+SUCCESS
+
+2025-11-12 23:09:31,297 [simulate_environment.py | 256] INFO: 2025-11-12 01:40:00, Item 0047010004-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:31,297 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:31,297 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 01:50:00, pre time: 2025-11-12 01:40:00
+2025-11-12 23:09:31,297 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 01:50:00
+2025-11-12 23:09:31,311 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 3 ongoing order items, 1 completed order items
+2025-11-12 23:09:32,860 [simulate_environment.py | 234] INFO: ['']
+['d1_0047070005-1']
+0047070005-1
+['0047070005', '1']
+0047070005-1
+['p1_0047010004-1', 'd1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 2.22
+
+Thoi gian thuc hien thuat toan:  0.8415184020996094
+SUCCESS
+
+2025-11-12 23:09:32,860 [simulate_environment.py | 256] INFO: 2025-11-12 01:50:00, Item 0047010004-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:32,876 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:32,876 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 02:00:00, pre time: 2025-11-12 01:50:00
+2025-11-12 23:09:32,876 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 02:00:00
+2025-11-12 23:09:32,889 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 3 ongoing order items, 1 completed order items
+2025-11-12 23:09:34,328 [simulate_environment.py | 234] INFO: ['']
+['d1_0047070005-1']
+0047070005-1
+['0047070005', '1']
+0047070005-1
+['p1_0047010004-1', 'd1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[d1_0047070005-1] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 2.22
+
+Thoi gian thuc hien thuat toan:  0.7972440719604492
+SUCCESS
+
+2025-11-12 23:09:34,328 [simulate_environment.py | 256] INFO: 2025-11-12 02:00:00, Item 0047010004-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:34,328 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:34,328 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 02:10:00, pre time: 2025-11-12 02:00:00
+2025-11-12 23:09:34,328 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 02:10:00
+2025-11-12 23:09:34,351 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 2 ongoing order items, 2 completed order items
+2025-11-12 23:09:35,843 [simulate_environment.py | 234] INFO: ['0047070005-1']
+[]
+['p1_0047010004-1', 'd1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[] V_3:[] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[] V_3:[] V_4:[] V_5:[p1_0047010004-1 d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 1.9200000000000004
+
+Thoi gian thuc hien thuat toan:  0.7991912364959717
+SUCCESS
+
+2025-11-12 23:09:35,862 [simulate_environment.py | 256] INFO: 2025-11-12 02:10:00, Item 0047010004-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:35,862 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:35,862 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 02:20:00, pre time: 2025-11-12 02:10:00
+2025-11-12 23:09:35,862 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 02:20:00
+2025-11-12 23:09:35,874 [simulate_environment.py | 167] INFO: Get 2 unallocated order items, 3 ongoing order items, 2 completed order items
+2025-11-12 23:09:37,458 [simulate_environment.py | 234] INFO: ['']
+['d1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[] V_3:[] V_4:[] V_5:[d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Pre GA Generation : Best = 5.12, Worst = 12.32, Avg = 6.75, 
+
+V_1:[] V_2:[] V_3:[] V_4:[] V_5:[d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[p2_0214070006-1-2 d2_0214070006-2-1] V_3:[] V_4:[] V_5:[d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 5.119999999999999
+
+Thoi gian thuc hien thuat toan:  0.9284839630126953
+SUCCESS
+
+2025-11-12 23:09:37,482 [simulate_environment.py | 256] INFO: 2025-11-12 02:20:00, Item 0214070006-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:37,483 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:37,483 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 02:30:00, pre time: 2025-11-12 02:20:00
+2025-11-12 23:09:37,483 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 02:30:00
+2025-11-12 23:09:37,484 [simulate_environment.py | 167] INFO: Get 3 unallocated order items, 3 ongoing order items, 2 completed order items
+2025-11-12 23:09:38,994 [simulate_environment.py | 234] INFO: ['']
+['p2_0214070006-1-2', 'd2_0214070006-2-1']
+0214070006-1-2
+['0214070006', '1', '2']
+0214070006-1
+0214070006-2
+0214070006-2-1
+['0214070006', '2', '1']
+0214070006-2
+0214070006-1
+['d1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[p2_0214070006-1-2 d2_0214070006-2-1] V_3:[] V_4:[] V_5:[d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Pre GA Generation : Best = 3.70, Worst = 10.88, Avg = 5.99, 
+
+V_1:[] V_2:[p2_0214070006-1-2 d2_0214070006-2-1] V_3:[] V_4:[] V_5:[d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[p2_0214070006-1-2 d2_0214070006-2-1 p1_0225350007-1 d1_0225350007-1] V_3:[] V_4:[] V_5:[d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 3.7
+
+Thoi gian thuc hien thuat toan:  0.8825700283050537
+SUCCESS
+
+2025-11-12 23:09:39,014 [simulate_environment.py | 256] INFO: 2025-11-12 02:30:00, Item 0214070006-1: state = 1 < 2, we can not finish the simulation
+2025-11-12 23:09:39,015 [simulate_environment.py | 99] INFO: **************************************************
+2025-11-12 23:09:39,015 [simulate_environment.py | 103] INFO: cur time: 2025-11-12 02:40:00, pre time: 2025-11-12 02:30:00
+2025-11-12 23:09:39,015 [simulate_environment.py | 140] INFO: Start to update the input of 2025-11-12 02:40:00
+2025-11-12 23:09:39,030 [simulate_environment.py | 167] INFO: Get 1 unallocated order items, 5 ongoing order items, 2 completed order items
+2025-11-12 23:09:40,481 [simulate_environment.py | 234] INFO: ['']
+['p2_0214070006-1-2', 'd2_0214070006-2-1', 'p1_0225350007-1', 'd1_0225350007-1']
+0214070006-1-2
+['0214070006', '1', '2']
+0214070006-1
+0214070006-2
+0214070006-2-1
+['0214070006', '2', '1']
+0214070006-2
+0214070006-1
+0225350007-1
+['0225350007', '1']
+0225350007-1
+0225350007-1
+['0225350007', '1']
+0225350007-1
+['d1_0047010004-1', 'd1_0009500002-1', 'd1_0009380001-1']
+0047010004-1
+['0047010004', '1']
+0047010004-1
+0009500002-1
+['0009500002', '1']
+0009500002-1
+0009380001-1
+['0009380001', '1']
+0009380001-1
+
+V_1:[] V_2:[p2_0214070006-1-2 d2_0214070006-2-1 p1_0225350007-1 d1_0225350007-1] V_3:[] V_4:[] V_5:[d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+
+Cant initialize the population
+
+V_1:[] V_2:[p2_0214070006-1-2 d2_0214070006-2-1] V_3:[] V_4:[] V_5:[d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+
+V_1:[] V_2:[p2_0214070006-1-2 d2_0214070006-2-1 p1_0225350007-1 d1_0225350007-1] V_3:[] V_4:[] V_5:[d1_0047010004-1 d1_0009500002-1 d1_0009380001-1]
+The fitness value after MA: 3.7000000000000006
+
+Thoi gian thuc hien thuat toan:  0.7985460758209229
+SUCCESS
+
+2025-11-12 23:09:40,497 [checker.py      | 83] ERROR: Vehicle V_2, returned destination id is 2445d4bd004c457d95957d6ecf77f759, however the origin destination id is f6faef4b36e743328800b961aced4a2c.
+2025-11-12 23:09:40,497 [checker.py      | 32] ERROR: Returned destination of Vehicle V_2 is not valid
+2025-11-12 23:09:40,497 [simulate_environment.py | 115] ERROR: Dispatch result is infeasible
+2025-11-12 23:09:40,511 [main.py         | 53] INFO: Score of instance_9: 9223372036854775807
