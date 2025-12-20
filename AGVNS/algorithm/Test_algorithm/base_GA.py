@@ -42,12 +42,12 @@ def GA(initial_vehicleid_to_plan: Dict[str, List[Node]], route_map: Dict[Tuple, 
             id_to_vehicle: Dict[str, Vehicle], Unongoing_super_nodes: Dict[int, Dict[str, Node]], 
             Base_vehicleid_to_plan: Dict[str, List[Node]]) -> Chromosome:
     
-    """ try:
+    try:
         current_orders = max(0, len(Unongoing_super_nodes))
         applied_params = adaptive_local_configs(current_orders, num_vehicles=len(id_to_vehicle))
         print(f"Adaptive config applied: {applied_params}")
     except Exception as e:
-        print(f"Adaptive config failed: {e}", file=sys.stderr) """
+        print(f"Adaptive config failed: {e}", file=sys.stderr)
     
     population, PDG_map = new_generate_random_chromosome(initial_vehicleid_to_plan, route_map, id_to_vehicle, Unongoing_super_nodes, Base_vehicleid_to_plan, config.POPULATION_SIZE)
     
@@ -139,7 +139,7 @@ def GA(initial_vehicleid_to_plan: Dict[str, List[Node]], route_map: Dict[Tuple, 
 
         # Điều kiện dừng
         #  
-        if stagnant_generations >= 5 :
+        if stagnant_generations >= 5 or avg == population[0].fitness :
             print("Stopping early due to lack of improvement.")
             break
         

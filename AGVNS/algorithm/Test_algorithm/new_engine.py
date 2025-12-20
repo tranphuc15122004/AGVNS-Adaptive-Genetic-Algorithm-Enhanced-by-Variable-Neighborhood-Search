@@ -14,125 +14,274 @@ import algorithm.algorithm_config as config
 from algorithm.local_search import *
 from algorithm.Test_algorithm.new_LS import *
 
-def new_dispatch_new_orders(vehicleid_to_plan: Dict[str , list[Node]] ,  id_to_factory:Dict[str , Factory] , route_map: Dict[tuple , tuple] ,  id_to_vehicle: Dict[str , Vehicle] , id_to_unlocated_items:Dict[str , OrderItem], new_order_itemIDs: list[str]):
-    all_exhautive = True
-    
-    if new_order_itemIDs:
-        orderId_to_Item : Dict[str , list[OrderItem]] = {}
-        for new_order_item in new_order_itemIDs:
-            new_item = id_to_unlocated_items.get(new_order_item)
-            orderID  = new_item.order_id
-            if orderID not in orderId_to_Item:
-                orderId_to_Item[orderID] = []
-            orderId_to_Item.get(orderID).append(new_item)
-        
-        for vehicle in id_to_vehicle.values():
-            capacity = vehicle.board_capacity
-            break
-        
-        for orderID , orderID_items in orderId_to_Item.items():
-            order_demand = 0
-            for item in orderID_items:
-                order_demand += item.demand
-            
-            if order_demand > capacity:
-                tmp_demand = 0
-                tmp_itemList: list[OrderItem] = []
-                
-                for item in orderID_items:
-                    if (tmp_demand + item.demand) > capacity:
-                        for plan in vehicleid_to_plan.values():
-                            if len(plan) >= 6: all_exhautive = False
-                        
-                        
-                        node_list: list[Node] = create_Pickup_Delivery_nodes(tmp_itemList , id_to_factory)
-                        isExhausive = False
-                        route_node_list : List[Node] = []
-                        
-                        if node_list:
-                            
-                            isExhausive , bestInsertVehicleID, bestInsertPosI, bestInsertPosJ , bestNodeList = dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan , route_map)
-                            #isExhausive , bestInsertVehicleID, bestInsertPosI, bestInsertPosJ , bestNodeList = new_dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan , route_map)
-                        
-                        route_node_list = vehicleid_to_plan.get(bestInsertVehicleID , [])
+def new_dispatch_new_orders(vehicleid_to_plan: Dict[str, List[Node]],
+                            id_to_factory: Dict[str, Factory],
+                            route_map: Dict[tuple, tuple],
+                            id_to_vehicle: Dict[str, Vehicle],
+                            id_to_unlocated_items: Dict[str, OrderItem],
+                            new_order_itemIDs: List[str],
+                            strict: bool = False):
+    """Dispatch new orders with CI before timeout, random after timeout.
 
-                        if isExhausive:
-                            route_node_list = bestNodeList[:]
-                        else:
-                            all_exhautive = False
-                            if route_node_list is None:
-                                route_node_list = []
-                            
-                            new_order_pickup_node = node_list[0]
-                            new_order_delivery_node = node_list[1]
-                            
-                            route_node_list.insert(bestInsertPosI, new_order_pickup_node)
-                            route_node_list.insert(bestInsertPosJ, new_order_delivery_node)
-                        vehicleid_to_plan[bestInsertVehicleID] = route_node_list
-                        
-                        tmp_itemList.clear()
-                        tmp_demand = 0
-                    tmp_itemList.append(item)
-                    tmp_demand += item.demand 
+    - Trước khi timeout: dùng `dispatch_nodePair` (cheapest insertion) để chèn.
+    - Sau khi timeout (config.is_timeout() == True): mọi block mới được gán
+      nhanh bằng `random_dispatch_nodePair`, không cần đếm đơn tồn đọng.
+    """
+    all_exhaustive = True
 
-                if len(tmp_itemList) > 0:
-                    for plan in vehicleid_to_plan.values():
-                        if len(plan) >= 6: all_exhautive = False
-                    
-                    node_list: list[Node] = create_Pickup_Delivery_nodes(tmp_itemList , id_to_factory)
-                    isExhausive = False
-                    
-                    if node_list:
-                        isExhausive , bestInsertVehicleID, bestInsertPosI, bestInsertPosJ , bestNodeList =  dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan, route_map)
-                        #isExhausive , bestInsertVehicleID, bestInsertPosI, bestInsertPosJ , bestNodeList = new_dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan , route_map)
-                    route_node_list : List[Node] = vehicleid_to_plan.get(bestInsertVehicleID , [])
-                    
-                    if isExhausive:
-                        route_node_list = bestNodeList[:]
-                    else:
-                        all_exhautive = False
-                        
-                        if route_node_list is None:
-                            route_node_list = []
-                        
-                        new_order_pickup_node = node_list[0]
-                        new_order_delivery_node = node_list[1]
-                        
-                        route_node_list.insert(bestInsertPosI, new_order_pickup_node)
-                        route_node_list.insert(bestInsertPosJ, new_order_delivery_node)
-                    vehicleid_to_plan[bestInsertVehicleID] = route_node_list
-            else:
-                for plan in vehicleid_to_plan.values():
-                    if len(plan) >= 6: all_exhautive = False
-                
-                node_list: list[Node] = create_Pickup_Delivery_nodes(orderID_items , id_to_factory)
-                
-                isExhausive = False
-                if node_list:
-                    isExhausive , bestInsertVehicleID, bestInsertPosI, bestInsertPosJ , bestNodeList = dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan , route_map)
-                    #isExhausive , bestInsertVehicleID, bestInsertPosI, bestInsertPosJ , bestNodeList = new_dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan , route_map)
-                route_node_list : List[Node] = vehicleid_to_plan.get(bestInsertVehicleID , [])
-                if isExhausive:
-                    route_node_list = bestNodeList[:]
-                else:
-                    all_exhautive = False
-                    
-                    if route_node_list is None:
-                        route_node_list = []
-                    
-                    new_order_pickup_node = node_list[0]
-                    new_order_delivery_node = node_list[1]
-                    
-                    route_node_list.insert(bestInsertPosI, new_order_pickup_node)
-                    route_node_list.insert(bestInsertPosJ, new_order_delivery_node)
-                vehicleid_to_plan[bestInsertVehicleID] = route_node_list
-    
-    return all_exhautive            
+    if not new_order_itemIDs:
+        return all_exhaustive
+
+    # Gom các order item theo order_id
+    # Đồng thời lưu lại tập ID item đầu vào để sau này validate đã được gán hết chưa
+    orderId_to_Item: Dict[str, List[OrderItem]] = {}
+    requested_item_ids: set[str] = set()
+    missing_item_ids: List[str] = []
+    for new_order_item in new_order_itemIDs:
+        requested_item_ids.add(new_order_item)
+        new_item = id_to_unlocated_items.get(new_order_item)
+        if new_item is None:
+            # Ghi nhận nhưng không làm hỏng luồng chèn; có thể in log để debug
+            missing_item_ids.append(new_order_item)
+            continue
+        orderID = new_item.order_id
+        orderId_to_Item.setdefault(orderID, []).append(new_item)
+
+    # Lấy sức chứa (giả sử tất cả xe cùng capacity như cũ)
+    capacity = None
+    for vehicle in id_to_vehicle.values():
+        capacity = vehicle.board_capacity
+        break
+
+    # Helper: chèn 1 block node_list theo CI hoặc random tùy trạng thái timeout
+    # YÊU CẦU: node_list phải chứa đủ các item tương ứng trong tmp_itemList/order_items;
+    # không được bỏ block nào nếu create_Pickup_Delivery_nodes trả về rỗng.
+    def _insert_block(node_list: List[Node]) -> None:
+        nonlocal all_exhaustive
+        if not node_list:
+            # Nếu node_list rỗng nhưng về logic lẽ ra phải có item, đây là tình huống lỗi;
+            # với strict=True ta raise để lộ bug sớm, còn không thì chỉ log.
+            msg = "[new_dispatch_new_orders] ERROR: _insert_block được gọi với node_list rỗng"
+            if strict:
+                raise RuntimeError(msg)
+            print(msg, file=sys.stderr)
+            all_exhaustive = False
+            return
+
+        # Đếm tổng node trước khi chèn để chắc chắn sau đó tăng đúng +2
+        before_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
+        # Nếu đã timeout tại thời điểm này -> random
+        if config.is_timeout():
+            random_dispatch_nodePair(node_list, id_to_vehicle, vehicleid_to_plan)
+            after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
+            if after_nodes != before_nodes + 2:
+                msg = f"[new_dispatch_new_orders] WARNING: random_dispatch_nodePair không tăng đúng 2 node (before={before_nodes}, after={after_nodes})"
+                print(msg, file=sys.stderr)
+                all_exhaustive = False
+                if strict:
+                    raise RuntimeError(msg)
+            return
+
+        isExhaustive = False
+        bestVID = ''
+        bestI = 0
+        bestJ = 1
+        bestList: List[Node] = []
+
+        isExhaustive, bestVID, bestI, bestJ, bestList = dispatch_nodePair(
+            node_list, id_to_vehicle, vehicleid_to_plan, route_map
+        )
+
+        # Nếu sau khi chạy CI mà timeout thì coi như đã trễ, block này dùng random
+        if config.is_timeout():
+            random_dispatch_nodePair(node_list, id_to_vehicle, vehicleid_to_plan)
+            after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
+            if after_nodes != before_nodes + 2:
+                msg = f"[new_dispatch_new_orders] WARNING: random_dispatch_nodePair (sau CI timeout) không tăng đúng 2 node (before={before_nodes}, after={after_nodes})"
+                print(msg, file=sys.stderr)
+                all_exhaustive = False
+                if strict:
+                    raise RuntimeError(msg)
+            return
+
+        # Kiểm tra kết quả CI hợp lệ
+        if not bestVID or bestVID not in id_to_vehicle:
+            random_dispatch_nodePair(node_list, id_to_vehicle, vehicleid_to_plan)
+            after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
+            if after_nodes != before_nodes + 2:
+                msg = f"[new_dispatch_new_orders] WARNING: CI trả về bestVID không hợp lệ, random fallback cũng không tăng đúng 2 node (before={before_nodes}, after={after_nodes})"
+                print(msg, file=sys.stderr)
+                all_exhaustive = False
+                if strict:
+                    raise RuntimeError(msg)
+            return
+
+        route_node_list = vehicleid_to_plan.get(bestVID, []) or []
+
+        if isExhaustive and bestList:
+            vehicleid_to_plan[bestVID] = bestList[:]
+        else:
+            all_exhaustive = False
+            # Bảo vệ chỉ số chèn
+            if bestI < 0:
+                bestI = 0
+            if bestJ < bestI + 1:
+                bestJ = bestI + 1
+            if bestI > len(route_node_list):
+                bestI = len(route_node_list)
+            if bestJ > len(route_node_list) + 1:
+                bestJ = len(route_node_list) + 1
+
+            new_pickup = node_list[0]
+            new_delivery = node_list[1]
+            route_node_list.insert(bestI, new_pickup)
+            route_node_list.insert(bestJ, new_delivery)
+            vehicleid_to_plan[bestVID] = route_node_list
+
+        # Kiểm tra lại: sau khi chèn bằng CI, tổng số node phải tăng đúng 2
+        after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
+        if after_nodes != before_nodes + 2:
+            msg = f"[new_dispatch_new_orders] WARNING: dispatch_nodePair/CI không làm tăng đúng 2 node (before={before_nodes}, after={after_nodes})"
+            print(msg, file=sys.stderr)
+            all_exhaustive = False
+            if strict:
+                raise RuntimeError(msg)
+
+    # Duyệt từng order; tại mọi thời điểm, chỉ check timeout để quyết định
+    for orderID, order_items in orderId_to_Item.items():
+        order_demand = sum(item.demand for item in order_items)
+
+        # Nếu timeout xảy ra ở thời điểm bắt đầu xử lý order này -> toàn bộ order dùng random
+        if config.is_timeout():
+            node_list = create_Pickup_Delivery_nodes(order_items, id_to_factory)
+            if node_list:
+                random_dispatch_nodePair(node_list, id_to_vehicle, vehicleid_to_plan)
+            continue
+
+        # Đơn vượt sức chứa: tách thành nhiều block
+        if capacity is not None and order_demand > capacity:
+            tmp_demand = 0
+            tmp_itemList: List[OrderItem] = []
+
+            for item in order_items:
+                # Nếu tại đây đã timeout thì phần block hiện tại và phần về sau
+                # đều sẽ được xử lý bằng random qua _insert_block (vì _insert_block
+                # kiểm tra timeout ở đầu).
+                if (tmp_demand + item.demand) > capacity:
+                    node_list = create_Pickup_Delivery_nodes(tmp_itemList, id_to_factory)
+                    _insert_block(node_list)
+                    tmp_itemList = []
+                    tmp_demand = 0
+
+                tmp_itemList.append(item)
+                tmp_demand += item.demand
+
+            if tmp_itemList:
+                node_list = create_Pickup_Delivery_nodes(tmp_itemList, id_to_factory)
+                _insert_block(node_list)
+        else:
+            # Đơn không vượt capacity
+            node_list = create_Pickup_Delivery_nodes(order_items, id_to_factory)
+            _insert_block(node_list)
+
+    # ===================== HẬU KIỂM: đảm bảo tất cả item mới đã được gán =====================
+    # Thu thập các item id đã xuất hiện trong mọi route sau khi chèn
+    assigned_item_ids: set[str] = set()
+
+    def _collect_items_from_node(nd: Node) -> None:
+        if nd is None:
+            return
+        if getattr(nd, 'pickup_item_list', None):
+            for it in nd.pickup_item_list:
+                if hasattr(it, 'id'):
+                    assigned_item_ids.add(it.id)
+        if getattr(nd, 'delivery_item_list', None):
+            for it in nd.delivery_item_list:
+                if hasattr(it, 'id'):
+                    assigned_item_ids.add(it.id)
+
+    for route in vehicleid_to_plan.values():
+        for nd in route or []:
+            _collect_items_from_node(nd)
+
+    # Những item mới mà không xuất hiện trong bất kỳ route nào
+    unassigned_items = [iid for iid in requested_item_ids if iid not in assigned_item_ids]
+
+    # ===================== BƯỚC CỨU HỘ: cố gắng gán lại các item chưa được gán =====================
+    if unassigned_items:
+        rescue_failed: List[str] = []
+
+        for iid in unassigned_items:
+            item = id_to_unlocated_items.get(iid)
+            if not item:
+                rescue_failed.append(iid)
+                continue
+
+            node_list = create_Pickup_Delivery_nodes([item], id_to_factory)
+            if not node_list:
+                rescue_failed.append(iid)
+                continue
+
+            # Thử random_dispatch_nodePair trước
+            before_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
+            random_dispatch_nodePair(node_list, id_to_vehicle, vehicleid_to_plan)
+            after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
+            if after_nodes == before_nodes + 2:
+                continue
+
+            # Nếu random thất bại, thử append cuối một xe bất kỳ (đơn giản, ưu tiên khả thi hơn tối ưu)
+            assigned = False
+            for vehicleID, vehicle in id_to_vehicle.items():
+                route = vehicleid_to_plan.get(vehicleID) or []
+                tempRouteNodeList = route + node_list
+                # Lấy carrying_items robust như trong fast_cheapest_insertion_for_block
+                def _carrying_list(v: Vehicle) -> List[OrderItem]:
+                    ci = getattr(v, 'carrying_items', None)
+                    try:
+                        ci_copy = copy.deepcopy(ci)
+                    except Exception:
+                        ci_copy = ci
+                    try:
+                        items_top_first: List[OrderItem] = []
+                        while ci_copy is not None and hasattr(ci_copy, 'is_empty') and not ci_copy.is_empty():
+                            items_top_first.append(ci_copy.pop())
+                        return list(reversed(items_top_first)) if items_top_first else (list(ci_copy) if isinstance(ci_copy, list) else [])
+                    except Exception:
+                        try:
+                            return list(ci_copy) if ci_copy is not None else []
+                        except Exception:
+                            return []
+
+                carrying_items = _carrying_list(vehicle)
+                if not isFeasible(tempRouteNodeList, carrying_items, vehicle.board_capacity):
+                    continue
+
+                vehicleid_to_plan[vehicleID] = tempRouteNodeList
+                assigned = True
+                break
+
+            if not assigned:
+                rescue_failed.append(iid)
+
+        if missing_item_ids or rescue_failed:
+            if missing_item_ids:
+                print(f"[new_dispatch_new_orders] WARNING: {len(missing_item_ids)} new_order_itemIDs không tìm thấy trong id_to_unlocated_items: {missing_item_ids}", file=sys.stderr)
+            if rescue_failed:
+                print(f"[new_dispatch_new_orders] ERROR: {len(rescue_failed)} items không thể gán ngay cả sau bước cứu hộ: {rescue_failed}", file=sys.stderr)
+            all_exhaustive = False
+            if strict and rescue_failed:
+                raise RuntimeError(f"new_dispatch_new_orders strict mode: không thể gán {len(rescue_failed)} items: {rescue_failed}")
+
+    return all_exhaustive
 
 
 
 def worse_dispatch_new_orders(vehicleid_to_plan: Dict[str , list[Node]] ,  id_to_factory:Dict[str , Factory] , route_map: Dict[tuple , tuple] ,  id_to_vehicle: Dict[str , Vehicle] , id_to_unlocated_items:Dict[str , OrderItem], new_order_itemIDs: list[str]):
-    all_exhautive = True
+    # Keep a safe backup of the original plans so we can revert on infeasible changes
+    try:
+        original_plans = copy.deepcopy(vehicleid_to_plan)
+    except Exception:
+        original_plans = {k: list(v) for k, v in vehicleid_to_plan.items()}
     
     if new_order_itemIDs:
         orderId_to_Item : Dict[str , list[OrderItem]] = {}
@@ -176,7 +325,26 @@ def worse_dispatch_new_orders(vehicleid_to_plan: Dict[str , list[Node]] ,  id_to
                         target_route[bestInsertPos: bestInsertPos] = node_list """
                         
                         if node_list:
+                            # Try random insertion first
+                            before_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
                             random_dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan)
+                            after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
+                            if after_nodes != before_nodes + 2:
+                                # Immediate fallback: cheapest insertion by cost
+                                isExhausiveFB = False
+                                bestVID = ''
+                                bestI = 0
+                                bestJ = 1
+                                bestList: List[Node] = []
+                                isExhausiveFB , bestVID, bestI, bestJ , bestList = dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan , route_map)
+                                tgt_route : List[Node] = vehicleid_to_plan.get(bestVID , [])
+                                if isExhausiveFB:
+                                    vehicleid_to_plan[bestVID] = bestList[:]
+                                else:
+                                    if tgt_route is None: tgt_route = []
+                                    tgt_route.insert(bestI , node_list[0])
+                                    tgt_route.insert(bestJ , node_list[1])
+                                    vehicleid_to_plan[bestVID] = tgt_route
                         
                         tmp_itemList.clear()
                         tmp_demand = 0
@@ -199,7 +367,19 @@ def worse_dispatch_new_orders(vehicleid_to_plan: Dict[str , list[Node]] ,  id_to
                     target_route = vehicleid_to_plan[bestInsertVehicle]
                     target_route[bestInsertPos: bestInsertPos] = node_list """
                     if node_list:
+                        before_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
                         random_dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan)
+                        after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
+                        if after_nodes != before_nodes + 2:
+                            isExhausiveFB , bestVID, bestI, bestJ , bestList = dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan , route_map)
+                            tgt_route : List[Node] = vehicleid_to_plan.get(bestVID , [])
+                            if isExhausiveFB:
+                                vehicleid_to_plan[bestVID] = bestList[:]
+                            else:
+                                if tgt_route is None: tgt_route = []
+                                tgt_route.insert(bestI , node_list[0])
+                                tgt_route.insert(bestJ , node_list[1])
+                                vehicleid_to_plan[bestVID] = tgt_route
             else:
                 for plan in vehicleid_to_plan.values():
                     if len(plan) >= 6: all_exhautive = False
@@ -216,9 +396,59 @@ def worse_dispatch_new_orders(vehicleid_to_plan: Dict[str , list[Node]] ,  id_to
                 target_route = vehicleid_to_plan[bestInsertVehicle]
                 target_route[bestInsertPos: bestInsertPos] = node_list """
                 if node_list:
+                    before_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
                     random_dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan)
+                    after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
+                    if after_nodes != before_nodes + 2:
+                        isExhausiveFB , bestVID, bestI, bestJ , bestList = dispatch_nodePair(node_list , id_to_vehicle , vehicleid_to_plan , route_map)
+                        tgt_route : List[Node] = vehicleid_to_plan.get(bestVID , [])
+                        if isExhausiveFB:
+                            vehicleid_to_plan[bestVID] = bestList[:]
+                        else:
+                            if tgt_route is None: tgt_route = []
+                            tgt_route.insert(bestI , node_list[0])
+                            tgt_route.insert(bestJ , node_list[1])
+                            vehicleid_to_plan[bestVID] = tgt_route
     
-    return all_exhautive   
+    # Post-insertion sanity check: validate feasibility for each vehicle; if any violation
+    # found, log a detailed capacity trace and revert to the original plans.
+    for vehicleID, vehicle in id_to_vehicle.items():
+        route = vehicleid_to_plan.get(vehicleID, [])
+        carrying = vehicle.carrying_items if vehicle.des else []
+        if not isFeasible(route, carrying, vehicle.board_capacity):
+            # produce a left_capacity trace for debugging
+            left_capacity = vehicle.board_capacity
+            trace = []
+            try:
+                if carrying:
+                    for ci in (carrying if isinstance(carrying, list) else list(carrying)):
+                        left_capacity -= getattr(ci, 'demand', 0)
+                        trace.append(f"init carrying -{getattr(ci,'demand',0)} -> {left_capacity}")
+            except Exception:
+                pass
+
+            for idx, nd in enumerate(route):
+                # delivery nodes increase capacity
+                dlist = getattr(nd, 'delivery_item_list', None) or getattr(nd, 'delivery_items', None) or []
+                if dlist:
+                    for it in dlist:
+                        left_capacity += getattr(it, 'demand', 0)
+                        trace.append(f"node{idx} delivery +{getattr(it,'demand',0)} -> {left_capacity}")
+
+                plist = getattr(nd, 'pickup_item_list', None) or getattr(nd, 'pickup_items', None) or []
+                if plist:
+                    for it in plist:
+                        left_capacity -= getattr(it, 'demand', 0)
+                        trace.append(f"node{idx} pickup -{getattr(it,'demand',0)} -> {left_capacity}")
+                        if left_capacity < 0:
+                            print(f"ERROR: vehicle {vehicleID} left capacity {left_capacity} < 0 at node idx {idx} (item {getattr(it,'id',None)}). Trace: {trace}", file=sys.stderr)
+                            break
+
+            print("Reverting to original plans due to infeasible insertion in worse_dispatch_new_orders", file=sys.stderr)
+            vehicleid_to_plan.clear()
+            vehicleid_to_plan.update(original_plans)
+            return 
+
 
 
 def fast_cheapest_insertion_for_block(node_block: List[Node],
@@ -285,7 +515,24 @@ def fast_cheapest_insertion_for_block(node_block: List[Node],
         vehicle = id_to_vehicle[vehicleID]
         vehicle_plan = vehicleid_to_plan.get(vehicleID) or []
         tempRouteNodeList = vehicle_plan + node_block  # append at end
-        carrying_items = vehicle.carrying_items if vehicle.des else []
+        # Build carrying list robustly (bottom -> top)
+        def _carrying_list(v: Vehicle) -> List[OrderItem]:
+            ci = getattr(v, 'carrying_items', None)
+            try:
+                ci_copy = copy.deepcopy(ci)
+            except Exception:
+                ci_copy = ci
+            try:
+                items_top_first: List[OrderItem] = []
+                while ci_copy is not None and hasattr(ci_copy, 'is_empty') and not ci_copy.is_empty():
+                    items_top_first.append(ci_copy.pop())
+                return list(reversed(items_top_first)) if items_top_first else (list(ci_copy) if isinstance(ci_copy, list) else [])
+            except Exception:
+                try:
+                    return list(ci_copy) if ci_copy is not None else []
+                except Exception:
+                    return []
+        carrying_items = _carrying_list(vehicle)
 
         # Feasibility precheck for this candidate only
         if not isFeasible(tempRouteNodeList, carrying_items, vehicle.board_capacity):
@@ -444,18 +691,7 @@ def new_generate_random_chromosome(initial_vehicleid_to_plan : Dict[str , List[N
     
     while len(population) < quantity:
         new_individual = disturbance_opt(initial_vehicleid_to_plan , id_to_vehicle , route_map , 0.5)
-        #new_individual = disturbance_2opt_blocks(initial_vehicleid_to_plan , id_to_vehicle , route_map , max_attempts= 2 , cross_rate=0.4)
-        """ new_individual = disturbance_2opt_blocks_plus(
-                    initial_vehicleid_to_plan,
-                    id_to_vehicle,
-                    route_map,
-                    steps=max(5 , len(id_to_vehicle) // 2),
-                    cross_rate=0.35,
-                    shuffle_rate=0.35,
-                    double_bridge_rate=0.20,
-                    accept_if_better=False,
-                    allow_worse_delta = config.addDelta,
-                ) """
+        
         if new_individual:
             population.append(new_individual)
     
@@ -641,7 +877,28 @@ def randon_1_LS(indivisual: Chromosome  , PDG_map: Dict[str, List[Node]], is_lim
     if mode == 0:
         chosen_method = random.choices(list(methods.keys()))[0]
     else:
-        chosen_method = get_adaptive_order(indivisual , methods , mode=mode)[0]
+        improvement_history = indivisual.improved_LS_map.copy()
+        for k in methods.keys():
+            improvement_history.setdefault(k, 0)
+        
+        # Roulette wheel: weight = (improved_count + 1); nếu mode != 0 có thể nhấn mạnh thêm
+        weights = []
+        for k in methods.keys():
+            base = improvement_history[k] + 1
+            
+            weights.append(base)
+        total_w = sum(weights)
+        r = random.uniform(0, total_w)
+        acc = 0.0
+        chosen_method = None
+        for k, w in zip(methods.keys(), weights):
+            acc += w
+            if r <= acc:
+                chosen_method = k
+                break
+        if chosen_method is None:
+            chosen_method = next(iter(methods.keys()))
+    
     i = 0
     begin_LS_time = time.time()
     while i < 1:
@@ -1557,7 +1814,23 @@ def cheapest_insertion_for_block(node_block: List[Node],
 
         vehicle_plan = vehicleid_to_plan.get(vehicleID) or []
         tempRouteNodeList = vehicle_plan + node_block  # append at end
-        carrying_items = vehicle.carrying_items if vehicle.des else []
+        def _carrying_list2(v: Vehicle) -> List[OrderItem]:
+            ci = getattr(v, 'carrying_items', None)
+            try:
+                ci_copy = copy.deepcopy(ci)
+            except Exception:
+                ci_copy = ci
+            try:
+                items_top_first: List[OrderItem] = []
+                while ci_copy is not None and hasattr(ci_copy, 'is_empty') and not ci_copy.is_empty():
+                    items_top_first.append(ci_copy.pop())
+                return list(reversed(items_top_first)) if items_top_first else (list(ci_copy) if isinstance(ci_copy, list) else [])
+            except Exception:
+                try:
+                    return list(ci_copy) if ci_copy is not None else []
+                except Exception:
+                    return []
+        carrying_items = _carrying_list2(vehicle)
         if not isFeasible(tempRouteNodeList, carrying_items, vehicle.board_capacity):
             continue
         # Temporarily override this vehicle's route
@@ -2324,7 +2597,7 @@ def new_crossver2(parent1: Chromosome , parent2: Chromosome , Base_vehicleid_to_
             
             if node_list:
                 bestInsertPos, bestInsertVehicle = cheapest_insertion_for_block(node_list, parent1.id_to_vehicle, child_vehicleid_to_plan, parent1.route_map)
-                
+            
             if bestInsertVehicle is None:
                 last_stop_reason = 'no-insertion-position'
                 print(f"[new_crossver2] reinsert abandon block | insertion failed -> stopping", file=sys.stderr)

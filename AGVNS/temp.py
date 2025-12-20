@@ -86,7 +86,7 @@ def plot_erfc_only(order_min=0,
     erfc_vals = [compute_adaptive_ratio_erfc(o, num_vehicles, params, center=center, width=width)['ratio'] for o in orders]
 
     plt.figure(figsize=(9, 5.2), dpi=140)
-    plt.plot(orders, erfc_vals, color='steelblue', linewidth=7.6,
+    plt.plot(orders, erfc_vals, color='steelblue', linewidth=5.6,
              label=f'ERFC μ={center}, σ={width}')
 
     ax = plt.gca()
@@ -141,13 +141,13 @@ def plot_erfc_only(order_min=0,
     for spine in ax.spines.values():
         spine.set_linewidth(0.9)
 
-    plt.xlabel('Number of Orders', fontsize=10)
-    plt.ylabel('CROSSOVER_TYPE_RATIO', fontsize=10)
-    plt.title('Adaptive CROSSOVER_TYPE_RATIO', fontsize=11)
+    plt.xlabel('Number of Orders', fontsize=14)
+    plt.ylabel('CROSSOVER_TYPE_RATIO', fontsize=14)
+    plt.title('Adaptive CROSSOVER_TYPE_RATIO', fontsize=15)
     plt.ylim(-0.05, 1.05)
     plt.grid(True, alpha=0.3)
     if show_legend:
-        plt.legend(fontsize=9, frameon=True, framealpha=0.85, borderpad=0.6)
+        plt.legend(fontsize=11, frameon=True, framealpha=0.85, borderpad=0.6)
     plt.tight_layout()
     if save_path:
         plt.savefig(save_path, dpi=180, bbox_inches='tight')
@@ -165,4 +165,4 @@ if __name__ == "__main__":
                    save_path=None,
                    show_threshold=True,
                    annotate=False,
-                   show_legend=False)
+                   show_legend=True)

@@ -750,6 +750,10 @@ def random_dispatch_nodePair(node_list: list[Node], id_to_vehicle: Dict[str, Veh
         return
 
     is_inserted = False
+    attempts = 0
+    MAX_ATTEMPTS = 500
+    # Probability to try simple end-extension (append pickup & delivery at tail)
+    p_extend_end = 1
     while not is_inserted:
         selected_vehicleID = random.choice(list(id_to_vehicle.keys()))
         selected_vehicle = id_to_vehicle[selected_vehicleID]
@@ -769,51 +773,121 @@ def random_dispatch_nodePair(node_list: list[Node], id_to_vehicle: Dict[str, Veh
             route.append(selected_vehicle.des)
             old_len = 1  # destination preserved at index 0
 
-        pickup_node = node_list[0]
-        delivery_node = node_list[-1]
+        pickup_node = None
+        delivery_node = None
+        if node_list[0].pickup_item_list and not node_list[0].delivery_item_list:
+            pickup_node , delivery_node = node_list[0] , node_list[-1]
+        else: 
+            delivery_node , pickup_node = node_list[0] , node_list[-1]
+            
+
+        # Helper: get current carrying items as Python list (bottom -> top)
+        def _get_carrying_list(v: Vehicle) -> List[OrderItem]:
+            ci = getattr(v, 'carrying_items', None)
+            # Try to deep copy stack-like object
+            try:
+                ci_copy = copy.deepcopy(ci)
+            except Exception:
+                ci_copy = ci
+            # Stack-like: has is_empty/pop
+            try:
+                items_top_first: List[OrderItem] = []
+                while ci_copy is not None and hasattr(ci_copy, 'is_empty') and not ci_copy.is_empty():
+                    items_top_first.append(ci_copy.pop())
+                # convert top->bottom to bottom->top for isFeasible
+                return list(reversed(items_top_first)) if items_top_first else (list(ci_copy) if isinstance(ci_copy, list) else [])
+            except Exception:
+                # list-like
+                try:
+                    return list(ci_copy) if ci_copy is not None else []
+                except Exception:
+                    return []
 
         if old_len == 0:
             # No destination and no existing route -> simply append pair (feasibility-checked)
             route.extend([pickup_node, delivery_node])
-            carrying_items = selected_vehicle.carrying_items if selected_vehicle.des else []
+            carrying_items = _get_carrying_list(selected_vehicle)
             if isFeasible(route, carrying_items, selected_vehicle.board_capacity):
                 is_inserted = True
             else:
                 # revert and retry with another vehicle
                 route.pop(); route.pop()
         else:
-            # Try random feasible positions for pickup and delivery (delivery strictly after pickup)
-            feasible_position1 = [i for i in range(begin_pos, len(route) + 1)]
-            random.shuffle(feasible_position1)
-            for insert_posI in feasible_position1:
-                feasible_position2 = [i for i in range(insert_posI + 1, len(route) + 2)]
-                random.shuffle(feasible_position2)
-                for insert_posJ in feasible_position2:
-                    route.insert(insert_posI, pickup_node)
-                    route.insert(insert_posJ, delivery_node)
+            # Branch 1: try end-extension with probability p_extend_end
+            did_try_extend = False
+            if random.random() < p_extend_end:
+                did_try_extend = True
+                route.append(pickup_node)
+                route.append(delivery_node)
+                carrying_items = _get_carrying_list(selected_vehicle)
+                # Validate destination position & feasibility
+                if (selected_vehicle.des and route[0].id != selected_vehicle.des.id) or not isFeasible(route, carrying_items, selected_vehicle.board_capacity):
+                    # Revert
+                    route.pop(); route.pop()
+                else:
+                    is_inserted = True
 
-                    # Do not allow changing destination position at index 0
-                    if selected_vehicle.des and route and route[0].id != selected_vehicle.des.id:
-                        # revert immediately if destination got shifted
+            # Branch 2: general random insertion search if not inserted yet
+            if not is_inserted and not did_try_extend:
+                # Try random feasible positions for pickup and delivery (delivery strictly after pickup)
+                feasible_position1 = [i for i in range(begin_pos, len(route) + 1)]
+                random.shuffle(feasible_position1)
+                for insert_posI in feasible_position1:
+                    feasible_position2 = [i for i in range(insert_posI + 1, len(route) + 2)]
+                    random.shuffle(feasible_position2)
+                    for insert_posJ in feasible_position2:
+                        route.insert(insert_posI, pickup_node)
+                        route.insert(insert_posJ, delivery_node)
+
+                        # Do not allow changing destination position at index 0
+                        if selected_vehicle.des and route and route[0].id != selected_vehicle.des.id:
+                            # revert immediately if destination got shifted
+                            route.pop(insert_posJ)
+                            route.pop(insert_posI)
+                            continue
+
+                        carrying_items = _get_carrying_list(selected_vehicle)
+                        if isFeasible(route, carrying_items, selected_vehicle.board_capacity):
+                            check_end = True
+                            break
+
+                        # Revert failed attempt
                         route.pop(insert_posJ)
                         route.pop(insert_posI)
-                        continue
-
-                    carrying_items = selected_vehicle.carrying_items if selected_vehicle.des else []
-                    if isFeasible(route, carrying_items, selected_vehicle.board_capacity):
-                        check_end = True
+                    if check_end:
                         break
-
-                    # Revert failed attempt
-                    route.pop(insert_posJ)
-                    route.pop(insert_posI)
-                if check_end:
-                    break
 
         # Confirm exactly two nodes were added and, if applicable, destination preserved
         if len(route) == old_len + 2:
             if not selected_vehicle.des or (route and route[0].id == selected_vehicle.des.id):
                 is_inserted = True
+
+        attempts += 1
+        if not is_inserted and attempts >= MAX_ATTEMPTS:
+            # Fallback: try exhaustive feasible insertion over all vehicles/positions deterministically
+            for vID, v in id_to_vehicle.items():
+                r = vehicleid_to_plan.get(vID)
+                if r is None:
+                    r = []
+                    vehicleid_to_plan[vID] = r
+                begin_pos2 = 1 if v.des else 0
+                base_len = len(r)
+                if base_len == 0 and v.des is not None:
+                    r.append(v.des); base_len = 1
+                for i in range(begin_pos2, len(r) + 1):
+                    for j in range(i + 1, len(r) + 2):
+                        r.insert(i, pickup_node)
+                        r.insert(j, delivery_node)
+                        # keep destination header
+                        if v.des and r and r[0].id != v.des.id:
+                            r.pop(j); r.pop(i)
+                            continue
+                        if isFeasible(r, _get_carrying_list(v), v.board_capacity):
+                            return
+                        r.pop(j); r.pop(i)
+            # If still not inserted, log and return without modification (caller may handle)
+            print("[random_dispatch_nodePair] Failed to insert PD pair after exhaustive search", file=sys.stderr)
+            return
 
 
 def isFeasible(route_node_list : List[Node] , carrying_items : List[OrderItem] , capacity : float ):
@@ -872,7 +946,24 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
     waiting_Sum  : float = 0.0
     objF : float = 0.0
     capacity = vehicle.board_capacity
-    carrying_Items : List[OrderItem] = vehicle.carrying_items if vehicle.des else []
+    # Build carrying items as list (bottom -> top) for correct feasibility check
+    def _get_carrying_list(v: Vehicle) -> List[OrderItem]:
+        ci = getattr(v, 'carrying_items', None)
+        try:
+            ci_copy = copy.deepcopy(ci)
+        except Exception:
+            ci_copy = ci
+        try:
+            items_top_first: List[OrderItem] = []
+            while ci_copy is not None and hasattr(ci_copy, 'is_empty') and not ci_copy.is_empty():
+                items_top_first.append(ci_copy.pop())
+            return list(reversed(items_top_first)) if items_top_first else (list(ci_copy) if isinstance(ci_copy, list) else [])
+        except Exception:
+            try:
+                return list(ci_copy) if ci_copy is not None else []
+            except Exception:
+                return []
+    carrying_Items : List[OrderItem] = _get_carrying_list(vehicle)
     
     if (temp_route_node_list) and (not isFeasible(temp_route_node_list , carrying_Items , capacity)):
         return math.inf

@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+simpy
+flask-socketio
+Flask
+flask-cors

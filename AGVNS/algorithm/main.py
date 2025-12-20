@@ -32,25 +32,38 @@ def main():
     #Thuat toan
     print()
     
-    if over24hours(id_to_vehicle , new_order_itemIDs):
+    """ if over24hours(id_to_vehicle , new_order_itemIDs):
         redispatch_process(id_to_vehicle , route_map , vehicleid_to_plan , id_to_factory , id_to_unlocated_items)
     else:
         dispatch_new_orders(vehicleid_to_plan , id_to_factory , route_map , id_to_vehicle , id_to_unlocated_items , new_order_itemIDs)
     
+<<<<<<< HEAD
     #worse_dispatch_new_orders(vehicleid_to_plan , id_to_factory , route_map , id_to_vehicle , id_to_unlocated_items , new_order_itemIDs)
+=======
+    worse_dispatch_new_orders(vehicleid_to_plan , id_to_factory , route_map , id_to_vehicle , id_to_unlocated_items , new_order_itemIDs) """
+    new_dispatch_new_orders(vehicleid_to_plan , id_to_factory , route_map , id_to_vehicle , id_to_unlocated_items , new_order_itemIDs)
+>>>>>>> cb888c89b9530547525885b5555ba29ec82fcbba
     
     Unongoing_super_nodes , Base_vehicleid_to_plan = get_UnongoingSuperNode(vehicleid_to_plan , id_to_vehicle)
     
     best_chromosome = Chromosome(vehicleid_to_plan , route_map , id_to_vehicle)
     
+<<<<<<< HEAD
     copy_vehicleid_to_plan = copy.deepcopy(vehicleid_to_plan)
     best_chromosome : Chromosome = GAVND_7(copy_vehicleid_to_plan , route_map , id_to_vehicle , Unongoing_super_nodes , Base_vehicleid_to_plan)
+=======
+    """ copy_vehicleid_to_plan = copy.deepcopy(vehicleid_to_plan)
+    best_chromosome : Chromosome = GA(copy_vehicleid_to_plan , route_map , id_to_vehicle , Unongoing_super_nodes , Base_vehicleid_to_plan)
+>>>>>>> cb888c89b9530547525885b5555ba29ec82fcbba
     if best_chromosome is None or best_chromosome.fitness > total_cost(id_to_vehicle , route_map , vehicleid_to_plan):
-        best_chromosome = Chromosome(vehicleid_to_plan , route_map , id_to_vehicle)
+        best_chromosome = Chromosome(vehicleid_to_plan , route_map , id_to_vehicle) """
     
+<<<<<<< HEAD
     copy_vehicleid_to_plan = copy.deepcopy(vehicleid_to_plan)
     best_chromosome = Chromosome(copy_vehicleid_to_plan , route_map , id_to_vehicle)
     gold_algorithm_LS(best_chromosome , False)
+=======
+>>>>>>> cb888c89b9530547525885b5555ba29ec82fcbba
     
     print()
     print('The solution initialized by Cheapest Insertion:')
