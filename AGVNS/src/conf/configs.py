@@ -101,9 +101,5 @@ class Configs(object):
     A_DAY_TIME_SECONDS = 24 * 60 * 60
 
     # 数据集选项，列表为空则选择所有数据集，如[]，[1], [1, 2, 3], [64]
-<<<<<<< HEAD
     selected_instances = [1]
-=======
-    selected_instances = [10]
->>>>>>> cb888c89b9530547525885b5555ba29ec82fcbba
     all_test_instances = range(1, 65)
