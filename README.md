@@ -387,7 +387,7 @@ print('Score:', score)
 ## Liên Hệ & Đóng Góp
 
 - **Tác giả**: tranphuc15122004
-- **GitHub**: <https://github.com/tranphuc15122004/New_DPDP>
+- **GitHub**: https://github.com/tranphuc15122004/AGVNS-Adaptive-Genetic-Algorithm-Enhanced-by-Variable-Neighborhood-Search
 - **Vấn đề / Đề xuất**: Hãy mở issue trên GitHub
 - **Đóng góp**: Pull requests được hoan nghênh!
 
