@@ -35,6 +35,14 @@ Thumbs.db
 *.log
 *.tmp
 
+# Runtime JSON data (generated during simulation)
+algorithm/data_interaction/
+src/output/
+
+# Compiled object files (not executable binaries)
+objdir/
+*.o
+
 # Jupyter
 .ipynb_checkpoints/
 

@@ -1,0 +1,72 @@
+[
+    {
+        "id": "V_1",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_1",
+        "update_time": 1782673800.0,
+        "cur_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "arrive_time_at_current_factory": 1782673320.0,
+        "leave_time_at_current_factory": 1782676320.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_2",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_2",
+        "update_time": 1782673800.0,
+        "cur_factory_id": "5920212e6b0b46b198b9677bfe74f35d",
+        "arrive_time_at_current_factory": 1782673608.0,
+        "leave_time_at_current_factory": 1782675528.0,
+        "carrying_items": [
+            "2354040050-1"
+        ],
+        "destination": {
+            "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+            "delivery_item_list": [
+                "2354040050-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 1782679596.0,
+            "leave_time": 1782681516.0
+        }
+    },
+    {
+        "id": "V_3",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_3",
+        "update_time": 1782673800.0,
+        "cur_factory_id": "d1f8de642d734931be957336196d996d",
+        "arrive_time_at_current_factory": 1782650772.0,
+        "leave_time_at_current_factory": 1782673800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_4",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_4",
+        "update_time": 1782673800.0,
+        "cur_factory_id": "206128e3ee9a458d9cfd053cedc0fad6",
+        "arrive_time_at_current_factory": 1782660852.0,
+        "leave_time_at_current_factory": 1782673800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_5",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_5",
+        "update_time": 1782673800.0,
+        "cur_factory_id": "d1f8de642d734931be957336196d996d",
+        "arrive_time_at_current_factory": 1782650592.0,
+        "leave_time_at_current_factory": 1782673800.0,
+        "carrying_items": [],
+        "destination": null
+    }
+]

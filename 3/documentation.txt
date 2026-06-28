@@ -1,0 +1,38 @@
+Qucikest Route Team Source Code Documentation
+
+1) content of the zip file
+
+* source code
+
+* binary exacutable main_algorithm.out
+
+* documentation (documentation.txt)
+
+2) Compilation
+
+in the source code directory type
+
+make clean
+
+make
+
+the binary file main_algorithm.out should be the same as the one in our submission "QuickestRoute_lq.zp"
+
+Note that some part of the source code is not used in solving the problem, we include them to ensure that the compiled program is the same as the one of our best submission.
+
+3) Short description of main algorithmic ideas
+
+MAIN STEPS:
+A1) read the input (vehicle_info, unolloacted_order_items, ongoing_order_items, factory_info, route_info). 
+
+A2) from the input order items create "packages" to schedule (one packge consists of items from the same order, and does not exceed the vehicle capacity).
+In case of orders exceeding vehicle capacity, splitting is done at this stage.
+
+A3) create initial schedule greedily. There are some fine details how the initial schedule is built, which are not provided here.
+
+A4) Local search using a simple algorithm and a clever neighborhood. 
+
+In steps A3 and A4, the original objective function as specified in the problem statement is perturbed by a quadratic term which tries to ensure that the number of vehicles visiting a factory is only 3 more than the number of ports.
+
+A5) write out output files.
+
