@@ -69,7 +69,7 @@ class Configs(object):
     RANDOM_SEED = 0
 
     # 算法运行超时时间
-    MAX_RUNTIME_OF_ALGORITHM = 1000
+    MAX_RUNTIME_OF_ALGORITHM = 600
 
     # 算法成功标识
     ALGORITHM_SUCCESS_FLAG = 'SUCCESS'

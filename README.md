@@ -121,7 +121,7 @@ source .venv/bin/activate
 
 ### 2. Cài Đặt Dependencies
 
-Mỗi thuật toán có dependencies riêng. Chạy lệnh tương ứng:
+Mỗi thuật toán có dependencies riêng (Python packages cho simulator + algorithm). Chạy lệnh tương ứng:
 
 ```bash
 # AGVNS
@@ -133,10 +133,11 @@ pip install -r MA/requirements.txt
 # Silver Algorithm
 pip install -r 2/Y_final_submission/requirements.txt
 
-# Gold Algorithm (Java) — không cần pip, chỉ cần Java JDK 8+
+# Gold Algorithm (Java) — cần Java JDK 8+ VÀ Python packages cho simulator
+pip install -r 1/compiled_files/requirements.txt
 java -version   # Kiểm tra Java đã cài chưa
 
-# Bronze Algorithm (C++) — cần g++ (MinGW) để biên dịch
+# Bronze Algorithm (C++) — cần g++ (MinGW) để biên dịch (nếu chưa có binary)
 pip install -r 3/requirements.txt
 g++ --version   # Kiểm tra C++ compiler
 ```
@@ -145,25 +146,35 @@ g++ --version   # Kiểm tra C++ compiler
 
 ### 3. Cấu Hình Simulation
 
-Trước khi chạy, có thể tùy chỉnh trong file `src/conf/configs.py` của từng thuật toán:
+Trước khi chạy, có thể tùy chỉnh trong file `src/conf/configs.py` của từng thuật toán. Mỗi thuật toán có file config riêng tại đường dẫn tương ứng:
+
+| Thuật toán | Đường dẫn config | `selected_instances` mặc định |
+|------------|-----------------|-------------------------------|
+| AGVNS | `AGVNS/src/conf/configs.py` | `[1]` |
+| MA | `MA/src/conf/configs.py` | `[9]` |
+| Gold (Java) | `1/compiled_files/src/conf/configs.py` | `[12]` |
+| Silver | `2/Y_final_submission/src/conf/configs.py` | `[10]` |
+| Bronze (C++) | `3/src/conf/configs.py` | `[10]` |
 
 | Tham số | Mô tả | Giá trị mặc định |
 |---------|-------|-----------------|
-| `selected_instances` | Danh sách instance muốn chạy. `[]` = chạy tất cả (1-64) | `[1]` |
+| `selected_instances` | Danh sách instance muốn chạy. `[]` = chạy tất cả (1-64) | Xem bảng trên |
 | `MAX_RUNTIME_OF_ALGORITHM` | Thời gian tối đa cho 1 lần gọi algorithm (giây) | `600` (10 phút) |
 
 **Các instance (64 instances):**
 
-- Instance 1-8: 50 orders
-- Instance 9-16: 100 orders
-- Instance 17-24: 300 orders
-- Instance 25-32: 500 orders
-- Instance 33-40: 1000 orders
-- Instance 41-48: 2000 orders
-- Instance 49-56: 3000 orders
-- Instance 57-64: 4000 orders
+| Instance | Số orders |
+|----------|-----------|
+| 1-8 | 50 orders |
+| 9-16 | 100 orders |
+| 17-24 | 300 orders |
+| 25-32 | 500 orders |
+| 33-40 | 1000 orders |
+| 41-48 | 2000 orders |
+| 49-56 | 3000 orders |
+| 57-64 | 4000 orders |
 
-**Algorithm parameters** (trong `algorithm/algorithm_config.py`):
+**Algorithm parameters** (trong `algorithm/algorithm_config.py` của AGVNS và MA):
 
 | Tham số | AGVNS | MA | Mô tả |
 |---------|-------|----|-------|
@@ -179,42 +190,77 @@ Trước khi chạy, có thể tùy chỉnh trong file `src/conf/configs.py` c�
 
 ### 4. Chạy Simulation
 
-#### 🥇 **AGVNS** (Thuật toán chính)
+Tất cả các thuật toán đều dùng chung cơ chế: **`main.py` là simulator entry point**, tự động gọi `main_algorithm.py` (hoặc Java `.class` / C++ binary) theo từng vòng lặp. File `main_algorithm.py` chỉ được gọi trực tiếp nếu muốn **chạy algorithm độc lập** (không qua simulator) để debug.
+
+---
+
+#### 🥇 **AGVNS** (Thuật toán chính — Python)
 
 ```bash
 cd AGVNS
 
-# Chạy với instance mặc định (instance 1)
+# Chạy simulator với instance mặc định (instance 1)
 python main.py
 
-# Hoặc chạy trực tiếp algorithm (không qua simulator)
+# Hoặc chạy thẳng algorithm (không qua simulator)
 python main_algorithm.py
 ```
 
-#### 📈 **MA** (Memetic Algorithm)
+> **Simulator** nằm trong `AGVNS/src/simulator/`.  
+> **Algorithm** nằm trong `AGVNS/algorithm/`.
+
+---
+
+#### 📈 **MA** (Memetic Algorithm — Python)
 
 ```bash
 cd MA
 
+# Chạy simulator
 python main.py
 
-# Hoặc chạy trực tiếp algorithm
+# Hoặc chạy thẳng algorithm
 python main_algorithm.py
 ```
+
+> Lưu ý: MA có config mặc định chạy **instance 9** (100 orders).
+
+---
 
 #### 🥇 **Gold Algorithm** (Java)
 
 ```bash
 cd 1/compiled_files
 
+# Chạy simulator (tự động gọi Java subprocess)
 python main.py
 ```
 
-> Simulator tự động phát hiện file `main_algorithm.class` và gọi `java main_algorithm`.
+> Simulator tự động phát hiện file `main_algorithm.class` và gọi `java main_algorithm`.  
+> **Yêu cầu:** Java JDK 8+ đã có trong `PATH`.  
+> Dependencies Java (Apache POI, JSON libs) nằm trong thư mục `algorithm/`.
+
+---
+
+#### 🥈 **Silver Algorithm** (Python)
+
+```bash
+cd 2/Y_final_submission
+
+# Chạy simulator
+python main.py
+
+# Hoặc chạy thẳng algorithm
+python main_algorithm.py
+```
+
+> **Algorithm** là `algorithm/algorithm_demo.py` — dispatch heuristic thuần.
+
+---
 
 #### 🥉 **Bronze Algorithm** (Quickest Route — C++)
 
-Cần biên dịch trước nếu chưa có `main_algorithm.exe`:
+**Nếu chưa có binary** (`main_algorithm.exe` / `main_algorithm.out`), biên dịch từ source:
 
 ```bash
 cd 3/SourceCode
@@ -225,7 +271,7 @@ copy main_algorithm.out ..\main_algorithm.exe
 cd ..
 ```
 
-Chạy simulation:
+**Chạy simulation:**
 
 ```bash
 cd 3
@@ -233,18 +279,8 @@ cd 3
 python main.py
 ```
 
-> Simulator gọi `main_algorithm.py` → wrapper Python gọi `main_algorithm.exe` (C++ binary).
-
-#### 🥈 **Silver Algorithm**
-
-```bash
-cd 2/Y_final_submission
-
-python main.py
-
-# Hoặc chạy trực tiếp
-python main_algorithm.py
-```
+> **Cơ chế:** `main.py` → gọi `main_algorithm.py` → `algorithm/algorithm_demo.py` (wrapper Python) → gọi `main_algorithm.exe` (C++ binary).  
+> **Binary có sẵn:** Windows (`main_algorithm.exe`), Linux (`main_algorithm.out`), Windows thay thế (`main_algorithm_windows.out`).
 
 ---
 
@@ -302,7 +338,7 @@ Ngoài ra, kết quả chi tiết được lưu trong:
 
 ### 7. Chạy Nhiều Instances
 
-Để chạy trên nhiều instances, sửa `selected_instances` trong `src/conf/configs.py`:
+Để chạy trên nhiều instances, sửa `selected_instances` trong file `src/conf/configs.py` của thuật toán tương ứng:
 
 ```python
 # Chạy instances 1, 2, 3
@@ -312,6 +348,8 @@ selected_instances = [1, 2, 3]
 selected_instances = []
 ```
 
+> **Mẹo:** Các thuật toán Python (AGVNS, MA, Silver) có thể chạy lần lượt nhiều instances. Riêng Gold (Java) và Bronze (C++) chạy từng instance một — nếu muốn chạy nhiều instance, để `selected_instances = []` (tự động duyệt toàn bộ).
+
 Kết quả tất cả instances được in dưới dạng list scores và average score:
 
 ```
@@ -319,48 +357,6 @@ Kết quả tất cả instances được in dưới dạng list scores và aver
 14.2
 Happy Ending
 ```
-
----
-
-### 8. Smoke Test (Kiểm Tra Nhanh)
-
-Để xác minh thuật toán chạy đúng, có thể chạy smoke test với thời gian giới hạn ngắn:
-
-```bash
-# Ví dụ: chạy AGVNS với 30s time limit
-cd AGVNS
-python -c "
-from src.conf.configs import Configs
-Configs.MAX_RUNTIME_OF_ALGORITHM = 30
-import algorithm.algorithm_config as alg_config
-alg_config.ALGO_TIME_LIMIT = 25
-from src.simulator.simulate_api import simulate
-score = simulate(Configs.factory_info_file, Configs.route_info_file, 'instance_1')
-print('Score:', score)
-"
-```
-
-> **Kết quả smoke test tham khảo** (chạy instance 1, time limit 120s):
->
-> - **AGVNS**: Score 130.40, thời gian ~5 phút
-> - **MA**: Score 140.16, thời gian ~5 phút
-> - **Gold (Java)**: Score 129.18, thời gian ~2 phút
-> - **Silver**: Score 2303.59, thời gian ~5 phút
-> - **Bronze (C++)**: Score 130.20, thời gian ~21s
-
----
-
-## 📊 Kết Quả Tham Khảo (Instance 1)
-
-| Thuật toán | Score | Total Distance | Sum Over Time | Ngôn ngữ | Thời gian chạy |
-|-----------|:----:|:--------------:|:-------------:|:--------:|:--------------:|
-| **Gold** 🥇 | **129.18** | **645.9** | 0 | Java | ~2 phút |
-| **Bronze** 🥉 | **130.20** | **651.0** | 0 | C++ | **21s** |
-| **AGVNS** 🥇 | 130.40 | 652.0 | 0 | Python | ~5 phút |
-| **MA** 📊 | 140.16 | 700.8 | 0 | Python | ~5 phút |
-| **Silver** 🥈 | 2303.59 | 851.3 | 768 | Python | ~5 phút |
-
-> **Lưu ý:** Score thấp hơn = tốt hơn. Các thuật toán metaheuristic có kết quả tương đồng (~129-140). Silver bị phạt 768s do dispatch heuristic đơn giản. Bronze chạy nhanh nhất nhờ C++ native. Gold có tổng distance thấp nhất (645.9 km).
 
 ---
 
@@ -376,18 +372,19 @@ print('Score:', score)
 
 ## 📝 Ghi Chú Quan Trọng
 
-1. **Gold Algorithm (Java)**: Cần Java JDK 8+. Simulator tự động gọi `java main_algorithm` từ thư mục `1/compiled_files/`.
-2. **Bronze Algorithm (C++)**: Binary đã được biên dịch sẵn cho Windows (`main_algorithm.exe`) và Linux (`main_algorithm.out`). Nếu cần biên dịch lại từ source, dùng `g++` (MinGW) với lệnh trong phần hướng dẫn.
+1. **Gold Algorithm (Java)**: Cần Java JDK 8+ có trong `PATH`. Simulator (Python) tự động gọi `java main_algorithm` từ thư mục `1/compiled_files/`. Nhớ cài Python packages trước: `pip install -r 1/compiled_files/requirements.txt`.
+2. **Bronze Algorithm (C++)**: Binary đã được biên dịch sẵn cho Windows (`main_algorithm.exe`) và Linux (`main_algorithm.out`). Nếu cần biên dịch lại từ source, dùng `g++` (MinGW) với lệnh trong phần hướng dẫn. Simulator gọi qua wrapper Python `algorithm/algorithm_demo.py`.
 3. **Silver Algorithm**: Nếu gặp lỗi `ImportError: cannot import name 'Inf' from 'numpy.core.numeric'`, sửa thành `from numpy import Inf` trong `algorithm/algorithm_demo.py`.
-4. **Thời gian chạy**: Instance càng lớn (50 → 4000 orders), thời gian simulation càng lâu. Instance 1 (50 orders) mất ~1-3 phút. Instance lớn có thể mất hàng giờ.
+4. **Thời gian chạy**: Instance càng lớn (50 → 4000 orders), thời gian simulation càng lâu. Instance 1 (50 orders) mất ~1-3 phút. Instance lớn (3000-4000 orders) có thể mất hàng giờ.
 5. **Dữ liệu cũ**: Trong thư mục `algorithm/data_interaction/` có thể còn dữ liệu từ lần chạy trước. Simulator sẽ ghi đè khi chạy mới.
+6. **Cấu hình riêng**: Mỗi thuật toán có file `src/conf/configs.py` riêng — nhớ sửa đúng file của thuật toán muốn chạy. Giá trị `selected_instances` mặc định khác nhau giữa các thuật toán (xem bảng ở mục 3).
 
 ---
 
 ## Liên Hệ & Đóng Góp
 
 - **Tác giả**: tranphuc15122004
-- **GitHub**: https://github.com/tranphuc15122004/AGVNS-Adaptive-Genetic-Algorithm-Enhanced-by-Variable-Neighborhood-Search
+- **GitHub**: <https://github.com/tranphuc15122004/AGVNS-Adaptive-Genetic-Algorithm-Enhanced-by-Variable-Neighborhood-Search>
 - **Vấn đề / Đề xuất**: Hãy mở issue trên GitHub
 - **Đóng góp**: Pull requests được hoan nghênh!
 
