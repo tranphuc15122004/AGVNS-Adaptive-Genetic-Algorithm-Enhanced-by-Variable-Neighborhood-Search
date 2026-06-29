@@ -86,7 +86,7 @@ def Memetic_algorithm(Base_vehicleid_to_plan: Dict[str, List[Node]], route_map: 
             break
         
         # Tạo con (có giới hạn số lần thử để tránh vòng lặp vô hạn ở test nhỏ)
-        target_size = 20 * 2
+        target_size = config.POPULATION_SIZE * 2
         max_attempts = (getattr(config, 'OFFSPRING_ATTEMPTS_FACTOR', 10) or 10) * max(1, target_size - len(population))
         attempts = 0
         while len(population) < target_size and not config.is_timeout():

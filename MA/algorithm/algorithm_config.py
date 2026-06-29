@@ -32,7 +32,7 @@ def get_remaining_time() -> float:
 
 
 """GA configuration"""
-POPULATION_SIZE = 40
+POPULATION_SIZE = 20
 NUMBER_OF_GENERATION = 20
 MUTATION_RATE = 0.25
 LS_MAX = 20

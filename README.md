@@ -148,14 +148,6 @@ g++ --version   # Kiểm tra C++ compiler
 
 Trước khi chạy, có thể tùy chỉnh trong file `src/conf/configs.py` của từng thuật toán. Mỗi thuật toán có file config riêng tại đường dẫn tương ứng:
 
-| Thuật toán | Đường dẫn config | `selected_instances` mặc định |
-|------------|-----------------|-------------------------------|
-| AGVNS | `AGVNS/src/conf/configs.py` | `[1]` |
-| MA | `MA/src/conf/configs.py` | `[9]` |
-| Gold (Java) | `1/compiled_files/src/conf/configs.py` | `[12]` |
-| Silver | `2/Y_final_submission/src/conf/configs.py` | `[10]` |
-| Bronze (C++) | `3/src/conf/configs.py` | `[10]` |
-
 | Tham số | Mô tả | Giá trị mặc định |
 |---------|-------|-----------------|
 | `selected_instances` | Danh sách instance muốn chạy. `[]` = chạy tất cả (1-64) | Xem bảng trên |
@@ -173,18 +165,6 @@ Trước khi chạy, có thể tùy chỉnh trong file `src/conf/configs.py` c�
 | 41-48 | 2000 orders |
 | 49-56 | 3000 orders |
 | 57-64 | 4000 orders |
-
-**Algorithm parameters** (trong `algorithm/algorithm_config.py` của AGVNS và MA):
-
-| Tham số | AGVNS | MA | Mô tả |
-|---------|-------|----|-------|
-| `POPULATION_SIZE` | 40 (adaptive 10-40) | 40 | Kích thước quần thể GA |
-| `NUMBER_OF_GENERATION` | 20 | 20 | Số thế hệ GA |
-| `MUTATION_RATE` | 0.25 (adaptive 0.1-0.4) | 0.25 | Tỉ lệ đột biến |
-| `ALGO_TIME_LIMIT` | 570s (9.5 phút) | 570s | Time limit cho algorithm |
-| `LS_METHODS` | PDE, BlockEx, BlockReloc, mPDG, MA | PDE, BlockEx, BlockReloc, mPDG, 2opt | Local search operators |
-| `LS_MAX` | 1 (adaptive 20-100) | 20 | Số lần LS tối đa mỗi generation |
-| `CROSSOVER_TYPE_RATIO` | Adaptive (erfc) | 0.0 | Tỉ lệ crossover/disturbance |
 
 ---
 
@@ -304,14 +284,14 @@ Simulator hoạt động theo vòng lặp:
 ```
 
 **Công thức tính score:**
-$$Score = \frac{\text{TotalDistance}}{5} + \frac{\text{SumOverTime} \times \lambda}{3600}$$
+$$Score = \frac{\text{TotalDistance}}{NumTruck} + \frac{\text{SumOverTime} \times \lambda}{3600}$$
 
 Trong đó:
 
 - $\lambda = 10000$ (hệ số mặc định trong `Configs.LAMDA`)
 - `TotalDistance`: tổng quãng đường các xe đã đi (km)
 - `SumOverTime`: tổng thời gian chờ trễ (giây) — phạt nếu giao trễ
-- Số xe = 5 (hằng số)
+- `NumTruck` : số xe trong mô phỏng
 
 ---
 
@@ -327,13 +307,6 @@ Total distance:  645.900
 Sum over time:  0.000
 Total score:  129.180
 ```
-
-Ngoài ra, kết quả chi tiết được lưu trong:
-
-- `algorithm/data_interaction/output_destination.json` — điểm đến của từng xe
-- `algorithm/data_interaction/output_route.json` — lộ trình chi tiết
-- `src/output/` — log files
-
 ---
 
 ### 7. Chạy Nhiều Instances
@@ -348,7 +321,7 @@ selected_instances = [1, 2, 3]
 selected_instances = []
 ```
 
-> **Mẹo:** Các thuật toán Python (AGVNS, MA, Silver) có thể chạy lần lượt nhiều instances. Riêng Gold (Java) và Bronze (C++) chạy từng instance một — nếu muốn chạy nhiều instance, để `selected_instances = []` (tự động duyệt toàn bộ).
+
 
 Kết quả tất cả instances được in dưới dạng list scores và average score:
 
@@ -366,7 +339,6 @@ Happy Ending
   - Input/Output JSON format
   - Các constraints (order non-splitting, destination invariant, ...)
   - Cách debug/test thuật toán
-- Xem **Paper PDF** trong repo để hiểu về AGVNS algorithm
 
 ---
 
@@ -389,5 +361,3 @@ Happy Ending
 - **Đóng góp**: Pull requests được hoan nghênh!
 
 ---
-
-**Cập nhật lần cuối**: June 2026
