@@ -2508,7 +2508,7 @@ def new_crossver2(parent1: Chromosome , parent2: Chromosome , Base_vehicleid_to_
             target_route[bestInsertPos: bestInsertPos] = best_block
             target_vehicle = parent1.id_to_vehicle[bestInsertVehicle]
 
-            # Validate only the modified vehicle route for LIFO + uniqueness
+            # Validate only the modified vehicle route for LIFO + capacity
             if not isFeasible(target_route , target_vehicle.carrying_items , target_vehicle.board_capacity):
                 # Rollback insertion
                 del target_route[bestInsertPos: bestInsertPos + len(best_block)]

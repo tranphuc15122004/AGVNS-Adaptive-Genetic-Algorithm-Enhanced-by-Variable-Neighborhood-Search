@@ -64,3 +64,4 @@ objdir/
 # Local data caches (optional)
 # data/
 # *.csv
+AGVNS/visualization_output/

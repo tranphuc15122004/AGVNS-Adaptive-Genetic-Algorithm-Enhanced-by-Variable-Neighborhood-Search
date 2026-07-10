@@ -100,6 +100,21 @@ class Configs(object):
     # 一天的秒数
     A_DAY_TIME_SECONDS = 24 * 60 * 60
 
+    # ── Visualization Configuration ──
+    # Set to True to enable epoch-by-epoch JSON snapshots for later visualization
+    ENABLE_VISUALIZATION = True
+    # Visualization output directory (relative to project root)
+    VISUALIZATION_OUTPUT_DIR = "visualization_output"
+    # Recording mode: "json" (lightweight) or "folium" (generate HTML maps inline)
+    VISUALIZATION_RECORD_MODE = "json"
+
+    # ── Executed Route Recording ──
+    # Set to True to record the ACTUAL executed route of each vehicle
+    # (nodes truly completed, with delivery/pickup items and carrying state).
+    # Output: executed_routes.json in the visualization output directory.
+    # Default: False (no impact on standard main.py)
+    ENABLE_EXECUTED_ROUTE_RECORDING = False
+
     # 数据集选项，列表为空则选择所有数据集，如[]，[1], [1, 2, 3], [64]
-    selected_instances = [25]
+    selected_instances = [10]
     all_test_instances = range(1, 65)

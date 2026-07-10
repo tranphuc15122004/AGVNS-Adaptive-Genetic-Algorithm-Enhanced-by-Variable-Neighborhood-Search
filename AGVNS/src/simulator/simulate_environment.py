@@ -36,11 +36,13 @@ from src.utils.json_tools import subprocess_function, get_algorithm_calling_comm
 from src.utils.logging_engine import logger
 from src.utils.tools import get_item_dict_from_order_dict, get_order_items_to_be_dispatched_of_cur_time
 from src.utils.tools import get_item_list_of_vehicles
+from src.visualization.visualization_recorder import VisualizationRecorder
 
 
 class SimulateEnvironment(object):
     def __init__(self, initial_time: int, time_interval: int, id_to_order: dict, id_to_vehicle: dict,
-                 id_to_factory: dict, route_map):
+                 id_to_factory: dict, route_map, visualizer: VisualizationRecorder = None,
+                 executed_route_recorder=None, instance_name: str = ""):
         """
         :param initial_time: unix timestamp, unit is second
         :param time_interval: unit is second
@@ -48,6 +50,9 @@ class SimulateEnvironment(object):
         :param id_to_vehicle: 所有车辆, total vehicles
         :param id_to_factory: 工厂信息, total factories
         :param route_map: 路网信息
+        :param visualizer: Optional VisualizationRecorder for epoch-by-epoch snapshots
+        :param executed_route_recorder: Optional ExecutedRouteRecorder for actual vehicle routes
+        :param instance_name: Instance name for output file path (e.g. "instance_1")
         """
         self.initial_time = initial_time
         self.time_interval = time_interval
@@ -60,6 +65,13 @@ class SimulateEnvironment(object):
         self.id_to_vehicle = id_to_vehicle
         self.id_to_factory = id_to_factory
         self.route_map = route_map
+        self.visualizer = visualizer
+        self.executed_route_recorder = executed_route_recorder
+        self.instance_name = instance_name
+
+        # Initialize visualizer with factory and route data
+        if self.visualizer is not None:
+            self.visualizer.set_factory_data(id_to_factory, route_map)
 
         # 不同状态的订单, order with different status
         self.id_to_generated_order_item = {}  # state = 1
@@ -74,6 +86,10 @@ class SimulateEnvironment(object):
 
         # 历史记录保存, save the visited nodes of vehicles and different status of orders for evaluation
         self.history = self.__ini_history()
+
+        # ── Capture initial vehicle carrying state for executed route recording ──
+        if self.executed_route_recorder is not None:
+            self.executed_route_recorder.capture_initial_state(self.id_to_vehicle)
 
         # 目标函数值, objective
         self.total_score = sys.maxsize
@@ -104,6 +120,7 @@ class SimulateEnvironment(object):
                         f"pre time: {datetime.datetime.fromtimestamp(self.pre_time)}")
 
             # update the status of vehicles and orders in a given interval [self.pre_time, self.cur_time]
+            # (visualization snapshot is recorded inside update_input())
             updated_input_info = self.update_input()
 
             # 派单环节, 设计与算法交互
@@ -132,6 +149,36 @@ class SimulateEnvironment(object):
         # 模拟完成车辆剩下的订单
         self.simulate_the_left_ongoing_orders_of_vehicles(self.id_to_vehicle)
 
+        # ── Record FINAL epoch snapshot (Pha 2: simulate_the_left_ongoing_orders) ──
+        # This captures the deliveries that happen AFTER the main loop,
+        # ensuring epoch_summary.json has complete data.
+        if self.visualizer is not None:
+            # Process final simulation results (use max time to capture everything)
+            import sys as _sys
+            self.vehicle_simulator.parse_simulation_result(
+                self.id_to_vehicle, _sys.maxsize)
+            # Update order statuses to reflect final completions
+            self.update_status_of_orders(
+                self.vehicle_simulator.completed_item_ids,
+                self.vehicle_simulator.ongoing_item_ids)
+            # Record the final epoch
+            self.visualizer.record_epoch(
+                cur_time=self.cur_time,
+                id_to_vehicle=self.id_to_vehicle,
+                id_to_generated_order_item={},   # all dispatched
+                id_to_ongoing_order_item={},      # all completed
+                id_to_completed_order_item=self.id_to_completed_order_item,
+                vehicle_simulator=self.vehicle_simulator
+            )
+            logger.info("[Visualization] Final epoch (Phase 2) recorded.")
+
+        # ── Finalize executed route recording ──
+        if self.executed_route_recorder is not None:
+            self.executed_route_recorder.record_final(self.id_to_vehicle)
+            self.executed_route_recorder.finalize()
+            if self.instance_name:
+                self.executed_route_recorder.save(self.instance_name)
+
         # 根据self.history 计算指标
         self.total_score = Evaluator.calculate_total_score(self.history, self.route_map, len(self.id_to_vehicle))
 
@@ -143,6 +190,14 @@ class SimulateEnvironment(object):
         # Get the updated status of vehicles and orders according to the simulator
         self.vehicle_simulator.run(self.id_to_vehicle, self.pre_time)
         self.vehicle_simulator.parse_simulation_result(self.id_to_vehicle, self.cur_time)
+
+        # ── Record executed route nodes BEFORE vehicle state is cleared ──
+        # At this point: simpy has set arrive/leave times on completed nodes,
+        # vehicle.destination + planned_route are still intact,
+        # carrying_items have been updated by the simulator.
+        if self.executed_route_recorder is not None:
+            self.executed_route_recorder.record_epoch(self.id_to_vehicle, self.cur_time)
+
         # 增加历史记录, add history
         self.history.add_history_of_vehicles(self.id_to_vehicle, self.cur_time)
         self.history.add_history_of_order_items(self.id_to_vehicle, self.cur_time)
@@ -150,18 +205,30 @@ class SimulateEnvironment(object):
         # 更新订单状态
         self.update_status_of_orders(self.vehicle_simulator.completed_item_ids, self.vehicle_simulator.ongoing_item_ids)
 
-        # 更新车辆状态
-        self.update_status_of_vehicles(self.vehicle_simulator.vehicle_id_to_cur_position_info,
-                                       self.vehicle_simulator.vehicle_id_to_destination,
-                                       self.vehicle_simulator.vehicle_id_to_carrying_items)
-
         # 根据当前时间选择待分配订单的物料集合
-        # Select the item collection of the orders to be allocated according to the current time
         self.id_to_generated_order_item = get_order_items_to_be_dispatched_of_cur_time(self.id_to_order_item,
                                                                                        self.cur_time)
 
-        # 汇总车辆、订单和路网信息, 作为派单算法的输入
-        # create the input of algorithm
+        # ── Record visualization snapshot BEFORE vehicle state is updated ──
+        # At this point:
+        #   - Order stats are up to date (generated/ongoing/completed)
+        #   - Vehicle.destination/planned_route still contain ALL nodes
+        #     from [pre_time, cur_time] (not yet pruned by update_status_of_vehicles)
+        #   - vehicle_simulator provides node-level trajectory with accurate simpy times
+        if self.visualizer is not None:
+            self.visualizer.record_epoch(
+                cur_time=self.cur_time,
+                id_to_vehicle=self.id_to_vehicle,
+                id_to_generated_order_item=self.id_to_generated_order_item,
+                id_to_ongoing_order_item=self.id_to_ongoing_order_item,
+                id_to_completed_order_item=self.id_to_completed_order_item,
+                vehicle_simulator=self.vehicle_simulator
+            )
+
+        # 更新车辆状态 (removes past nodes from destination/planned_route)
+        self.update_status_of_vehicles(self.vehicle_simulator.vehicle_id_to_cur_position_info,
+                                       self.vehicle_simulator.vehicle_id_to_destination,
+                                       self.vehicle_simulator.vehicle_id_to_carrying_items)
         updated_input_info = InputInfo(self.id_to_generated_order_item, self.id_to_ongoing_order_item,
                                        self.id_to_vehicle, self.id_to_factory, self.route_map)
         logger.info(f"Get {len(self.id_to_generated_order_item)} unallocated order items, "

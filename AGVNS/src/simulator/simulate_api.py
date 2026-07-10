@@ -28,6 +28,8 @@ from src.conf.configs import Configs
 from src.simulator.simulate_environment import SimulateEnvironment
 from src.utils.input_utils import get_initial_data
 from src.utils.logging_engine import logger
+from src.visualization.visualization_recorder import VisualizationRecorder
+from src.visualization.executed_route_recorder import ExecutedRouteRecorder
 
 
 def __initialize(factory_info_file_name: str, route_info_file_name: str, instance_folder: str):
@@ -69,8 +71,34 @@ def __initialize(factory_info_file_name: str, route_info_file_name: str, instanc
         # 初始化车辆位置, set the initial position of vehicles
         __initial_position_of_vehicles(id_to_factory, id_to_vehicle, initial_time)
 
+        # ── Create visualizer if enabled ──
+        visualizer = None
+        instance_name = os.path.basename(instance_folder)
+        if Configs.ENABLE_VISUALIZATION:
+            vis_output_dir = os.path.join(Configs.VISUALIZATION_OUTPUT_DIR, instance_name)
+            visualizer = VisualizationRecorder(
+                output_dir=vis_output_dir,
+                record_mode=Configs.VISUALIZATION_RECORD_MODE
+            )
+            logger.info(f"[Visualization] Enabled, output dir: {vis_output_dir}")
+
+        # ── Create executed route recorder if enabled ──
+        executed_route_recorder = None
+        if Configs.ENABLE_EXECUTED_ROUTE_RECORDING:
+            executed_route_recorder = ExecutedRouteRecorder(
+                output_dir=Configs.VISUALIZATION_OUTPUT_DIR
+            )
+            executed_route_recorder.set_factory_data(id_to_factory)
+            logger.info(f"[ExecutedRoute] Enabled, output dir: {Configs.VISUALIZATION_OUTPUT_DIR}")
+
         # return the instance of the object SimulateEnvironment
-        return SimulateEnvironment(initial_time, time_interval, id_to_order, id_to_vehicle, id_to_factory, route_map)
+        return SimulateEnvironment(
+            initial_time, time_interval,
+            id_to_order, id_to_vehicle, id_to_factory, route_map,
+            visualizer=visualizer,
+            executed_route_recorder=executed_route_recorder,
+            instance_name=instance_name
+        )
     except Exception as exception:
         logger.error("Failed to read initial data")
         logger.error(f"Error: {exception}, {traceback.format_exc()}")
@@ -92,4 +120,10 @@ def simulate(factory_info_file: str, route_info_file: str, instance: str):
     if simulate_env is not None:
         # 模拟器仿真过程
         simulate_env.run()
+
+        # ── Save visualization summary after simulation ──
+        if simulate_env.visualizer is not None:
+            summary_path = simulate_env.visualizer.save_summary_json()
+            logger.info(f"[Visualization] Epoch summary saved to {summary_path}")
+
     return simulate_env.total_score

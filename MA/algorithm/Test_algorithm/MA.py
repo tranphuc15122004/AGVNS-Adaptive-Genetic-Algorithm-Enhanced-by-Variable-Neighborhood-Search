@@ -134,7 +134,7 @@ def Memetic_algorithm(Base_vehicleid_to_plan: Dict[str, List[Node]], route_map: 
 
         # Điều kiện dừng
         #  
-        if stagnant_generations >= 10 :
+        if stagnant_generations >= 5 :
             print("Stopping early due to lack of improvement.")
             break
         
