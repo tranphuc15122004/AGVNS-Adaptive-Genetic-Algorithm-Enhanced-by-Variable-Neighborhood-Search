@@ -1507,7 +1507,7 @@ def deal_old_solution_file(id2VehicleMap):
                 return
 
         # Xóa file solution.json nếu tồn tại
-        file_path = "./algorithm/data_interaction/solution.json"
+        file_path = os.path.join(Configs.algorithm_data_interaction_folder_path, "solution.json")
         if os.path.exists(file_path):
             os.remove(file_path)
             

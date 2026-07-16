@@ -1,6 +1,23 @@
 import os
 
 
+def _parse_selected_instances_from_env():
+    raw_value = os.environ.get("MA_SELECTED_INSTANCES")
+    if raw_value is None:
+        return [25]
+
+    raw_value = raw_value.strip()
+    if not raw_value:
+        return []
+
+    instances = []
+    for part in raw_value.split(","):
+        part = part.strip()
+        if part:
+            instances.append(int(part))
+    return instances
+
+
 class Configs(object):
     MAX_SCORE = 9999999999
 
@@ -43,7 +60,9 @@ class Configs(object):
     route_info_file_path = os.path.join(benchmark_folder_path, route_info_file)
     factory_info_file_path = os.path.join(benchmark_folder_path, factory_info_file)
 
-    algorithm_data_interaction_folder_path = os.path.join(algorithm_folder_path, "data_interaction")
+    algorithm_data_interaction_folder_path = os.path.abspath(
+        os.environ.get("MA_DATA_INTERACTION_DIR", os.path.join(algorithm_folder_path, "data_interaction"))
+    )
     if not os.path.exists(algorithm_data_interaction_folder_path):
         os.makedirs(algorithm_data_interaction_folder_path)
     algorithm_vehicle_input_info_path = os.path.join(algorithm_data_interaction_folder_path, "vehicle_info.json")
@@ -81,9 +100,33 @@ class Configs(object):
     A_DAY_TIME_SECONDS = 24 * 60 * 60
 
     # 数据集选项，列表为空则选择所有数据集，如[]，[1], [1, 2, 3], [64]
-    selected_instances = [25]
+    selected_instances = _parse_selected_instances_from_env()
     #32 - 100
     #22 - 100 ok
     
     all_test_instances = range(1 , 65)
-    
+
+    @classmethod
+    def configure_algorithm_data_dir(cls, folder_path: str):
+        cls.algorithm_data_interaction_folder_path = os.path.abspath(folder_path)
+        os.makedirs(cls.algorithm_data_interaction_folder_path, exist_ok=True)
+        cls.algorithm_vehicle_input_info_path = os.path.join(
+            cls.algorithm_data_interaction_folder_path,
+            "vehicle_info.json",
+        )
+        cls.algorithm_unallocated_order_items_input_path = os.path.join(
+            cls.algorithm_data_interaction_folder_path,
+            "unallocated_order_items.json",
+        )
+        cls.algorithm_ongoing_order_items_input_path = os.path.join(
+            cls.algorithm_data_interaction_folder_path,
+            "ongoing_order_items.json",
+        )
+        cls.algorithm_output_destination_path = os.path.join(
+            cls.algorithm_data_interaction_folder_path,
+            "output_destination.json",
+        )
+        cls.algorithm_output_planned_route_path = os.path.join(
+            cls.algorithm_data_interaction_folder_path,
+            "output_route.json",
+        )

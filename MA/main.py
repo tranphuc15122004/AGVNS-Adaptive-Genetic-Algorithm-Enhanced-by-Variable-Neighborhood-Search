@@ -1,67 +1,98 @@
-# Copyright (C) 2021. Huawei Technologies Co., Ltd. All rights reserved.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE
-
-import traceback
+import argparse
 import datetime
-import numpy as np
+import os
 import sys
+import traceback
+
+import numpy as np
 
 from src.conf.configs import Configs
 from src.simulator.simulate_api import simulate
 from src.utils.log_utils import ini_logger, remove_file_handler_of_logging
 from src.utils.logging_engine import logger
-# from naie.metrics import report
+
+
+def _parse_instances(raw_value: str):
+    raw_value = raw_value.strip()
+    if not raw_value:
+        return []
+
+    instances = []
+    for part in raw_value.split(","):
+        part = part.strip()
+        if part:
+            instances.append(int(part))
+    return instances
+
+
+def _parse_args():
+    parser = argparse.ArgumentParser(
+        description="Run the MA simulator for one or more benchmark instances."
+    )
+    parser.add_argument(
+        "--instances",
+        help="Comma-separated instance ids. Empty means using Configs.selected_instances or all instances.",
+    )
+    parser.add_argument(
+        "--data-dir",
+        help="Override the algorithm data_interaction directory for this process.",
+    )
+    parser.add_argument(
+        "--cpu",
+        type=int,
+        help="Pin this process to a single CPU core on Linux.",
+    )
+    return parser.parse_args()
+
+
+def _configure_runtime(args):
+    if args.data_dir:
+        os.environ["MA_DATA_INTERACTION_DIR"] = os.path.abspath(args.data_dir)
+        Configs.configure_algorithm_data_dir(args.data_dir)
+
+    if args.instances is not None:
+        Configs.selected_instances = _parse_instances(args.instances)
+
+    if args.cpu is not None and hasattr(os, "sched_setaffinity"):
+        os.sched_setaffinity(0, {args.cpu})
+
+
+def _get_test_instances():
+    selected_instances = Configs.selected_instances
+    if selected_instances:
+        return selected_instances
+    return list(Configs.all_test_instances)
+
 
 if __name__ == "__main__":
-    # if you want to traverse all instances, set the selected_instances to []
-    selected_instances = Configs.selected_instances
-
-    if selected_instances:
-        test_instances = selected_instances
-    else:
-        test_instances = Configs.all_test_instances
+    args = _parse_args()
+    _configure_runtime(args)
 
     score_list = []
-    for idx in test_instances:
-        # Initial the log
-        log_file_name = f"dpdp_{datetime.datetime.now().strftime('%y%m%d%H%M%S')}.log"
+    for idx in _get_test_instances():
+        instance = f"instance_{idx}"
+        log_file_name = (
+            f"dpdp_{instance}_{os.getpid()}_{datetime.datetime.now().strftime('%y%m%d%H%M%S%f')}.log"
+        )
         ini_logger(log_file_name)
 
-        instance = "instance_%d" % idx
         logger.info(f"Start to run {instance}")
+        logger.info(f"data_interaction directory: {Configs.algorithm_data_interaction_folder_path}")
+        if args.cpu is not None:
+            logger.info(f"CPU affinity target: core {args.cpu}")
 
         try:
             score = simulate(Configs.factory_info_file, Configs.route_info_file, instance)
             score_list.append(score)
             logger.info(f"Score of {instance}: {score}")
-        except Exception as e:
+        except Exception as exc:
             logger.error("Failed to run simulator")
-            logger.error(f"Error: {e}, {traceback.format_exc()}")
+            logger.error(f"Error: {exc}, {traceback.format_exc()}")
             score_list.append(sys.maxsize)
 
-        # 删除日志句柄
         remove_file_handler_of_logging(log_file_name)
 
     avg_score = np.mean(score_list)
-    # with report(True) as logs:
-    #     logs.log_metrics('score', [avg_score])
     print(score_list)
     print(avg_score)
     print("Happy Ending")

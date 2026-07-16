@@ -80,10 +80,10 @@ def subprocess_function(cmd):
     # Force UTF-8 for child process stdio to avoid UnicodeEncodeError on Windows consoles
     env = os.environ.copy()
     env.setdefault('PYTHONIOENCODING', 'utf-8')
-    sub_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, shell=True, env=env)
+    sub_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, env=env)
     try:
         start_time = time.time()
-        stdout, stderr = sub_process.communicate(timeout=Configs.MAX_RUNTIME_OF_ALGORITHM)
+        stdout, _ = sub_process.communicate(timeout=Configs.MAX_RUNTIME_OF_ALGORITHM)
         end_time = time.time()
         # Be tolerant to encoding issues across platforms; keep ASCII like 'SUCCESS' intact
         message = stdout.decode('utf-8', errors='replace') if isinstance(stdout, (bytes, bytearray)) else str(stdout)
