@@ -1,0 +1,93 @@
+[
+    {
+        "id": "0013570003-1",
+        "type": "BOX",
+        "order_id": "0013570003",
+        "demand": 0.25,
+        "pickup_factory_id": "ffd0ed8719f54294a452ed3e3b6a986c",
+        "delivery_factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+        "creation_time": 1784506437,
+        "committed_completion_time": 1784520837,
+        "load_time": 60,
+        "unload_time": 60,
+        "delivery_state": 1
+    },
+    {
+        "id": "0033520004-1",
+        "type": "HALF_PALLET",
+        "order_id": "0033520004",
+        "demand": 0.5,
+        "pickup_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1784507632,
+        "committed_completion_time": 1784522032,
+        "load_time": 120,
+        "unload_time": 120,
+        "delivery_state": 1
+    },
+    {
+        "id": "0033520004-2",
+        "type": "HALF_PALLET",
+        "order_id": "0033520004",
+        "demand": 0.5,
+        "pickup_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1784507632,
+        "committed_completion_time": 1784522032,
+        "load_time": 120,
+        "unload_time": 120,
+        "delivery_state": 1
+    },
+    {
+        "id": "0033520004-3",
+        "type": "BOX",
+        "order_id": "0033520004",
+        "demand": 0.25,
+        "pickup_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1784507632,
+        "committed_completion_time": 1784522032,
+        "load_time": 60,
+        "unload_time": 60,
+        "delivery_state": 1
+    },
+    {
+        "id": "0038220005-1",
+        "type": "BOX",
+        "order_id": "0038220005",
+        "demand": 0.25,
+        "pickup_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "delivery_factory_id": "32ab2049f3fb437881ff3912470d7840",
+        "creation_time": 1784507902,
+        "committed_completion_time": 1784522302,
+        "load_time": 60,
+        "unload_time": 60,
+        "delivery_state": 1
+    },
+    {
+        "id": "0038220005-2",
+        "type": "BOX",
+        "order_id": "0038220005",
+        "demand": 0.25,
+        "pickup_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "delivery_factory_id": "32ab2049f3fb437881ff3912470d7840",
+        "creation_time": 1784507902,
+        "committed_completion_time": 1784522302,
+        "load_time": 60,
+        "unload_time": 60,
+        "delivery_state": 1
+    },
+    {
+        "id": "0038220005-3",
+        "type": "BOX",
+        "order_id": "0038220005",
+        "demand": 0.25,
+        "pickup_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "delivery_factory_id": "32ab2049f3fb437881ff3912470d7840",
+        "creation_time": 1784507902,
+        "committed_completion_time": 1784522302,
+        "load_time": 60,
+        "unload_time": 60,
+        "delivery_state": 1
+    }
+]

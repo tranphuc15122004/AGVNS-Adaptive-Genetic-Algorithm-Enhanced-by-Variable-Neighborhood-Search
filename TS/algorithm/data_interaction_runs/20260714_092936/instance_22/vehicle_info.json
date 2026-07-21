@@ -1,0 +1,320 @@
+[
+    {
+        "id": "V_1",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_1",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "arrive_time_at_current_factory": 1784072796.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_2",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_2",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "d1f8de642d734931be957336196d996d",
+        "arrive_time_at_current_factory": 1784080404.0,
+        "leave_time_at_current_factory": 1784082564.0,
+        "carrying_items": [
+            "2356250297-1",
+            "2347220294-1"
+        ],
+        "destination": {
+            "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+            "delivery_item_list": [
+                "2347220294-1",
+                "2356250297-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 1784085600.0,
+            "leave_time": 1784087760.0
+        }
+    },
+    {
+        "id": "V_3",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_3",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "arrive_time_at_current_factory": 1784063628.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_4",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_4",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "arrive_time_at_current_factory": 1784071896.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_5",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_5",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "7fb0acc4e2634440ba26a7ebc0040dc2",
+        "arrive_time_at_current_factory": 1784079924.0,
+        "leave_time_at_current_factory": 1784081964.0,
+        "carrying_items": [
+            "2338100292-1",
+            "2300480285-1",
+            "2300480285-2",
+            "2300480285-3",
+            "2352210296-1"
+        ],
+        "destination": {
+            "factory_id": "62cbdc8fbbc5452da72e83705b4e19af",
+            "delivery_item_list": [
+                "2352210296-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 1784082000.0,
+            "leave_time": 1784084040.0
+        }
+    },
+    {
+        "id": "V_6",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_6",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "arrive_time_at_current_factory": 1784079888.0,
+        "leave_time_at_current_factory": 1784081988.0,
+        "carrying_items": [
+            "2319310286-1",
+            "2356570298-1",
+            "2356570298-2",
+            "2356570298-3"
+        ],
+        "destination": {
+            "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+            "delivery_item_list": [
+                "2356570298-3",
+                "2356570298-2",
+                "2356570298-1",
+                "2319310286-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 1784082096.0,
+            "leave_time": 1784084196.0
+        }
+    },
+    {
+        "id": "V_7",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_7",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "ee187c7680604a9fa1f3d3837610c11a",
+        "arrive_time_at_current_factory": 1784071980.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_8",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_8",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "arrive_time_at_current_factory": 1784072688.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_9",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_9",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "",
+        "arrive_time_at_current_factory": 0,
+        "leave_time_at_current_factory": 0,
+        "carrying_items": [
+            "2334000290-1",
+            "2334000290-2",
+            "2259330283-1"
+        ],
+        "destination": {
+            "factory_id": "f6faef4b36e743328800b961aced4a2c",
+            "delivery_item_list": [
+                "2259330283-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 1784082000.0,
+            "leave_time": 1784084040.0
+        }
+    },
+    {
+        "id": "V_10",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_10",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "arrive_time_at_current_factory": 1784074416.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_11",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_11",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "arrive_time_at_current_factory": 1784080644.0,
+        "leave_time_at_current_factory": 1784083884.0,
+        "carrying_items": [
+            "2359400300-1",
+            "2359400300-2",
+            "2359400300-3",
+            "2359400300-4",
+            "2359400300-5",
+            "2359400300-6",
+            "2333240288-1",
+            "2358100299-1",
+            "2338100291-1",
+            "2345390293-1",
+            "2324550287-1"
+        ],
+        "destination": {
+            "factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+            "delivery_item_list": [
+                "2324550287-1",
+                "2345390293-1",
+                "2338100291-1",
+                "2358100299-1",
+                "2333240288-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 1784084772.0,
+            "leave_time": 1784087292.0
+        }
+    },
+    {
+        "id": "V_12",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_12",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "206128e3ee9a458d9cfd053cedc0fad6",
+        "arrive_time_at_current_factory": 1784067144.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_13",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_13",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+        "arrive_time_at_current_factory": 1784071608.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_14",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_14",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "arrive_time_at_current_factory": 1784066004.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_15",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_15",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "arrive_time_at_current_factory": 1784040708.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_16",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_16",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "arrive_time_at_current_factory": 1784065728.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_17",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_17",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "arrive_time_at_current_factory": 1784051736.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_18",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_18",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "arrive_time_at_current_factory": 1784075196.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_19",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_19",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "arrive_time_at_current_factory": 1784076840.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_20",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_20",
+        "update_time": 1784080800.0,
+        "cur_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "arrive_time_at_current_factory": 1784054748.0,
+        "leave_time_at_current_factory": 1784080800.0,
+        "carrying_items": [],
+        "destination": null
+    }
+]
