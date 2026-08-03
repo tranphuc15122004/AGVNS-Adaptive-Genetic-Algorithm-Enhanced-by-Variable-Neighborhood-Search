@@ -837,17 +837,17 @@ def multi_pd_group_relocate(vehicleid_to_plan: Dict[str , List[Node]], id_to_veh
     return is_improved
 
 
-def improve_ci_path_by_2_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple]  , is_limited : bool = False):
+def improve_ci_path_by_2_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple]  , is_limited : bool = False, limit_time: float = math.inf):
     if config.is_timeout():
         return False
     
+    op_start_time = time.time()
     is_improved = False
-    cost0 = total_cost(id_to_vehicle , route_map , vehicleid_to_plan)
-    best_node_list : List[Node] = []
+    best_node_list = None
     
     for vehicleID , route_node_list in vehicleid_to_plan.items():
         # Kiểm tra timeout cho mỗi vehicle
-        if config.is_timeout():
+        if config.is_timeout() or (time.time() - op_start_time) > limit_time:
             break
         
         vehicle = id_to_vehicle.get(vehicleID)
@@ -863,10 +863,12 @@ def improve_ci_path_by_2_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_ve
         
         for i in range(begin_pos, route_node_len - 3):
             # Kiểm tra timeout trong vòng lặp ngoài
-            if config.is_timeout():
+            if config.is_timeout() or (time.time() - op_start_time) > limit_time:
                 break
             
             for j in range(i + 2, route_node_len):
+                if config.is_timeout() or (time.time() - op_start_time) > limit_time:
+                    break
                 # bản sao nông
                 temp_route_node_list = route_node_list[:]
                 node_i = temp_route_node_list[i]
@@ -891,9 +893,7 @@ def improve_ci_path_by_2_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_ve
                                 continue
                             
                             cost = cost_of_a_route(temp_route_node_list, vehicle , id_to_vehicle ,route_map , vehicleid_to_plan)
-                            print(cost)
                             if cost < min_cost:
-                                print("tried case 1 improved", file= sys.stderr  )
                                 min_cost = cost
                                 best_node_list = temp_route_node_list[:]
                                 
@@ -917,9 +917,7 @@ def improve_ci_path_by_2_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_ve
                             continue
                         
                         cost = cost_of_a_route(temp_route_node_list, vehicle , id_to_vehicle , route_map , vehicleid_to_plan)
-                        print(cost)
                         if cost < min_cost:
-                            print("tried case 2 improved" , file= sys.stderr )
                             min_cost = cost
                             best_node_list = temp_route_node_list[:]
                 
@@ -940,9 +938,7 @@ def improve_ci_path_by_2_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_ve
                         continue
                     
                     cost = cost_of_a_route(temp_route_node_list, vehicle , id_to_vehicle , route_map , vehicleid_to_plan)
-                    print(cost)
                     if cost < min_cost:
-                        print("tried case 4 improved", file= sys.stderr  )
                         min_cost = cost
                         best_node_list = temp_route_node_list[:]
                 
@@ -953,19 +949,15 @@ def improve_ci_path_by_2_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_ve
             if is_route_improved and is_limited:
                 break
         
-        if min_cost < cost0 + config.addDelta:
+        current_route_cost = cost_of_a_route(route_node_list, vehicle, id_to_vehicle,
+                                             route_map, vehicleid_to_plan)
+        if best_node_list is not None and min_cost < current_route_cost:
+            vehicleid_to_plan[vehicleID] = best_node_list
             is_improved = True
             is_route_improved = True
         
-        if is_route_improved and best_node_list is not None:
-            vehicleid_to_plan[vehicleID] = best_node_list
-            is_improved = True
-        
         if is_improved and is_limited:
             break
-        if config.is_timeout():
-            print('Timeout at 2opt !!!!!!!!!!' , file= sys.stderr)
+        if config.is_timeout() or (time.time() - op_start_time) > limit_time:
             return is_improved
-    
-    print(is_improved)
     return is_improved

@@ -80,21 +80,21 @@ class SimulationWrapper:
             with OutputCapturer(self.output_queue, instance_id, socketio, self.log_file_path , wrapper= self) as _:
                 idx = int(instance_id.split('_')[1])
                 if idx <= 64:
-                    score = simulate(
+                    score, elapsed = simulate(
                         SimulatorConfigs.factory_info_file,
                         SimulatorConfigs.route_info_file,
                         instance_id,
                         algorithm_name
                     )
                 else:
-                    score = simulate(
+                    score, elapsed = simulate(
                         SimulatorConfigs.customed_factory_info_file,
                         SimulatorConfigs.customed_route_info_file,
                         instance_id,
                         algorithm_name
                     )
                 self.scores.append(score)
-                logger.info(f"Score of {instance_id}: {score}")
+                logger.info(f"Score of {instance_id}: {score}, runtime: {elapsed:.2f}s")
                 
                 # Emit event khi hoàn thành
                 if socketio:

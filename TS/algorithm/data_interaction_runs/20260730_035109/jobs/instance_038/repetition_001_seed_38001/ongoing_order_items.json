@@ -1,0 +1,28 @@
+[
+    {
+        "id": "2357180996-1",
+        "type": "PALLET",
+        "order_id": "2357180996",
+        "demand": 1,
+        "pickup_factory_id": "d1f8de642d734931be957336196d996d",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1785455838,
+        "committed_completion_time": 1785470238,
+        "load_time": 240,
+        "unload_time": 240,
+        "delivery_state": 2
+    },
+    {
+        "id": "1740130748-1",
+        "type": "HALF_PALLET",
+        "order_id": "1740130748",
+        "demand": 0.5,
+        "pickup_factory_id": "99f05d5e71104b04838cff91b231a002",
+        "delivery_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "creation_time": 1785433213,
+        "committed_completion_time": 1785447613,
+        "load_time": 120,
+        "unload_time": 120,
+        "delivery_state": 2
+    }
+]

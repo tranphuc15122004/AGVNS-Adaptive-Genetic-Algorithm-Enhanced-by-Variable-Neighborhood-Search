@@ -38,7 +38,14 @@ def delete_files(file_folder, max_num):
                 total_files.append(item)
         total_files.sort()
         for i in range(delete_num):
-            os.remove(os.path.join(file_folder, total_files[i]))
+            file_path = os.path.join(file_folder, total_files[i])
+            try:
+                os.remove(file_path)
+            except FileNotFoundError:
+                # Race condition: another parallel process already deleted this file
+                pass
+            except Exception as e:
+                logger.warning(f"Failed to delete log file {file_path}, reason: {e}")
 
 
 # 计算目标文件夹下的文件数量, 不递归文件夹

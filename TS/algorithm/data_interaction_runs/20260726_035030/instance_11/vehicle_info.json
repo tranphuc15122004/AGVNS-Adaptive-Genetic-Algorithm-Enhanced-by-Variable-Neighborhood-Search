@@ -1,0 +1,86 @@
+[
+    {
+        "id": "V_1",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_1",
+        "update_time": 1785116400.0,
+        "cur_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "arrive_time_at_current_factory": 1785115824.0,
+        "leave_time_at_current_factory": 1785119304.0,
+        "carrying_items": [
+            "2355190100-1",
+            "2355190100-2",
+            "2355190100-3"
+        ],
+        "destination": {
+            "factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+            "delivery_item_list": [
+                "2355190100-3",
+                "2355190100-2",
+                "2355190100-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 1785119484.0,
+            "leave_time": 1785121644.0
+        }
+    },
+    {
+        "id": "V_2",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_2",
+        "update_time": 1785116400.0,
+        "cur_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "arrive_time_at_current_factory": 1785115608.0,
+        "leave_time_at_current_factory": 1785117768.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_3",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_3",
+        "update_time": 1785116400.0,
+        "cur_factory_id": "206128e3ee9a458d9cfd053cedc0fad6",
+        "arrive_time_at_current_factory": 1785112368.0,
+        "leave_time_at_current_factory": 1785116400.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_4",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_4",
+        "update_time": 1785116400.0,
+        "cur_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "arrive_time_at_current_factory": 1785115908.0,
+        "leave_time_at_current_factory": 1785117768.0,
+        "carrying_items": [
+            "2251510093-1"
+        ],
+        "destination": {
+            "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+            "delivery_item_list": [
+                "2251510093-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 1785117876.0,
+            "leave_time": 1785119736.0
+        }
+    },
+    {
+        "id": "V_5",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_5",
+        "update_time": 1785116400.0,
+        "cur_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "arrive_time_at_current_factory": 1785116376.0,
+        "leave_time_at_current_factory": 1785118656.0,
+        "carrying_items": [],
+        "destination": null
+    }
+]

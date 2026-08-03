@@ -331,6 +331,29 @@ Kết quả tất cả instances được in dưới dạng list scores và aver
 Happy Ending
 ```
 
+#### Chạy lặp nhiều instances song song (TS)
+
+TS có queue runner để chạy nhiều instances và nhiều repetitions với thư mục
+riêng cho từng job. Ví dụ chạy instances 1 đến 20, mỗi instance 5 lần:
+
+```bash
+cd TS
+python run_parallel.py --instances 1-20 --repetitions 5 --workers 20 --base-seed 0
+```
+
+`--workers` giới hạn số job chạy đồng thời; có thể dùng `--cores 0,1,2,3`
+để chỉ định các CPU core. Mỗi job nhận seed khác nhau theo công thức
+`base_seed + instance_id * 1000 + repetition`.
+
+Mỗi batch được lưu tại `TS/algorithm/data_interaction_runs/<batch_id>/`, gồm
+`manifest.json`, `results.csv`, `summary.json`, và workspace riêng trong
+`jobs/instance_<id>/repetition_<n>_seed_<seed>/`. Job lỗi được ghi nhận và
+queue tiếp tục chạy; process kết thúc với mã lỗi nếu batch có job thất bại.
+`results.csv` lưu riêng `simulation_runtime_seconds` (runtime do `simulate()`
+trả về), `wall_time_seconds` (thời gian process do queue đo), và tổng thời gian
+dispatch của algorithm. `summary.json` thống kê min/mean/max/std runtime cho
+từng instance.
+
 ---
 
 ## 📚 Tài Liệu Tham Khảo

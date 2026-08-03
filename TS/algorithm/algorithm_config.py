@@ -1,6 +1,12 @@
 # Timeout checking utilities
+import os
+import random
 import time
-from collections import deque   
+
+try:
+    import numpy as np
+except ImportError:  # numpy is optional for the standalone algorithm process
+    np = None
 
 """Problem constant"""
 APPROACHING_DOCK_TIME = 1800
@@ -11,16 +17,47 @@ debugPeriod = "0010-0020"
 addDelta = 400000.0
 LS_METHODS = ['PDPairExchange', 'BlockExchange', 'BlockRelocate', 'mPDG', '2opt']
 BEGIN_TIME = 0
-ALGO_TIME_LIMIT = 9*60 + 30
+ALGO_TIME_LIMIT = 570
 DELAY_DISPATCH = False
 CROSSOVER_TYPE_RATIO = 0.0  
 USE_ADAPTIVE_ORDER_DISCRIMINATE = True
 WAITING_WEIGHT = 0
 
+# Classical Tabu Search configuration.
+#
+# Comparison scale: MA evaluates up to 20 offspring in each of 20 generations
+# (about 400 solutions); AGVNS uses 40 individuals for 20 generations
+# (about 800).  TS therefore evaluates up to 30 neighbours in each of 20
+# iterations (about 600), which sits between those two baselines.  The 8-second
+# cap is deliberately per dynamic dispatch decision: using the shared 570s
+# process limit here would again make a multi-tick DPDP simulation impractical.
+TS_RANDOM_SEED = 0
+TS_TABU_LIST_SIZE = 20
+TS_NEIGHBORS_PER_OPERATOR = 6  # 5 neighbourhoods x 6 = at most 30 candidates.
+TS_SEARCH_TIME_LIMIT = 8.0
+TS_MAX_ITERATIONS = 20
+TS_STAGNATION_LIMIT = 10
+TS_OPERATOR_TIME_LIMIT = 0.25
+
 def set_begin_time():
     """Set the start time for algorithm execution"""
     global BEGIN_TIME
     BEGIN_TIME = time.time()
+
+def set_random_seed(seed=None):
+    """Seed all random sources used by the TS child process.
+
+    ``TS_RANDOM_SEED`` is inherited by every simulator-launched subprocess;
+    an explicit argument is useful for focused tests.
+    """
+    global TS_RANDOM_SEED
+    if seed is None:
+        seed = os.environ.get("TS_RANDOM_SEED", TS_RANDOM_SEED)
+    TS_RANDOM_SEED = int(seed)
+    random.seed(TS_RANDOM_SEED)
+    if np is not None:
+        np.random.seed(TS_RANDOM_SEED)
+    return TS_RANDOM_SEED
 
 def is_timeout() -> bool:
     """Check if algorithm has exceeded time limit"""
@@ -33,14 +70,14 @@ def get_remaining_time() -> float:
 
 """GA configuration"""
 POPULATION_SIZE = 20
-NUMBER_OF_GENERATION = 15
+NUMBER_OF_GENERATION = 20
 MUTATION_RATE = 0.25
-LS_MAX = 15
+LS_MAX = 20
 IMPROVED_IN_CROSS = 0
 IMPROVED_IN_MUTATION = 0
 IMPROVED_IN_DIVER = 0
 """Per local search time limit (seconds). Each LS operator should stop when exceeding this budget."""
-LS_MAX_TIME_PER_OP = 5  # seconds (adjustable)
+LS_MAX_TIME_PER_OP = 8  # seconds (adjustable)
 LS_MAX_TIME_IN_SINGLE = 1
 
 # GA defensive guards

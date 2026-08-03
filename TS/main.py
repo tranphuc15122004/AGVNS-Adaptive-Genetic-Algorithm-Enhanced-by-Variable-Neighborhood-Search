@@ -27,7 +27,7 @@ def _parse_instances(raw_value: str):
 
 def _parse_args():
     parser = argparse.ArgumentParser(
-        description="Run the MA simulator for one or more benchmark instances."
+        description="Run the pure Tabu Search simulator for one or more benchmark instances."
     )
     parser.add_argument(
         "--instances",
@@ -42,10 +42,20 @@ def _parse_args():
         type=int,
         help="Pin this process to a single CPU core on Linux.",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Seed used by the pure TS algorithm subprocesses (default: 0).",
+    )
     return parser.parse_args()
 
 
 def _configure_runtime(args):
+    # The simulator calls main_algorithm.py in a fresh subprocess on every
+    # dispatch tick.  Environment propagation keeps that child deterministic.
+    os.environ["TS_RANDOM_SEED"] = str(args.seed)
+
     if args.data_dir:
         os.environ["MA_DATA_INTERACTION_DIR"] = os.path.abspath(args.data_dir)
         Configs.configure_algorithm_data_dir(args.data_dir)
@@ -69,6 +79,7 @@ if __name__ == "__main__":
     _configure_runtime(args)
 
     score_list = []
+    failed_instances = []
     for idx in _get_test_instances():
         instance = f"instance_{idx}"
         log_file_name = (
@@ -80,15 +91,17 @@ if __name__ == "__main__":
         logger.info(f"data_interaction directory: {Configs.algorithm_data_interaction_folder_path}")
         if args.cpu is not None:
             logger.info(f"CPU affinity target: core {args.cpu}")
+        logger.info(f"TS random seed: {args.seed}")
 
         try:
-            score = simulate(Configs.factory_info_file, Configs.route_info_file, instance)
+            score, elapsed = simulate(Configs.factory_info_file, Configs.route_info_file, instance)
             score_list.append(score)
-            logger.info(f"Score of {instance}: {score}")
+            logger.info(f"Score of {instance}: {score}, runtime: {elapsed:.6f}s")
         except Exception as exc:
             logger.error("Failed to run simulator")
             logger.error(f"Error: {exc}, {traceback.format_exc()}")
             score_list.append(sys.maxsize)
+            failed_instances.append(instance)
 
         remove_file_handler_of_logging(log_file_name)
 
@@ -96,3 +109,6 @@ if __name__ == "__main__":
     print(score_list)
     print(avg_score)
     print("Happy Ending")
+    if failed_instances:
+        logger.error(f"Failed instances: {', '.join(failed_instances)}")
+        sys.exit(1)

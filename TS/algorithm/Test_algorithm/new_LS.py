@@ -1669,3 +1669,15 @@ def new_multi_pd_group_relocate(vehicleid_to_plan: Dict[str , List[Node]], id_to
                     if is_limited:
                         break
     return is_improved
+
+
+def new_two_opt(vehicleid_to_plan: Dict[str, List[Node]],
+                id_to_vehicle: Dict[str, Vehicle],
+                route_map: Dict[tuple, tuple],
+                limit_time: float,
+                is_limited: bool = False) -> bool:
+    """Run the existing FILO-preserving 2-opt LS with the shared LS contract."""
+    if config.is_timeout():
+        return False
+    return improve_ci_path_by_2_opt(vehicleid_to_plan, id_to_vehicle,
+                                    route_map, is_limited, limit_time)

@@ -1,0 +1,15 @@
+[
+    {
+        "id": "2354040050-1",
+        "type": "HALF_PALLET",
+        "order_id": "2354040050",
+        "demand": 0.5,
+        "pickup_factory_id": "5920212e6b0b46b198b9677bfe74f35d",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1785110044,
+        "committed_completion_time": 1785124444,
+        "load_time": 120,
+        "unload_time": 120,
+        "delivery_state": 2
+    }
+]

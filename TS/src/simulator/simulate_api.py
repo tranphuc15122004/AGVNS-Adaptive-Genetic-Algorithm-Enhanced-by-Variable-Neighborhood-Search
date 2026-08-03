@@ -88,8 +88,11 @@ def __initial_position_of_vehicles(id_to_factory: dict, id_to_vehicle: dict, ini
 
 
 def simulate(factory_info_file: str, route_info_file: str, instance: str , algorithm_name : str = 'GA'):
+    _start_wall = time.time()
     simulate_env = __initialize(factory_info_file, route_info_file, instance)
     if simulate_env is not None:
         # 模拟器仿真过程
         simulate_env.run()
-    return simulate_env.total_score
+    elapsed = time.time() - _start_wall
+    logger.info(f"Simulation {instance} completed in {elapsed:.2f} seconds")
+    return simulate_env.total_score, elapsed

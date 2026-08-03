@@ -1,13 +1,10 @@
 import sys
 import time
+import copy
 from typing import Dict , List
 from algorithm.In_and_Out import *
 from algorithm.Object import Chromosome
 from algorithm.engine import *
-from algorithm.Test_algorithm.new_engine import *
-from algorithm.Test_algorithm.new_LS import *
-from algorithm.Test_algorithm.MA import Memetic_algorithm
-from algorithm.Test_algorithm.MA_engine import *
 from algorithm.Test_algorithm.tabu_search import Tabu_Search
 import algorithm.algorithm_config as Config
 from src.conf.configs import Configs
@@ -18,6 +15,7 @@ input_directory = Configs.algorithm_data_interaction_folder_path
 
 
 def main():
+    Config.set_random_seed()
     Config.set_begin_time()
     id_to_factory , route_map ,  id_to_vehicle , id_to_unlocated_items ,  id_to_ongoing_items , id_to_allorder = Input()
     deal_old_solution_file(id_to_vehicle)
@@ -35,17 +33,15 @@ def main():
     print()
     
     
-    Pre_Unongoing_super_nodes , Base_vehicleid_to_plan = get_UnongoingSuperNode(vehicleid_to_plan , id_to_vehicle)
-    base_plan_before_preinitialization = copy.deepcopy(Base_vehicleid_to_plan)
-    
-    orderId_to_nodelist =  Pre_population_initialization_2(Base_vehicleid_to_plan , Pre_Unongoing_super_nodes , id_to_factory , route_map , id_to_vehicle , id_to_unlocated_items , new_order_itemIDs)
-    
-    copy_base_vehicleid_to_plan = base_plan_before_preinitialization
+    # Pure TS starts directly from the restored dynamic scene.  GA population
+    # pre-initialisation is intentionally not part of this baseline.
+    restored_vehicleid_to_plan = copy.deepcopy(vehicleid_to_plan)
+
+    initial_cost = total_cost(id_to_vehicle, route_map, restored_vehicleid_to_plan)
     best_chromosome : Chromosome = Tabu_Search(
-        copy_base_vehicleid_to_plan,
+        restored_vehicleid_to_plan,
         route_map,
         id_to_vehicle,
-        orderId_to_nodelist,
         id_to_factory,
         id_to_unlocated_items,
         new_order_itemIDs,
@@ -55,11 +51,12 @@ def main():
         best_chromosome : Chromosome = Chromosome(vehicleid_to_plan , route_map , id_to_vehicle)
     
     print()
-    print('Route before:', get_route_after(base_plan_before_preinitialization , {}))
-    
+    print('Route before:', get_route_after(restored_vehicleid_to_plan , {}))
+    print(f'[TS] Fitness before TS: {initial_cost:.2f}')
+
     print()
     print('Route after:', get_route_after(best_chromosome.solution , {}))
-    print(f'[TS] Fitness after MA: {best_chromosome.fitness:.2f}')
+    print(f'[TS] Fitness after TS: {best_chromosome.fitness:.2f}')
     print()
     
     #Ket thuc thuat toan

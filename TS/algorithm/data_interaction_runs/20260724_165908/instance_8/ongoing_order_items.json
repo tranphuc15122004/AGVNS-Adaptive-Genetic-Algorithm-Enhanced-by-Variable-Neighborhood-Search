@@ -1,0 +1,67 @@
+[
+    {
+        "id": "0002240001-1",
+        "type": "PALLET",
+        "order_id": "0002240001",
+        "demand": 1,
+        "pickup_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1784851344,
+        "committed_completion_time": 1784865744,
+        "load_time": 240,
+        "unload_time": 240,
+        "delivery_state": 2
+    },
+    {
+        "id": "0002240001-2",
+        "type": "PALLET",
+        "order_id": "0002240001",
+        "demand": 1,
+        "pickup_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1784851344,
+        "committed_completion_time": 1784865744,
+        "load_time": 240,
+        "unload_time": 240,
+        "delivery_state": 2
+    },
+    {
+        "id": "0002240001-3",
+        "type": "PALLET",
+        "order_id": "0002240001",
+        "demand": 1,
+        "pickup_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1784851344,
+        "committed_completion_time": 1784865744,
+        "load_time": 240,
+        "unload_time": 240,
+        "delivery_state": 2
+    },
+    {
+        "id": "0002240001-4",
+        "type": "PALLET",
+        "order_id": "0002240001",
+        "demand": 1,
+        "pickup_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1784851344,
+        "committed_completion_time": 1784865744,
+        "load_time": 240,
+        "unload_time": 240,
+        "delivery_state": 2
+    },
+    {
+        "id": "0002240001-5",
+        "type": "PALLET",
+        "order_id": "0002240001",
+        "demand": 1,
+        "pickup_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1784851344,
+        "committed_completion_time": 1784865744,
+        "load_time": 240,
+        "unload_time": 240,
+        "delivery_state": 2
+    }
+]

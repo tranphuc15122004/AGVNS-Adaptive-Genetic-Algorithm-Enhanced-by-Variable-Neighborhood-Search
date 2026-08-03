@@ -15,6 +15,93 @@ from src.conf.configs import Configs
 
 input_directory = Configs.algorithm_data_interaction_folder_path   
 
+
+def _vehicle_sort_key(vehicle_id: str) -> Tuple[int, str, int, str]:
+    """Sort conventional ``V_<number>`` IDs numerically and deterministically."""
+    match = re.match(r"^(.*)_(\d+)$", vehicle_id)
+    if match:
+        return 0, match.group(1), int(match.group(2)), ""
+    return 1, vehicle_id, 0, vehicle_id
+
+
+def _item_sort_key(item_id: str, delivery: bool = False) -> Tuple[int, str, int, str]:
+    """Sort item IDs by numeric suffix, preserving FILO delivery order.
+
+    Pickup items are loaded in increasing sequence.  Items delivered from the
+    same pickup group must be visited in the reverse sequence, because
+    ``isFeasible`` consumes delivery lists from the top of the FILO stack.
+    """
+    match = re.match(r"^(.*)-(\d+)$", item_id)
+    if match:
+        sequence = int(match.group(2))
+        return 0, match.group(1), -sequence if delivery else sequence, item_id
+    return 1, item_id, 0, item_id
+
+
+def _restore_canonical_route_after(
+        route_after: str,
+        vehicleid_to_plan: Dict[str, List[Node]],
+        id_to_factory: Dict[str, Factory],
+        id_to_allorder: Dict[str, OrderItem],
+        complete_item_ids: List[str],
+        on_vehicle_item_ids: List[str],
+) -> bool:
+    """Restore the canonical JSON representation emitted by ``get_route_after``.
+
+    ``False`` signals the legacy, human-readable representation so old
+    ``solution.json`` files can still be restored by the compatibility path.
+    """
+    try:
+        encoded_routes = json.loads(route_after)
+    except (TypeError, json.JSONDecodeError):
+        return False
+
+    if not isinstance(encoded_routes, list):
+        return False
+
+    complete_ids = set(complete_item_ids)
+    on_vehicle_ids = set(on_vehicle_item_ids)
+    for encoded_route in encoded_routes:
+        if (not isinstance(encoded_route, list) or len(encoded_route) != 2 or
+                not isinstance(encoded_route[0], str) or
+                not isinstance(encoded_route[1], list)):
+            return False
+
+        vehicle_id, encoded_nodes = encoded_route
+        if vehicle_id not in vehicleid_to_plan:
+            continue
+
+        restored_route: List[Node] = []
+        for encoded_node in encoded_nodes:
+            if (not isinstance(encoded_node, list) or len(encoded_node) != 3 or
+                    not isinstance(encoded_node[0], str) or
+                    not isinstance(encoded_node[1], list) or
+                    not isinstance(encoded_node[2], list)):
+                return False
+
+            factory_id, pickup_ids, delivery_ids = encoded_node
+            factory = id_to_factory.get(factory_id)
+            if factory is None:
+                return False
+
+            pickup_items = [
+                id_to_allorder[item_id] for item_id in pickup_ids
+                if (isinstance(item_id, str) and item_id in id_to_allorder and
+                    item_id not in on_vehicle_ids and item_id not in complete_ids)
+            ]
+            delivery_items = [
+                id_to_allorder[item_id] for item_id in delivery_ids
+                if (isinstance(item_id, str) and item_id in id_to_allorder and
+                    item_id not in complete_ids)
+            ]
+            if pickup_items or delivery_items:
+                restored_route.append(Node(
+                    factory_id, delivery_items, pickup_items, None, None,
+                    factory.lng, factory.lat,
+                ))
+        vehicleid_to_plan[vehicle_id] = restored_route
+    return True
+
 def restore_scene_with_single_node(vehicleid_to_plan: Dict[str , List[Node]], id_to_ongoing_items: Dict[str , OrderItem], id_to_unlocated_items: Dict[str , OrderItem], id_to_vehicle: Dict[str , Vehicle] , id_to_factory: Dict[str , Factory], id_to_allorder: Dict[str , OrderItem]) -> List[str]:
     onVehicleOrderItems = ''
     unallocatedOrderItems = ''
@@ -59,6 +146,17 @@ def restore_scene_with_single_node(vehicleid_to_plan: Dict[str , List[Node]], id
                 config.IMPROVED_IN_MUTATION  = int(before_solution.get("improved_in_mutation" , 0))
                 config.IMPROVED_IN_DIVER  = int(before_solution.get("improved_in_diver" , 0))
                 
+                restored_canonical_route = _restore_canonical_route_after(
+                    routeBefore,
+                    vehicleid_to_plan,
+                    id_to_factory,
+                    id_to_allorder,
+                    complete_item_array,
+                    curr_on_vehicle_items,
+                )
+                if restored_canonical_route:
+                    splited_routeBefore = []
+
                 for route in splited_routeBefore:
                     if not route or len(route) < 3:
                         continue
@@ -312,92 +410,44 @@ def merge_node(id_to_vehicle: Dict[str , Vehicle], vehicleid_to_plan: Dict[str, 
                     i += 1  # Chỉ tăng index khi không xóa phần tử
         vehicleid_to_plan[vehicle_id] = origin_planned_route
         
-def get_route_after(vehicleid_to_plan: Dict[str , list[Node]], vehicleid_to_destination : Dict[str , Node]):
-    # Helper: build multi-suffix id string like 1648150066-1-2-3
-    def _format_multi_suffix(items: List[OrderItem], kind: str) -> str:
-        if not items:
-            return ""
-        # Group by base prefix to be safe; typical case: all items share same base
-        groups: Dict[str, List[int]] = {}
-        for it in items:
-            try:
-                base, suf = it.id.split("-")
-                suf_n = int(suf)
-            except Exception:
-                # Fallback: treat entire id as base, without numeric suffix
-                base, suf_n = it.id, None
-            groups.setdefault(base, [])
-            if suf_n is not None:
-                groups[base].append(suf_n)
-        # Build string; for multiple bases, join segments with '+'
-        segments: List[str] = []
-        for base, suffixes in groups.items():
-            if kind == 'pickup':
-                suffixes = sorted(suffixes)
-            else:
-                suffixes = sorted(suffixes, reverse=True)
-            if suffixes:
-                seg = base + "-" + "-".join(str(s) for s in suffixes)
-            else:
-                seg = base
-            segments.append(seg)
-        # Typical case: one segment
-        return "+".join(segments)
-    
-    route_str = ""
-    vehicle_num = len(vehicleid_to_plan)
-    vehicle_routes = [""] * vehicle_num
-    index = 0
-    
-    if vehicleid_to_destination is None or len(vehicleid_to_destination) == 0:
-        for i in range(vehicle_num):
-            vehicle_routes[i] = "["
-    for vehicle_id, first_node in vehicleid_to_destination.items():
-        if first_node is not None:
-            pickup_size = len(first_node.pickup_item_list) if first_node.pickup_item_list else 0
-            delivery_size = len(first_node.delivery_item_list) if first_node.delivery_item_list else 0
-            
-            if delivery_size > 0:
-                multi_id = _format_multi_suffix(first_node.delivery_item_list, 'delivery')
-                vehicle_routes[index] = f"[d{delivery_size}_{multi_id} "
-                
-            if pickup_size > 0:
-                multi_id = _format_multi_suffix(first_node.pickup_item_list, 'pickup')
-                if delivery_size == 0:
-                    vehicle_routes[index] = f"[p{pickup_size}_{multi_id} "
-                else:
-                    vehicle_routes[index] = vehicle_routes[index].strip()
-                    vehicle_routes[index] += f"p{pickup_size}_{multi_id} "
-        else:
-            vehicle_routes[index] = "["
-        index += 1
-    
-    index = 0
-    for vehicle_id, id2_node_list in vehicleid_to_plan.items():
-        if id2_node_list and len(id2_node_list) > 0:
-            for node in id2_node_list:
-                pickup_size = len(node.pickup_item_list)
-                delivery_size = len(node.delivery_item_list)
-                
-                if delivery_size > 0:
-                    multi_id = _format_multi_suffix(node.delivery_item_list, 'delivery')
-                    vehicle_routes[index] += f"d{delivery_size}_{multi_id} "
-                if pickup_size > 0:
-                    if delivery_size > 0:
-                        vehicle_routes[index] = vehicle_routes[index].strip()
-                    multi_id = _format_multi_suffix(node.pickup_item_list, 'pickup')
-                    vehicle_routes[index] += f"p{pickup_size}_{multi_id} "
-            
-            vehicle_routes[index] = vehicle_routes[index].strip()
-        vehicle_routes[index] += "]"
-        index += 1
+def get_route_after(vehicleid_to_plan: Dict[str, List[Node]],
+                    vehicleid_to_destination: Optional[Dict[str, Node]]) -> str:
+    """Serialize a solution canonically for restoration and tabu signatures.
 
-    for i in range(vehicle_num):
-        car_id = f"V_{i + 1}"
-        route_str += f"{car_id}:{vehicle_routes[i]} "
-    
-    route_str = route_str.strip()
-    return route_str
+    The JSON array records the actual vehicle ID, then each route node as
+    ``[factory_id, sorted_pickup_item_ids, sorted_delivery_item_ids]``.  This
+    makes the representation independent of dictionary insertion order while
+    retaining route-node order and every item assigned to that node.
+    """
+    destinations = vehicleid_to_destination or {}
+    vehicle_ids = sorted(
+        set(vehicleid_to_plan).union(destinations),
+        key=_vehicle_sort_key,
+    )
+    encoded_routes = []
+    for vehicle_id in vehicle_ids:
+        nodes: List[Node] = []
+        destination = destinations.get(vehicle_id)
+        if destination is not None:
+            nodes.append(destination)
+        nodes.extend(vehicleid_to_plan.get(vehicle_id) or [])
+
+        encoded_nodes = [
+            [
+                node.id,
+                sorted(
+                    (item.id for item in (node.pickup_item_list or [])),
+                    key=_item_sort_key,
+                ),
+                sorted(
+                    (item.id for item in (node.delivery_item_list or [])),
+                    key=lambda item_id: _item_sort_key(item_id, delivery=True),
+                ),
+            ]
+            for node in nodes
+        ]
+        encoded_routes.append([vehicle_id, encoded_nodes])
+    return json.dumps(encoded_routes, ensure_ascii=False, separators=(",", ":"))
 
 
 

@@ -1,92 +1,18 @@
 {
-    "V_1": {
-        "factory_id": "9b40bfd6ca1c432498685540652a5a8b",
-        "lng": 116.7099,
-        "lat": 40.3517,
-        "delivery_item_list": [
-            "2327040479-1"
-        ],
-        "pickup_item_list": [],
-        "arrive_time": 1782764544,
-        "leave_time": 0
-    },
-    "V_2": {
-        "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
-        "lng": 116.6264,
-        "lat": 40.2253,
-        "delivery_item_list": [
-            "2353540495-2",
-            "2353540495-1",
-            "2320100472-5",
-            "2320100472-4",
-            "2320100472-3",
-            "2320100472-2",
-            "2320100472-1",
-            "2325350477-1",
-            "2358590498-1",
-            "2348440492-1"
-        ],
-        "pickup_item_list": [],
-        "arrive_time": 1782762888,
-        "leave_time": 0
-    },
+    "V_1": null,
+    "V_2": null,
     "V_3": null,
-    "V_4": {
-        "factory_id": "7b84670cf4164cccba22ebb17a2c290a",
-        "lng": 116.6262,
-        "lat": 40.2256,
-        "delivery_item_list": [
-            "2336410484-1"
-        ],
-        "pickup_item_list": [],
-        "arrive_time": 1782763008,
-        "leave_time": 0
-    },
-    "V_5": null,
-    "V_6": null,
-    "V_7": null,
-    "V_8": null,
-    "V_9": {
-        "factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
-        "lng": 116.6191,
-        "lat": 40.2128,
-        "delivery_item_list": [
-            "2239100461-1"
-        ],
-        "pickup_item_list": [],
-        "arrive_time": 1782761472,
-        "leave_time": 0
-    },
-    "V_10": null,
-    "V_11": null,
-    "V_12": null,
-    "V_13": null,
-    "V_14": null,
-    "V_15": {
+    "V_4": null,
+    "V_5": {
         "factory_id": "2445d4bd004c457d95957d6ecf77f759",
         "lng": 116.5841,
         "lat": 40.2869,
-        "delivery_item_list": [
-            "2346310490-12",
-            "2346310490-11",
-            "2346310490-10",
-            "2346310490-9",
-            "2346310490-8",
-            "2346310490-7",
-            "2346310490-6",
-            "2346310490-5",
-            "2346310490-4",
-            "2346310490-3",
-            "2346310490-2",
-            "2346310490-1"
+        "delivery_item_list": [],
+        "pickup_item_list": [
+            "0003480001-1",
+            "0012230002-1"
         ],
-        "pickup_item_list": [],
-        "arrive_time": 1782763463,
+        "arrive_time": 1784593524,
         "leave_time": 0
-    },
-    "V_16": null,
-    "V_17": null,
-    "V_18": null,
-    "V_19": null,
-    "V_20": null
+    }
 }
