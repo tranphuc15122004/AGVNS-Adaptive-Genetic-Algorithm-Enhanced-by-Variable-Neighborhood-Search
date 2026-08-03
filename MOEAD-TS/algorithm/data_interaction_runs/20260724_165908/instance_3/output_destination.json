@@ -1,0 +1,18 @@
+{
+    "V_1": null,
+    "V_2": null,
+    "V_3": null,
+    "V_4": null,
+    "V_5": {
+        "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "lng": 116.5841,
+        "lat": 40.2869,
+        "delivery_item_list": [],
+        "pickup_item_list": [
+            "0018200001-1",
+            "0018200001-2"
+        ],
+        "arrive_time": 1784855232,
+        "leave_time": 0
+    }
+}

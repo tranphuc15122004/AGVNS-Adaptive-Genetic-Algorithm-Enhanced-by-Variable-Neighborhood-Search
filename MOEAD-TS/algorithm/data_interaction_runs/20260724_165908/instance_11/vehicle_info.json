@@ -1,0 +1,74 @@
+[
+    {
+        "id": "V_1",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_1",
+        "update_time": 1784852400.0,
+        "cur_factory_id": "e2d5093fbe36431f8986ddb0e1c586be",
+        "arrive_time_at_current_factory": 1784851200,
+        "leave_time_at_current_factory": 1784852400.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_2",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_2",
+        "update_time": 1784852400.0,
+        "cur_factory_id": "7fe14b93f0f04ee7a994ef5b2c1fdb72",
+        "arrive_time_at_current_factory": 1784851200,
+        "leave_time_at_current_factory": 1784852400.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_3",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_3",
+        "update_time": 1784852400.0,
+        "cur_factory_id": "fa366fc87a124d32926daa5bb093129f",
+        "arrive_time_at_current_factory": 1784851200,
+        "leave_time_at_current_factory": 1784852400.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_4",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_4",
+        "update_time": 1784852400.0,
+        "cur_factory_id": "e47399648fa842b2b8f80094343d8091",
+        "arrive_time_at_current_factory": 1784851200,
+        "leave_time_at_current_factory": 1784852400.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_5",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_5",
+        "update_time": 1784852400.0,
+        "cur_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "arrive_time_at_current_factory": 1784851800,
+        "leave_time_at_current_factory": 1784853840,
+        "carrying_items": [
+            "0001210001-1",
+            "0001210001-2"
+        ],
+        "destination": {
+            "factory_id": "99f05d5e71104b04838cff91b231a002",
+            "delivery_item_list": [],
+            "pickup_item_list": [
+                "0009380002-1",
+                "0009380002-2"
+            ],
+            "arrive_time": 1784855664,
+            "leave_time": 1784857704
+        }
+    }
+]

@@ -1,0 +1,72 @@
+[
+    {
+        "id": "V_1",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_1",
+        "update_time": 1784853600.0,
+        "cur_factory_id": "e2d5093fbe36431f8986ddb0e1c586be",
+        "arrive_time_at_current_factory": 1784851200,
+        "leave_time_at_current_factory": 1784853600.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_2",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_2",
+        "update_time": 1784853600.0,
+        "cur_factory_id": "7fe14b93f0f04ee7a994ef5b2c1fdb72",
+        "arrive_time_at_current_factory": 1784851200,
+        "leave_time_at_current_factory": 1784853600.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_3",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_3",
+        "update_time": 1784853600.0,
+        "cur_factory_id": "fa366fc87a124d32926daa5bb093129f",
+        "arrive_time_at_current_factory": 1784851200,
+        "leave_time_at_current_factory": 1784853600.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_4",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_4",
+        "update_time": 1784853600.0,
+        "cur_factory_id": "e47399648fa842b2b8f80094343d8091",
+        "arrive_time_at_current_factory": 1784851200,
+        "leave_time_at_current_factory": 1784853600.0,
+        "carrying_items": [],
+        "destination": null
+    },
+    {
+        "id": "V_5",
+        "operation_time": 24,
+        "capacity": 15,
+        "gps_id": "G_5",
+        "update_time": 1784853600.0,
+        "cur_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "arrive_time_at_current_factory": 1784853000.0,
+        "leave_time_at_current_factory": 1784854920.0,
+        "carrying_items": [
+            "0023390001-1"
+        ],
+        "destination": {
+            "factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+            "delivery_item_list": [
+                "0023390001-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 1784855196.0,
+            "leave_time": 1784857116.0
+        }
+    }
+]

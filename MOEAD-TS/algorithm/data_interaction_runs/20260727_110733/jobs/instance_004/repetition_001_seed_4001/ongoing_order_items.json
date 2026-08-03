@@ -1,0 +1,15 @@
+[
+    {
+        "id": "2357490050-1",
+        "type": "BOX",
+        "order_id": "2357490050",
+        "demand": 0.25,
+        "pickup_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "delivery_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "creation_time": 1785196669,
+        "committed_completion_time": 1785211069,
+        "load_time": 60,
+        "unload_time": 60,
+        "delivery_state": 2
+    }
+]

@@ -1,0 +1,16 @@
+{
+    "no.": "1",
+    "deltaT": "0020-0030",
+    "complete_order_items": [],
+    "onvehicle_order_items": "0002240001-1 0002240001-2 0002240001-3 0002240001-4 0002240001-5",
+    "ongoing_order_items": "",
+    "unongoing_order_items": "",
+    "unallocated_order_items": "",
+    "new_order_items": [],
+    "used_time": 1.861356496810913,
+    "route_before": "V_1:[] V_2:[] V_3:[p5_0002240001-1-2-3-4-5 d5_0002240001-5-4-3-2-1] V_4:[] V_5:[]",
+    "route_after": "V_1:[] V_2:[] V_3:[d5_0002240001-5-4-3-2-1] V_4:[] V_5:[]",
+    "improved_in_cross": 0,
+    "improved_in_mutation": 0,
+    "improved_in_diver": 0
+}
