@@ -1,4 +1,5 @@
 import copy
+from collections import Counter
 from datetime import datetime
 import json
 import math
@@ -6,6 +7,7 @@ import os
 import random
 import re
 import sys
+import tempfile
 from typing import Dict , List, Optional, Tuple
 
 from algorithm.Object import *
@@ -24,18 +26,84 @@ def _vehicle_sort_key(vehicle_id: str) -> Tuple[int, str, int, str]:
     return 1, vehicle_id, 0, vehicle_id
 
 
-def _item_sort_key(item_id: str, delivery: bool = False) -> Tuple[int, str, int, str]:
-    """Sort item IDs by numeric suffix, preserving FILO delivery order.
+def _node_action_ids(node: Node) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
+    """The ordered action lists are part of a node's immutable LIFO state."""
+    return (
+        tuple(item.id for item in (node.pickup_item_list or [])),
+        tuple(item.id for item in (node.delivery_item_list or [])),
+    )
 
-    Pickup items are loaded in increasing sequence.  Items delivered from the
-    same pickup group must be visited in the reverse sequence, because
-    ``isFeasible`` consumes delivery lists from the top of the FILO stack.
+
+def _destination_matches(node: Node, destination: Node) -> bool:
+    return node.id == destination.id and _node_action_ids(node) == _node_action_ids(destination)
+
+
+def repair_restored_lifo_routes(vehicleid_to_plan: Dict[str, List[Node]],
+                                id_to_vehicle: Dict[str, Vehicle]) -> bool:
+    """Repair legacy archive ordering only when the current stack proves it.
+
+    Older archives sorted item IDs inside a factory node, losing the delivery
+    order of different orders.  Consecutive mutable visits to one factory are
+    canonicalised, then their deliveries are reordered to the unique current
+    stack-top sequence.  If an item set does not match the stack, no guessing
+    is performed and ``False`` is returned.
     """
-    match = re.match(r"^(.*)-(\d+)$", item_id)
-    if match:
-        sequence = int(match.group(2))
-        return 0, match.group(1), -sequence if delivery else sequence, item_id
-    return 1, item_id, 0, item_id
+    for vehicle_id, vehicle in id_to_vehicle.items():
+        route = vehicleid_to_plan.get(vehicle_id, []) or []
+        canonical: List[Node] = []
+        for index, node in enumerate(route):
+            if (canonical and canonical[-1].id == node.id and
+                    not (vehicle.des and len(canonical) == 1)):
+                canonical[-1].delivery_item_list.extend(node.delivery_item_list or [])
+                canonical[-1].pickup_item_list.extend(node.pickup_item_list or [])
+                continue
+            canonical.append(Node(
+                node.id, list(node.delivery_item_list or []),
+                list(node.pickup_item_list or []), node.arrive_time,
+                node.leave_time, node.lng, node.lat,
+            ))
+
+        stack = list(vehicle.carrying_items or [])
+        for index, node in enumerate(canonical):
+            deliveries = list(node.delivery_item_list or [])
+            expected = list(reversed(stack[-len(deliveries):])) if deliveries else []
+            if deliveries:
+                # The committed prefix is immutable.  Its supplied action
+                # order must already be valid; only restored suffix nodes are
+                # eligible for the deterministic legacy repair.
+                if vehicle.des and index == 0:
+                    if [item.id for item in deliveries] != [item.id for item in expected]:
+                        return False
+                elif Counter(item.id for item in deliveries) != Counter(item.id for item in expected):
+                    return False
+                else:
+                    node.delivery_item_list = expected
+                del stack[-len(deliveries):]
+            stack.extend(node.pickup_item_list or [])
+        if stack:
+            return False
+        vehicleid_to_plan[vehicle_id] = canonical
+    return True
+
+
+def _atomic_json_dump(path: str, payload: object) -> None:
+    """Write JSON atomically so a timeout cannot leave a truncated archive."""
+    directory = os.path.dirname(path) or "."
+    os.makedirs(directory, exist_ok=True)
+    temporary_path = ""
+    try:
+        with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=directory,
+                prefix=".tmp_moead_", suffix=".json", delete=False) as file:
+            temporary_path = file.name
+            json.dump(payload, file, indent=4, ensure_ascii=False)
+            file.flush()
+            os.fsync(file.fileno())
+        os.replace(temporary_path, path)
+    except Exception:
+        if temporary_path and os.path.exists(temporary_path):
+            os.unlink(temporary_path)
+        raise
 
 
 def _restore_canonical_route_after(
@@ -123,7 +191,7 @@ def restore_scene_with_single_node(vehicleid_to_plan: Dict[str , List[Node]], id
         try:
             with open(solution_json_path , 'r') as file:
                 before_solution = json.load(file)
-                no = int(before_solution.get('no', 0))
+                no = int(before_solution.get('no.', before_solution.get('no', 0)))
                 f = (no + 1) * 10
                 t = (no + 1) * 10 + 10
                 global delta_t
@@ -258,19 +326,24 @@ def get_output_solution(id_to_vehicle: Dict[str , Vehicle] , vehicleid_to_plan: 
         destination : Node = None
         if vehicle.des:
             if (not origin_plan):
-                print(f"Planned route of vehicle {vehicleID} is wrong", file=sys.stderr)
-            else:
-                destination = origin_plan[0]
-                destination.arrive_time = vehicle.des.arrive_time
-                origin_plan.pop(0)
-            
-            if destination and vehicle.des.id != destination.id:
-                print(f"Vehicle {vehicleID} returned destination id is {vehicle.des.id} "
-                    f"however the origin destination id is {destination.id}", file=sys.stderr)
+                raise ValueError(
+                    "vehicle {} has a committed destination but no route prefix".format(
+                        vehicleID
+                    )
+                )
+            destination = origin_plan[0]
+            if not _destination_matches(destination, vehicle.des):
+                raise ValueError(
+                    "vehicle {} changed its committed destination factory or actions".format(
+                        vehicleID
+                    )
+                )
+            destination.arrive_time = vehicle.des.arrive_time
+            origin_plan.pop(0)
         elif (origin_plan):
             destination = origin_plan[0]
             origin_plan.pop(0)
-        if origin_plan and len(origin_plan) == 0:
+        if origin_plan is not None and len(origin_plan) == 0:
             origin_plan = None
         vehicleid_to_plan[vehicleID] = origin_plan
         vehicleid_to_destination[vehicleID] = destination
@@ -337,8 +410,9 @@ def update_solution_json (id_to_ongoing_items: Dict[str , OrderItem] , id_to_unl
             with open(order_items_json_path, 'r', encoding='utf-8') as file:
                 before_solution = json.load(file)
         except (IOError, json.JSONDecodeError) as e:
-            print(f"Lỗi khi đọc file JSON: {e}", file = sys.stderr)
-            return  # Ngăn lỗi tiếp tục chạy
+            raise RuntimeError(
+                "cannot read the previous solution archive: {}".format(e)
+            )
 
         no = int(before_solution["no."]) + 1
 
@@ -377,12 +451,7 @@ def update_solution_json (id_to_ongoing_items: Dict[str , OrderItem] , id_to_unl
             "improved_in_diver": improved_in_diver
         }
 
-    # Ghi dữ liệu ra file JSON
-    try:
-        with open(order_items_json_path, 'w', encoding='utf-8') as file:
-            json.dump(solution_json_obj, file, indent=4, ensure_ascii=False)
-    except IOError as e:
-        print(f"Lỗi khi ghi file JSON: {e}", file = sys.stderr)
+    _atomic_json_dump(order_items_json_path, solution_json_obj)
         
 
 def merge_node(id_to_vehicle: Dict[str , Vehicle], vehicleid_to_plan: Dict[str, list[Node]]):
@@ -395,7 +464,11 @@ def merge_node(id_to_vehicle: Dict[str , Vehicle], vehicleid_to_plan: Dict[str, 
             while (i < len(origin_planned_route)):
                 next_node = origin_planned_route[i]
 
-                if before_node.id == next_node.id:
+                # A destination already assigned by the simulator is
+                # immutable.  Keep a following same-factory visit separate so
+                # its new actions cannot be folded into the committed node.
+                protected_destination_boundary = bool(vehicle.des and i == 1)
+                if before_node.id == next_node.id and not protected_destination_boundary:
                     # Gộp danh sách pickupItemList
                     if next_node.pickup_item_list:
                         before_node.pickup_item_list.extend(next_node.pickup_item_list)  
@@ -415,9 +488,9 @@ def get_route_after(vehicleid_to_plan: Dict[str, List[Node]],
     """Serialize a solution canonically for restoration and tabu signatures.
 
     The JSON array records the actual vehicle ID, then each route node as
-    ``[factory_id, sorted_pickup_item_ids, sorted_delivery_item_ids]``.  This
-    makes the representation independent of dictionary insertion order while
-    retaining route-node order and every item assigned to that node.
+    ``[factory_id, pickup_item_ids, delivery_item_ids]``.  The item-list order
+    is intentionally preserved: it is the truck stack order required by the
+    LIFO constraint and must survive a dynamic restore unchanged.
     """
     destinations = vehicleid_to_destination or {}
     vehicle_ids = sorted(
@@ -435,14 +508,8 @@ def get_route_after(vehicleid_to_plan: Dict[str, List[Node]],
         encoded_nodes = [
             [
                 node.id,
-                sorted(
-                    (item.id for item in (node.pickup_item_list or [])),
-                    key=_item_sort_key,
-                ),
-                sorted(
-                    (item.id for item in (node.delivery_item_list or [])),
-                    key=lambda item_id: _item_sort_key(item_id, delivery=True),
-                ),
+                [item.id for item in (node.pickup_item_list or [])],
+                [item.id for item in (node.delivery_item_list or [])],
             ]
             for node in nodes
         ]

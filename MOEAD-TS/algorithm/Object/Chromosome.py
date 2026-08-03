@@ -19,6 +19,8 @@ class Chromosome:
 
     @property
     def fitness(self) -> float:
+        if hasattr(self, "_moead_tc"):
+            return float(self._moead_tc)
         return total_cost(self.id_to_vehicle, self.route_map, self.solution)
 
     def mutate(self  ,is_limited = False , is_1LS : bool = False):

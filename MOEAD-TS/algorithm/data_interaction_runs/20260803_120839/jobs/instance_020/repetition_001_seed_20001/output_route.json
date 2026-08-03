@@ -1,0 +1,152 @@
+{
+    "V_1": [
+        {
+            "factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+            "lng": 116.6309,
+            "lat": 40.2304,
+            "delivery_item_list": [
+                "0248330015-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        },
+        {
+            "factory_id": "f6faef4b36e743328800b961aced4a2c",
+            "lng": 116.6346,
+            "lat": 40.2301,
+            "delivery_item_list": [
+                "0247500014-1",
+                "0228470013-1"
+            ],
+            "pickup_item_list": [
+                "0304190016-1",
+                "0304190016-2"
+            ],
+            "arrive_time": 0,
+            "leave_time": 0
+        },
+        {
+            "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+            "lng": 116.6264,
+            "lat": 40.2253,
+            "delivery_item_list": [
+                "0304190016-2",
+                "0304190016-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        }
+    ],
+    "V_2": [],
+    "V_3": [],
+    "V_4": [],
+    "V_5": [],
+    "V_6": [],
+    "V_7": [],
+    "V_8": [
+        {
+            "factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+            "lng": 116.6191,
+            "lat": 40.2128,
+            "delivery_item_list": [],
+            "pickup_item_list": [
+                "0349520020-1"
+            ],
+            "arrive_time": 0,
+            "leave_time": 0
+        },
+        {
+            "factory_id": "32ab2049f3fb437881ff3912470d7840",
+            "lng": 116.7112,
+            "lat": 40.3527,
+            "delivery_item_list": [
+                "0349520020-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        },
+        {
+            "factory_id": "d1f8de642d734931be957336196d996d",
+            "lng": 116.7019,
+            "lat": 40.4455,
+            "delivery_item_list": [
+                "0346280019-9",
+                "0346280019-8",
+                "0346280019-7",
+                "0346280019-6",
+                "0346280019-5",
+                "0346280019-4",
+                "0346280019-3",
+                "0346280019-2",
+                "0346280019-11",
+                "0346280019-10",
+                "0346280019-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        }
+    ],
+    "V_9": [],
+    "V_10": [],
+    "V_11": [],
+    "V_12": [],
+    "V_13": [],
+    "V_14": [],
+    "V_15": [],
+    "V_16": [],
+    "V_17": [
+        {
+            "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+            "lng": 116.5841,
+            "lat": 40.2869,
+            "delivery_item_list": [],
+            "pickup_item_list": [
+                "0313560017-1",
+                "0313560017-2",
+                "0313560017-3",
+                "0313560017-4",
+                "0313560017-5",
+                "0313560017-6",
+                "0313560017-7"
+            ],
+            "arrive_time": 0,
+            "leave_time": 0
+        },
+        {
+            "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+            "lng": 116.6264,
+            "lat": 40.2253,
+            "delivery_item_list": [
+                "0313560017-7",
+                "0313560017-6",
+                "0313560017-5",
+                "0313560017-4",
+                "0313560017-3",
+                "0313560017-2",
+                "0313560017-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        }
+    ],
+    "V_18": [],
+    "V_19": [],
+    "V_20": [
+        {
+            "factory_id": "f6faef4b36e743328800b961aced4a2c",
+            "lng": 116.6346,
+            "lat": 40.2301,
+            "delivery_item_list": [
+                "0343360018-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        }
+    ]
+}

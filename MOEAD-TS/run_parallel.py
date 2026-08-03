@@ -1,4 +1,4 @@
-"""Queue-based parallel runner for repeated TS experiments.
+"""Queue-based parallel runner for repeated MOEA/D--TS experiments.
 
 Each queued job owns a separate ``data_interaction`` directory.  A batch
 therefore never lets two simulator processes overwrite each other's JSON
@@ -124,7 +124,7 @@ def _available_cores() -> List[int]:
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run repeated TS simulations in parallel with isolated workspaces."
+        description="Run repeated MOEA/D--TS simulations in parallel with isolated workspaces."
     )
     parser.add_argument(
         "instance_ids",
@@ -159,7 +159,7 @@ def _parse_args() -> argparse.Namespace:
         "--base-seed",
         type=int,
         default=0,
-        help="Base seed for deterministic per-job TS seeds (default: 0).",
+        help="Base seed for deterministic per-job MOEA/D--TS seeds (default: 0).",
     )
     parser.add_argument(
         "--run-root",
@@ -259,8 +259,7 @@ def _build_jobs(
 
 def _build_worker_env(data_dir: str) -> Dict[str, str]:
     env = os.environ.copy()
-    # The TS Configs class currently uses this compatibility variable name.
-    env["MA_DATA_INTERACTION_DIR"] = os.path.abspath(data_dir)
+    env["MOEAD_DATA_INTERACTION_DIR"] = os.path.abspath(data_dir)
     env.setdefault("OMP_NUM_THREADS", "1")
     env.setdefault("OPENBLAS_NUM_THREADS", "1")
     env.setdefault("MKL_NUM_THREADS", "1")
@@ -598,7 +597,7 @@ def _run_batch(
     )
     manifest = {
         "batch_id": batch_id,
-        "algorithm": "TS",
+        "algorithm": "MOEAD-TS",
         "created_at_utc": _utc_now(),
         "instances": instances,
         "repetitions": args.repetitions,
@@ -608,7 +607,7 @@ def _run_batch(
         "base_seed": args.base_seed,
         "seed_formula": "base_seed + instance_id * 1000 + repetition",
         "job_order": "instance-major",
-        "runtime_source": "simulate() elapsed return value logged by TS/main.py",
+        "runtime_source": "simulate() elapsed return value logged by MOEAD-TS/main.py",
     }
     _write_json(os.path.join(batch_root, "manifest.json"), manifest)
     _persist_progress(batch_root, manifest, [], "RUNNING")

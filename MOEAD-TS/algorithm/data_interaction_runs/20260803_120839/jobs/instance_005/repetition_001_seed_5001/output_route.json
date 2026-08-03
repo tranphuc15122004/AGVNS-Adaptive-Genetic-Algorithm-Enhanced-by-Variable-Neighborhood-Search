@@ -1,0 +1,101 @@
+{
+    "V_1": [],
+    "V_2": [
+        {
+            "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+            "lng": 116.6264,
+            "lat": 40.2253,
+            "delivery_item_list": [
+                "1553110035-6",
+                "1553110035-5",
+                "1553110035-4",
+                "1553110035-3",
+                "1553110035-2",
+                "1553110035-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        },
+        {
+            "factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+            "lng": 116.6191,
+            "lat": 40.2128,
+            "delivery_item_list": [
+                "1446560030-1"
+            ],
+            "pickup_item_list": [
+                "1641240037-1"
+            ],
+            "arrive_time": 0,
+            "leave_time": 0
+        },
+        {
+            "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+            "lng": 116.6264,
+            "lat": 40.2253,
+            "delivery_item_list": [],
+            "pickup_item_list": [
+                "1643570039-1"
+            ],
+            "arrive_time": 0,
+            "leave_time": 0
+        },
+        {
+            "factory_id": "f6faef4b36e743328800b961aced4a2c",
+            "lng": 116.6346,
+            "lat": 40.2301,
+            "delivery_item_list": [
+                "1643570039-1",
+                "1641240037-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        }
+    ],
+    "V_3": [],
+    "V_4": [
+        {
+            "factory_id": "32ab2049f3fb437881ff3912470d7840",
+            "lng": 116.7112,
+            "lat": 40.3527,
+            "delivery_item_list": [
+                "1546110033-1",
+                "1549520034-1",
+                "1413480028-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        }
+    ],
+    "V_5": [
+        {
+            "factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+            "lng": 116.6309,
+            "lat": 40.2304,
+            "delivery_item_list": [
+                "1631140036-1",
+                "1643030038-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        },
+        {
+            "factory_id": "ffd0ed8719f54294a452ed3e3b6a986c",
+            "lng": 116.6296,
+            "lat": 40.2253,
+            "delivery_item_list": [
+                "1517060031-4",
+                "1517060031-3",
+                "1517060031-2",
+                "1517060031-1"
+            ],
+            "pickup_item_list": [],
+            "arrive_time": 0,
+            "leave_time": 0
+        }
+    ]
+}

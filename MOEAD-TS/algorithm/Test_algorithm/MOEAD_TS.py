@@ -1,24 +1,32 @@
-"""Solution-based Tabu Search for the dynamic pickup and delivery problem."""
+"""MOEA/D--TS public adapter and retained route-level regression operators.
+
+The public ``MOEAD_TS`` function delegates to ``moead_core``.  Production
+Tabu Search intentionally loads the four shared AGVNS LS methods through
+``agvns_ls_bridge`` so AGVNS remains the single source of truth.  The
+route-level generators below are retained only for focused regression tests
+of DPDP move invariants; they are not part of the production TS workflow.
+"""
 
 import copy
 import hashlib
+from itertools import combinations
 import math
-import random
 import time
-from collections import Counter, deque
+from collections import Counter
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Set, Tuple
 
 from algorithm.Object import Chromosome, Factory, Node, OrderItem, Vehicle
 import algorithm.algorithm_config as config
 from algorithm.engine import get_route_after, isFeasible
-from algorithm.Test_algorithm.new_engine import new_dispatch_new_orders , worse_dispatch_new_orders
-from algorithm.Test_algorithm.new_LS import new_get_UnongoingSuperNode
+from algorithm.Test_algorithm.moead_objectives import (
+    canonicalize_route, destination_matches, ensure_destination_prefix,
+)
 
 
 SolutionSignature = bytes
 
-_OUTPUT_RESERVE_SECONDS = 5.0
+_ACTIVE_OBJECTIVE_CONTEXT = None
 
 
 @dataclass(frozen=True)
@@ -58,6 +66,12 @@ def _cached_signature(candidate: Chromosome) -> SolutionSignature:
 
 def _cached_fitness(candidate: Chromosome) -> float:
     """Evaluate a TS candidate once; its solution is immutable after creation."""
+    if _ACTIVE_OBJECTIVE_CONTEXT is not None:
+        from algorithm.Test_algorithm.moead_objectives import evaluate_solution
+        objective = evaluate_solution(candidate.solution, _ACTIVE_OBJECTIVE_CONTEXT)
+        candidate._moead_objectives = objective
+        candidate._ts_fitness = objective.tc
+        return objective.tc
     fitness = getattr(candidate, "_ts_fitness", None)
     if fitness is None:
         fitness = candidate.fitness
@@ -80,7 +94,7 @@ def _solution_coverage(solution: Dict[str, List[Node]]) -> Counter:
 
 def _changed_vehicle_ids(original: Dict[str, List[Node]],
                          candidate: Dict[str, List[Node]]) -> Set[str]:
-    """Return only routes modified by a sampled neighbourhood operation."""
+    """Return only routes modified by a neighbourhood operation."""
     changed = set()
     for vehicle_id in set(original).union(candidate):
         original_route = original.get(vehicle_id, [])
@@ -110,7 +124,7 @@ def _has_destination_prefix(solution: Dict[str, List[Node]],
         if vehicle is None:
             return False
         route = solution.get(vehicle_id, [])
-        if vehicle.des and (not route or route[0].id != vehicle.des.id):
+        if vehicle.des and (not route or not destination_matches(route[0], vehicle.des)):
             return False
     return True
 
@@ -126,8 +140,7 @@ def _ensure_destination_prefix(solution: Dict[str, List[Node]],
     """
     for vehicle_id, vehicle in id_to_vehicle.items():
         route = solution.setdefault(vehicle_id, [])
-        if vehicle.des and (not route or route[0].id != vehicle.des.id):
-            route.insert(0, copy.deepcopy(vehicle.des))
+        ensure_destination_prefix(route, vehicle)
 
 
 def _insertion_start(route: List[Node], vehicle: Vehicle) -> Optional[int]:
@@ -148,78 +161,91 @@ def _is_feasible_solution(candidate: Chromosome,
         vehicle = candidate.id_to_vehicle.get(vehicle_id)
         if vehicle is None:
             return False
-        if vehicle.des and (not route or route[0].id != vehicle.des.id):
+        if vehicle.des and (not route or not destination_matches(route[0], vehicle.des)):
             return False
-        carrying = vehicle.carrying_items if vehicle.des else []
-        if not isFeasible(route, carrying, vehicle.board_capacity):
+        carrying = vehicle.carrying_items or []
+        if not isFeasible(canonicalize_route(route, bool(vehicle.des)),
+                          carrying, vehicle.board_capacity):
             return False
     return True
 
 
-def add_tabu_signature(signature: SolutionSignature,
-                       tabu_fifo: deque,
-                       tabu_signatures: Set[SolutionSignature],
-                       max_size: int) -> None:
-    """Store one visited solution in bounded FIFO tabu memory."""
-    if max_size <= 0 or signature in tabu_signatures:
-        return
-    while len(tabu_fifo) >= max_size:
-        tabu_signatures.discard(tabu_fifo.popleft())
-    tabu_fifo.append(signature)
-    tabu_signatures.add(signature)
-
-
-def select_admissible_solution(
-        candidates: List[Chromosome],
-        tabu_signatures: Set[SolutionSignature],
-        global_best_cost: float,
-) -> Tuple[Optional[Chromosome], Optional[SolutionSignature], int, int]:
-    """Select the lowest-cost neighbour that satisfies tabu/aspiration rules."""
-    chosen: Optional[Chromosome] = None
-    chosen_signature: Optional[SolutionSignature] = None
-    chosen_cost = math.inf
-    tabu_rejections = 0
-    aspirations = 0
-
-    for candidate in candidates:
-        signature = _cached_signature(candidate)
-        candidate_cost = _cached_fitness(candidate)
-        tabu = signature in tabu_signatures
-        aspirated = tabu and candidate_cost < global_best_cost
-        if tabu and not aspirated:
-            tabu_rejections += 1
-            continue
-        if aspirated:
-            aspirations += 1
-        if candidate_cost < chosen_cost:
-            chosen = candidate
-            chosen_signature = signature
-            chosen_cost = candidate_cost
-    return chosen, chosen_signature, tabu_rejections, aspirations
-
-
 def _extract_pdg_units(solution: Dict[str, List[Node]],
                        id_to_vehicle: Dict[str, Vehicle]) -> List[PdgUnit]:
-    """Adapt the legacy LS supernode map into stable TS sampling units."""
-    units: List[PdgUnit] = []
-    for supernode in new_get_UnongoingSuperNode(solution, id_to_vehicle).values():
-        entries = []
-        for vehicle_and_position, node in supernode.items():
-            vehicle_id, position = vehicle_and_position.rsplit(",", 1)
-            entries.append((vehicle_id, int(position), node))
-        if not entries or len({entry[0] for entry in entries}) != 1:
+    """Extract non-overlapping movable PD pairs directly from the LIFO stack.
+
+    The legacy ``new_get_UnongoingSuperNode`` assumes that a visit is either a
+    pickup or delivery node.  MOEA/D--TS expands mutable visits into atomic
+    actions before local search; reject an unnormalised combined node here so
+    an external caller cannot create overlapping move units by accident.
+    """
+    records_by_order: Dict[str, List[Tuple[str, str, int, int, OrderItem]]] = {}
+    min_capacity = min(
+        (vehicle.board_capacity for vehicle in id_to_vehicle.values()), default=0.0
+    )
+
+    for vehicle_id, vehicle in id_to_vehicle.items():
+        route = solution.get(vehicle_id, [])
+        movable_start = 1 if vehicle.des else 0
+        # ``carrying_items`` is stored bottom-to-top, therefore list.pop()
+        # faithfully returns the currently accessible top item.
+        stack: List[Tuple[Optional[int], OrderItem]] = [
+            (None, item) for item in (vehicle.carrying_items or [])
+        ]
+        route_records: List[Tuple[str, str, int, int, OrderItem]] = []
+        valid = True
+        for index, node in enumerate(route):
+            if (index >= movable_start and node.delivery_item_list and
+                    node.pickup_item_list):
+                valid = False
+                break
+            for delivery in node.delivery_item_list or []:
+                if not stack:
+                    valid = False
+                    break
+                pickup_index, pickup = stack.pop()
+                if pickup.id != delivery.id:
+                    valid = False
+                    break
+                if pickup_index is not None:
+                    route_records.append((
+                        delivery.order_id or delivery.id, vehicle_id,
+                        pickup_index, index, delivery,
+                    ))
+            if not valid:
+                break
+            for pickup in node.pickup_item_list or []:
+                stack.append((index if index >= movable_start else None, pickup))
+        if not valid:
             continue
-        vehicle_id = entries[0][0]
-        pickup_indices = tuple(sorted(entry[1] for entry in entries
-                                      if entry[2].pickup_item_list))
-        delivery_indices = tuple(sorted(entry[1] for entry in entries
-                                        if entry[2].delivery_item_list))
-        item_ids = tuple(sorted(
-            item.id for _, _, node in entries for item in node.pickup_item_list
-        ))
-        if pickup_indices and delivery_indices and item_ids:
-            units.append(PdgUnit(item_ids, vehicle_id, pickup_indices,
-                                 delivery_indices))
+        for record in route_records:
+            records_by_order.setdefault(record[0], []).append(record)
+
+    units: List[PdgUnit] = []
+    for order_id in sorted(records_by_order):
+        records = records_by_order[order_id]
+        order_demand = sum(record[4].demand for record in records)
+        by_vehicle: Dict[str, List[Tuple[str, str, int, int, OrderItem]]] = {}
+        for record in records:
+            by_vehicle.setdefault(record[1], []).append(record)
+        # An order that fits every vehicle must move as one unit to preserve
+        # the simulator's no-splitting constraint.  Oversized orders may have
+        # been legally split by the initial dispatcher, so preserve each
+        # existing vehicle-specific part.
+        groups = (
+            [records] if len(by_vehicle) == 1 and order_demand <= min_capacity + 1e-9
+            else [by_vehicle[vehicle_id] for vehicle_id in sorted(by_vehicle)]
+        )
+        for group in groups:
+            vehicle_ids = {record[1] for record in group}
+            if len(vehicle_ids) != 1:
+                continue
+            units.append(PdgUnit(
+                tuple(sorted(record[4].id for record in group)),
+                next(iter(vehicle_ids)),
+                tuple(sorted(record[2] for record in group)),
+                tuple(sorted(record[3] for record in group)),
+            ))
     return units
 
 
@@ -278,8 +304,11 @@ def _append_candidate(plan: Dict[str, List[Node]],
                       current_signature: SolutionSignature,
                       current_coverage: Counter,
                       seen_signatures: Set[SolutionSignature],
-                      results: List[Chromosome]) -> bool:
-    """Validate, evaluate and deduplicate one sampled solution neighbour."""
+                      results: List[Chromosome],
+                      max_neighbors: int) -> bool:
+    """Validate a move and retain the best ``max_neighbors`` candidates."""
+    if max_neighbors <= 0:
+        return False
     candidate = Chromosome(plan, current.route_map, current.id_to_vehicle)
     signature = _cached_signature(candidate)
     changed_vehicle_ids = _changed_vehicle_ids(current.solution, candidate.solution)
@@ -297,74 +326,113 @@ def _append_candidate(plan: Dict[str, List[Node]],
         return False
     seen_signatures.add(signature)
     results.append(candidate)
+    results.sort(key=lambda value: (
+        _cached_fitness(value), _cached_signature(value)
+    ))
+    if len(results) > max_neighbors:
+        del results[max_neighbors:]
     return True
 
 
-def _deadline_reached(deadline: float, results: List[Chromosome],
-                      max_neighbors: int) -> bool:
-    return (time.time() >= deadline or config.is_timeout() or
-            len(results) >= max_neighbors)
+def _deadline_reached(deadline: float) -> bool:
+    return time.time() >= deadline or config.is_timeout()
 
 
 def generate_pdg_relocate_neighbors(current: Chromosome, max_neighbors: int,
                                     deadline: float,
                                     seen_signatures: Set[SolutionSignature]) -> List[Chromosome]:
-    """Sample feasible one-PDG relocations without requiring an improvement."""
+    """Return the best feasible couple-relocate moves.
+
+    A pickup-delivery couple is removed once, then every legal pickup and
+    delivery insertion position on every route is evaluated.  This is the
+    best-improvement relocate-couple operator defined in the paper's ref. [62].
+    """
     units = _extract_pdg_units(current.solution, current.id_to_vehicle)
-    random.shuffle(units)
-    vehicle_ids = list(current.id_to_vehicle)
-    random.shuffle(vehicle_ids)
+    vehicle_ids = sorted(current.id_to_vehicle)
     results: List[Chromosome] = []
     current_signature = _cached_signature(current)
     current_coverage = _solution_coverage(current.solution)
 
     for unit in units:
-        if _deadline_reached(deadline, results, max_neighbors):
+        if _deadline_reached(deadline):
             break
         for target_id in vehicle_ids:
-            if _deadline_reached(deadline, results, max_neighbors):
+            if _deadline_reached(deadline):
                 break
-            for _ in range(2):
-                plan = copy.deepcopy(current.solution)
-                source_route = plan[unit.vehicle_id]
-                pickup_nodes = [source_route[index] for index in unit.pickup_indices]
-                delivery_nodes = [source_route[index] for index in unit.delivery_indices]
-                removed = unit.pickup_indices + unit.delivery_indices
-                if len(_remove_nodes(source_route, removed)) != len(set(removed)):
-                    continue
-                target_route = plan[target_id]
-                start = _insertion_start(
-                    target_route, current.id_to_vehicle[target_id]
-                )
-                if start is None:
-                    continue
-                pickup_position = random.randint(start, len(target_route))
-                delivery_position = random.randint(
-                    pickup_position + len(pickup_nodes),
-                    len(target_route) + len(pickup_nodes),
-                )
-                target_route[pickup_position:pickup_position] = pickup_nodes
-                target_route[delivery_position:delivery_position] = delivery_nodes
-                _append_candidate(plan, current, current_signature, current_coverage,
-                                  seen_signatures, results)
+            base_plan = copy.deepcopy(current.solution)
+            source_route = base_plan[unit.vehicle_id]
+            pickup_nodes = [source_route[index] for index in unit.pickup_indices]
+            delivery_nodes = [source_route[index] for index in unit.delivery_indices]
+            removed = unit.pickup_indices + unit.delivery_indices
+            if len(_remove_nodes(source_route, removed)) != len(set(removed)):
+                continue
+            target_route = base_plan[target_id]
+            start = _insertion_start(
+                target_route, current.id_to_vehicle[target_id]
+            )
+            if start is None:
+                continue
+            for pickup_position in range(start, len(target_route) + 1):
+                if _deadline_reached(deadline):
+                    break
+                first_delivery_position = pickup_position + len(pickup_nodes)
+                last_delivery_position = len(target_route) + len(pickup_nodes)
+                for delivery_position in range(
+                        first_delivery_position, last_delivery_position + 1):
+                    if _deadline_reached(deadline):
+                        break
+                    plan = copy.deepcopy(base_plan)
+                    candidate_route = plan[target_id]
+                    candidate_route[pickup_position:pickup_position] = copy.deepcopy(
+                        pickup_nodes
+                    )
+                    candidate_route[delivery_position:delivery_position] = copy.deepcopy(
+                        delivery_nodes
+                    )
+                    _append_candidate(
+                        plan, current, current_signature, current_coverage,
+                        seen_signatures, results, max_neighbors,
+                    )
     return results
 
 
 def generate_pdg_exchange_neighbors(current: Chromosome, max_neighbors: int,
                                     deadline: float,
                                     seen_signatures: Set[SolutionSignature]) -> List[Chromosome]:
-    """Sample feasible inter-vehicle PDG exchanges without a cost filter."""
+    """Return the best feasible intra- and inter-route couple exchanges.
+
+    Figure 5(b) in the paper exchanges two pickup-delivery couples within one
+    route.  The legacy implementation only supported inter-vehicle exchanges;
+    retain that case and add the missing intra-route position swap.
+    """
     units = _extract_pdg_units(current.solution, current.id_to_vehicle)
     results: List[Chromosome] = []
     current_signature = _cached_signature(current)
     current_coverage = _solution_coverage(current.solution)
-    attempts = max_neighbors * 12
 
-    for _ in range(attempts):
-        if _deadline_reached(deadline, results, max_neighbors) or len(units) < 2:
+    for left, right in combinations(units, 2):
+        if _deadline_reached(deadline):
             break
-        left, right = random.sample(units, 2)
         if left.vehicle_id == right.vehicle_id:
+            all_left_indices = left.pickup_indices + left.delivery_indices
+            all_right_indices = right.pickup_indices + right.delivery_indices
+            if (set(all_left_indices).intersection(all_right_indices) or
+                    len(left.pickup_indices) != len(right.pickup_indices) or
+                    len(left.delivery_indices) != len(right.delivery_indices)):
+                continue
+            plan = copy.deepcopy(current.solution)
+            route = plan[left.vehicle_id]
+            original_route = list(route)
+            for left_index, right_index in zip(left.pickup_indices, right.pickup_indices):
+                route[left_index] = original_route[right_index]
+                route[right_index] = original_route[left_index]
+            for left_index, right_index in zip(left.delivery_indices, right.delivery_indices):
+                route[left_index] = original_route[right_index]
+                route[right_index] = original_route[left_index]
+            _append_candidate(
+                plan, current, current_signature, current_coverage,
+                seen_signatures, results, max_neighbors,
+            )
             continue
         plan = copy.deepcopy(current.solution)
         left_route, right_route = plan[left.vehicle_id], plan[right.vehicle_id]
@@ -387,61 +455,64 @@ def generate_pdg_exchange_neighbors(current: Chromosome, max_neighbors: int,
         left_route[left_delivery_position:left_delivery_position] = right_deliveries
         right_route[right_pickup_position:right_pickup_position] = left_pickups
         right_route[right_delivery_position:right_delivery_position] = left_deliveries
-        _append_candidate(plan, current, current_signature, current_coverage,
-                          seen_signatures, results)
+        _append_candidate(
+            plan, current, current_signature, current_coverage,
+            seen_signatures, results, max_neighbors,
+        )
     return results
 
 
 def generate_block_relocate_neighbors(current: Chromosome, max_neighbors: int,
                                       deadline: float,
                                       seen_signatures: Set[SolutionSignature]) -> List[Chromosome]:
-    """Sample whole pickup-to-delivery block relocations without a cost filter."""
+    """Return the best feasible pickup-to-delivery block relocations."""
     units = _extract_pdg_units(current.solution, current.id_to_vehicle)
-    random.shuffle(units)
-    vehicle_ids = list(current.id_to_vehicle)
-    random.shuffle(vehicle_ids)
+    vehicle_ids = sorted(current.id_to_vehicle)
     results: List[Chromosome] = []
     current_signature = _cached_signature(current)
     current_coverage = _solution_coverage(current.solution)
 
     for unit in units:
-        if _deadline_reached(deadline, results, max_neighbors):
+        if _deadline_reached(deadline):
             break
         block_indices = tuple(range(unit.start_index, unit.end_index + 1))
         for target_id in vehicle_ids:
-            if _deadline_reached(deadline, results, max_neighbors):
+            if _deadline_reached(deadline):
                 break
-            plan = copy.deepcopy(current.solution)
-            block = _remove_nodes(plan[unit.vehicle_id], block_indices)
+            base_plan = copy.deepcopy(current.solution)
+            block = _remove_nodes(base_plan[unit.vehicle_id], block_indices)
             if len(block) != len(block_indices):
                 continue
-            target_route = plan[target_id]
+            target_route = base_plan[target_id]
             start = _insertion_start(
                 target_route, current.id_to_vehicle[target_id]
             )
             if start is None:
                 continue
-            position = random.randint(start, len(target_route))
-            target_route[position:position] = block
-            _append_candidate(plan, current, current_signature, current_coverage,
-                              seen_signatures, results)
+            for position in range(start, len(target_route) + 1):
+                if _deadline_reached(deadline):
+                    break
+                plan = copy.deepcopy(base_plan)
+                plan[target_id][position:position] = copy.deepcopy(block)
+                _append_candidate(
+                    plan, current, current_signature, current_coverage,
+                    seen_signatures, results, max_neighbors,
+                )
     return results
 
 
 def generate_block_exchange_neighbors(current: Chromosome, max_neighbors: int,
                                       deadline: float,
                                       seen_signatures: Set[SolutionSignature]) -> List[Chromosome]:
-    """Sample feasible inter- or intra-route block exchanges without a cost filter."""
+    """Return the best feasible inter- or intra-route block exchanges."""
     units = _extract_pdg_units(current.solution, current.id_to_vehicle)
     results: List[Chromosome] = []
     current_signature = _cached_signature(current)
     current_coverage = _solution_coverage(current.solution)
-    attempts = max_neighbors * 12
 
-    for _ in range(attempts):
-        if _deadline_reached(deadline, results, max_neighbors) or len(units) < 2:
+    for left, right in combinations(units, 2):
+        if _deadline_reached(deadline):
             break
-        left, right = random.sample(units, 2)
         left_indices = tuple(range(left.start_index, left.end_index + 1))
         right_indices = tuple(range(right.start_index, right.end_index + 1))
         if left.vehicle_id == right.vehicle_id:
@@ -467,182 +538,31 @@ def generate_block_exchange_neighbors(current: Chromosome, max_neighbors: int,
             right_position = _adjusted_index(right.start_index, right_indices)
             left_route[left_position:left_position] = right_nodes
             right_route[right_position:right_position] = left_nodes
-        _append_candidate(plan, current, current_signature, current_coverage,
-                          seen_signatures, results)
-    return results
-
-
-def generate_two_opt_neighbors(current: Chromosome, max_neighbors: int,
-                               deadline: float,
-                               seen_signatures: Set[SolutionSignature]) -> List[Chromosome]:
-    """Reverse complete, contiguous PDG blocks without partial-pair loss."""
-    results: List[Chromosome] = []
-    current_signature = _cached_signature(current)
-    current_coverage = _solution_coverage(current.solution)
-    units = _extract_pdg_units(current.solution, current.id_to_vehicle)
-    runs_by_vehicle = {
-        vehicle_id: _contiguous_outer_block_runs(units, vehicle_id)
-        for vehicle_id in current.solution
-    }
-    vehicle_ids = [
-        vehicle_id for vehicle_id, runs in runs_by_vehicle.items() if runs
-    ]
-    attempts = max_neighbors * 16
-
-    for _ in range(attempts):
-        if _deadline_reached(deadline, results, max_neighbors) or not vehicle_ids:
-            break
-        vehicle_id = random.choice(vehicle_ids)
-        run = random.choice(runs_by_vehicle[vehicle_id])
-        first_index, last_index = sorted(random.sample(range(len(run)), 2))
-        first_start = run[first_index][0]
-        last_end = run[last_index][1]
-        plan = copy.deepcopy(current.solution)
-        route = plan[vehicle_id]
-        reversed_blocks: List[Node] = []
-        for start, end in reversed(run[first_index:last_index + 1]):
-            reversed_blocks.extend(route[start:end + 1])
-        route[first_start:last_end + 1] = reversed_blocks
-        _append_candidate(plan, current, current_signature, current_coverage,
-                          seen_signatures, results)
-    return results
-
-
-def generate_neighbors(current: Chromosome, limit_time: float,
-                       deadline: Optional[float] = None) -> List[Chromosome]:
-    """Generate bounded feasible TS neighbours, including worsening solutions."""
-    generators = (
-        generate_pdg_relocate_neighbors,
-        generate_pdg_exchange_neighbors,
-        generate_block_relocate_neighbors,
-        generate_block_exchange_neighbors,
-        generate_two_opt_neighbors,
-    )
-    overall_deadline = deadline or (time.time() + limit_time * len(generators))
-    seen_signatures: Set[SolutionSignature] = set()
-    neighbors: List[Chromosome] = []
-
-    for index, generator in enumerate(generators):
-        if time.time() >= overall_deadline or config.is_timeout():
-            break
-        remaining_generators = len(generators) - index
-        remaining_time = max(0.0, overall_deadline - time.time())
-        operator_deadline = time.time() + min(
-            limit_time, remaining_time / max(1, remaining_generators)
+        _append_candidate(
+            plan, current, current_signature, current_coverage,
+            seen_signatures, results, max_neighbors,
         )
-        neighbors.extend(generator(
-            current, config.TS_NEIGHBORS_PER_OPERATOR, operator_deadline,
-            seen_signatures,
-        ))
-    return neighbors
-
-
-def _search_deadline() -> float:
-    """Return the tighter of the TS budget and simulator safety deadline."""
-    simulator_deadline = (
-        config.BEGIN_TIME + config.ALGO_TIME_LIMIT - _OUTPUT_RESERVE_SECONDS
-    )
-    return min(simulator_deadline, time.time() + config.TS_SEARCH_TIME_LIMIT)
+    return results
 
 
 def MOEAD_TS(Base_vehicleid_to_plan: Dict[str, List[Node]],
-                route_map: Dict[Tuple, Tuple],
-                id_to_vehicle: Dict[str, Vehicle],
-                id_to_factory: Dict[str, Factory],
-                id_to_unlocated_items: Dict[str, OrderItem],
-                new_order_itemIDs: List[str]) -> Optional[Chromosome]:
-    """Run bounded classical TS for one dynamic dispatch decision.
+             route_map: Dict[Tuple, Tuple],
+             id_to_vehicle: Dict[str, Vehicle],
+             id_to_factory: Dict[str, Factory],
+             id_to_unlocated_items: Dict[str, OrderItem],
+             new_order_itemIDs: List[str]) -> Optional[Chromosome]:
+    """Public MOEA/D--TS adapter implementing Algorithms 2--4.
 
-    This retains the classical tabu list, aspiration, and best-admissible
-    neighbour selection (including worsening moves). It intentionally omits
-    diversification because DPDP invokes TS again after each state update.
+    The production entry point is the decomposition-based population search;
+    the four move constructors above are the feasibility-aware,
+    best-improvement local searches used by Algorithm 4.
     """
-    if not new_order_itemIDs:
-        return None
-
-    if config.BEGIN_TIME == 0:
-        config.set_begin_time()
-    config.set_random_seed()
-    start_time = time.time()
-    search_deadline = _search_deadline()
-
-    try:
-        # Khởi tạo giống AGVNS: chèn đơn hàng mới bằng cheapest insertion (CI)
-        # thay cho worse_dispatch_new_orders. TS chỉ cần 1 lời giải nên dùng
-        # thẳng lời giải CI làm điểm khởi đầu, không cần population như GA.
-        initial_plan = copy.deepcopy(Base_vehicleid_to_plan)
-        worse_dispatch_new_orders(
-            initial_plan,
-            id_to_factory,
-            route_map,
-            id_to_vehicle,
-            id_to_unlocated_items,
-            new_order_itemIDs,
-        )
-        initial = Chromosome(initial_plan, route_map, id_to_vehicle)
-    except Exception:
-        # Fallback: return a Chromosome from the base plan itself
-        return None
-
-    current = initial
-    best_solution = copy.deepcopy(current.solution)
-    best_cost = _cached_fitness(current)
-    tabu_fifo = deque()
-    tabu_signatures: Set[SolutionSignature] = set()
-    add_tabu_signature(_cached_signature(current), tabu_fifo,
-                       tabu_signatures, config.TS_TABU_LIST_SIZE)
-
-    iteration = 0
-    stagnation = 0
-    total_aspirations = 0
-    print("[TS-Tabu] Init: seed={}, cost={:.2f}, tabu_size={}, budget={:.2f}s, "
-          "max_iters={}".format(
-        config.TS_RANDOM_SEED, best_cost, config.TS_TABU_LIST_SIZE,
-        max(0.0, search_deadline - start_time), config.TS_MAX_ITERATIONS,
-    ))
-
-    while (iteration < config.TS_MAX_ITERATIONS and
-           time.time() < search_deadline and not config.is_timeout()):
-        iteration += 1
-        neighbors = generate_neighbors(current, config.TS_OPERATOR_TIME_LIMIT,
-                                       search_deadline)
-        chosen, signature, tabu_rejections, aspirations = select_admissible_solution(
-            neighbors, tabu_signatures, best_cost
-        )
-        total_aspirations += aspirations
-
-        if chosen is None:
-            stagnation += 1
-        else:
-            current = chosen
-            add_tabu_signature(signature, tabu_fifo, tabu_signatures,
-                               config.TS_TABU_LIST_SIZE)
-            current_cost = _cached_fitness(current)
-            if current_cost < best_cost:
-                best_solution = copy.deepcopy(current.solution)
-                best_cost = current_cost
-                stagnation = 0
-            else:
-                stagnation += 1
-
-        if stagnation >= config.TS_STAGNATION_LIMIT:
-            print("[TS-Tabu] Stop at iter={}: stagnated for {} iterations".format(
-                iteration, config.TS_STAGNATION_LIMIT
-            ))
-            break
-
-        if iteration == 1 or iteration % 10 == 0:
-            print(
-                "[TS-Tabu] iter={} current={:.2f} best={:.2f} neighbors={} "
-                "tabu_rejected={} aspiration={} stuck={} tabu_size={} remaining={:.1f}s".format(
-                    iteration, _cached_fitness(current), best_cost, len(neighbors), tabu_rejections,
-                    aspirations, stagnation, len(tabu_fifo),
-                    max(0.0, search_deadline - time.time()),
-                )
-            )
-
-    elapsed = time.time() - start_time
-    print("[TS-Tabu] DONE: iters={}, best={:.2f}, aspirations={}, time={:.2f}s".format(
-        iteration, best_cost, total_aspirations, elapsed
-    ))
-    return Chromosome(best_solution, route_map, id_to_vehicle)
+    from algorithm.Test_algorithm.moead_core import run_moead_ts
+    return run_moead_ts(
+        Base_vehicleid_to_plan,
+        route_map,
+        id_to_vehicle,
+        id_to_factory,
+        id_to_unlocated_items,
+        new_order_itemIDs,
+    )

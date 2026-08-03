@@ -1,12 +1,33 @@
 import json
 import os
 import sys
+import tempfile
 from typing import Dict  , Tuple
 from algorithm.Object import *
 import pandas as pd
 from src.conf.configs import Configs
 from src.utils.logging_engine import logger
 from algorithm.algorithm_config import *
+
+
+def _write_json_atomic(path: str, payload: object) -> None:
+    """Atomically publish an output file or raise so the parent sees ``FAIL``."""
+    directory = os.path.dirname(path) or "."
+    os.makedirs(directory, exist_ok=True)
+    temporary_path = ""
+    try:
+        with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=directory,
+                prefix=".tmp_moead_", suffix=".json", delete=False) as file:
+            temporary_path = file.name
+            json.dump(payload, file, ensure_ascii=False, indent=4)
+            file.flush()
+            os.fsync(file.fileno())
+        os.replace(temporary_path, path)
+    except Exception:
+        if temporary_path and os.path.exists(temporary_path):
+            os.unlink(temporary_path)
+        raise
 
 def read_input_Factory_CSV(file_path : str) -> Dict[str , Factory]:
     id2factory_map: Dict[str, Factory] = {}
@@ -181,22 +202,8 @@ def write_destination_json_to_file(vehicleid_to_destination : Dict[str , Node] ,
             }
         result_json[vehicleID] = current_node
     
-    # Đảm bảo input_directory hợp lệ
-    if not os.path.isdir(input_directory):
-        try:
-            os.makedirs(input_directory, exist_ok=True)
-        except OSError as e:
-            print(f"Lỗi khi tạo thư mục: {e}", file = sys.stderr)
-            return  # Tránh tiếp tục nếu có lỗi
-
     output_file = os.path.join(input_directory, "output_destination.json")
-
-    # Ghi dữ liệu ra file JSON với kiểm soát lỗi
-    try:
-        with open(output_file, "w", encoding="utf-8") as file:
-            json.dump(result_json, file, ensure_ascii=False, indent=4)
-    except IOError as e:
-        print(f"Lỗi khi ghi file JSON: {e}", file = sys.stderr)
+    _write_json_atomic(output_file, result_json)
 
 
 def write_route_json_to_file(vehicleid_to_plan: Dict[str, list[Node]] , input_directory: str):
@@ -231,19 +238,5 @@ def write_route_json_to_file(vehicleid_to_plan: Dict[str, list[Node]] , input_di
                 vehicle_items.append(current_node)
         result_json[vehicleID] = vehicle_items
         
-    # Đảm bảo thư mục đầu ra hợp lệ
-    if not os.path.isdir(input_directory):
-        try:
-            os.makedirs(input_directory, exist_ok=True)
-        except OSError as e:
-            print(f"Lỗi khi tạo thư mục: {e}", file = sys.stderr)
-            return  # Tránh tiếp tục nếu có lỗi
-
     output_file = os.path.join(input_directory, "output_route.json")
-
-    # Ghi dữ liệu ra file JSON với kiểm soát lỗi
-    try:
-        with open(output_file, "w", encoding="utf-8") as file:
-            json.dump(result_json, file, ensure_ascii=False, indent=4)
-    except IOError as e:
-        print(f"Lỗi khi ghi file JSON: {e}", file = sys.stderr)
+    _write_json_atomic(output_file, result_json)

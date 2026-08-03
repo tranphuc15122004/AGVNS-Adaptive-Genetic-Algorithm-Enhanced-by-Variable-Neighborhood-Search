@@ -10,6 +10,7 @@ from algorithm.algorithm_config import *
 from typing import Dict , List, Optional, Tuple
 from algorithm.Object import *
 from algorithm.engine import *
+from algorithm.In_and_Out import _write_json_atomic
 import algorithm.algorithm_config as config
 from algorithm.local_search import *
 from algorithm.Test_algorithm.new_LS import *
@@ -2883,22 +2884,8 @@ def write_destination_json_to_file_with_delay_timme(vehicleid_to_destination : D
                 }
         result_json[vehicleID] = current_node
     
-      # Đảm bảo input_directory hợp lệ
-    if not os.path.isdir(input_directory):
-        try:
-            os.makedirs(input_directory, exist_ok=True)
-        except OSError as e:
-            print(f"Lỗi khi tạo thư mục: {e}", file = sys.stderr)
-            return  # Tránh tiếp tục nếu có lỗi
-
     output_file = os.path.join(input_directory, "output_destination.json")
-
-    # Ghi dữ liệu ra file JSON với kiểm soát lỗi
-    try:
-        with open(output_file, "w", encoding="utf-8") as file:
-            json.dump(result_json, file, ensure_ascii=False, indent=4)
-    except IOError as e:
-        print(f"Lỗi khi ghi file JSON: {e}", file = sys.stderr)
+    _write_json_atomic(output_file, result_json)
     
 
 
@@ -2936,21 +2923,6 @@ def write_route_json_to_file_with_delay_time(vehicleid_to_plan: Dict[str, list[N
                     vehicle_items.append(current_node)
         result_json[vehicleID] = vehicle_items
         
-    # Đảm bảo thư mục đầu ra hợp lệ
-    if not os.path.isdir(input_directory):
-        try:
-            os.makedirs(input_directory, exist_ok=True)
-        except OSError as e:
-            print(f"Lỗi khi tạo thư mục: {e}", file = sys.stderr)
-            return  # Tránh tiếp tục nếu có lỗi
-
     output_file = os.path.join(input_directory, "output_route.json")
-
-    # Ghi dữ liệu ra file JSON với kiểm soát lỗi
-    try:
-        with open(output_file, "w", encoding="utf-8") as file:
-            json.dump(result_json, file, ensure_ascii=False, indent=4)
-    except IOError as e:
-        print(f"Lỗi khi ghi file JSON: {e}", file = sys.stderr)
-
+    _write_json_atomic(output_file, result_json)
 

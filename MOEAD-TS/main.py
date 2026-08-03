@@ -27,7 +27,7 @@ def _parse_instances(raw_value: str):
 
 def _parse_args():
     parser = argparse.ArgumentParser(
-        description="Run the pure Tabu Search simulator for one or more benchmark instances."
+        description="Run the MOEA/D--TS simulator for one or more benchmark instances."
     )
     parser.add_argument(
         "--instances",
@@ -46,7 +46,7 @@ def _parse_args():
         "--seed",
         type=int,
         default=0,
-        help="Seed used by the pure TS algorithm subprocesses (default: 0).",
+        help="Seed used by MOEA/D--TS algorithm subprocesses (default: 0).",
     )
     return parser.parse_args()
 
@@ -54,10 +54,10 @@ def _parse_args():
 def _configure_runtime(args):
     # The simulator calls main_algorithm.py in a fresh subprocess on every
     # dispatch tick.  Environment propagation keeps that child deterministic.
-    os.environ["TS_RANDOM_SEED"] = str(args.seed)
+    os.environ["MOEAD_RANDOM_SEED"] = str(args.seed)
 
     if args.data_dir:
-        os.environ["MA_DATA_INTERACTION_DIR"] = os.path.abspath(args.data_dir)
+        os.environ["MOEAD_DATA_INTERACTION_DIR"] = os.path.abspath(args.data_dir)
         Configs.configure_algorithm_data_dir(args.data_dir)
 
     if args.instances is not None:
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         logger.info(f"data_interaction directory: {Configs.algorithm_data_interaction_folder_path}")
         if args.cpu is not None:
             logger.info(f"CPU affinity target: core {args.cpu}")
-        logger.info(f"TS random seed: {args.seed}")
+        logger.info(f"MOEA/D--TS random seed: {args.seed}")
 
         try:
             score, elapsed = simulate(Configs.factory_info_file, Configs.route_info_file, instance)

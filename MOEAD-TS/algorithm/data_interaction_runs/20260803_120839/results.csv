@@ -1,0 +1,1 @@
+batch_id,instance_id,repetition,seed,core,pid,started_at_utc,finished_at_utc,wall_time_seconds,simulation_runtime_seconds,algorithm_time_seconds,algorithm_dispatch_count,score,return_code,status,workspace,log_path,error

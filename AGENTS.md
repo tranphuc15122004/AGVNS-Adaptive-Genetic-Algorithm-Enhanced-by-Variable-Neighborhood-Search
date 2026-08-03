@@ -4,19 +4,20 @@ This repository implements and compares several algorithms for the **Dynamic Pic
 
 ## Architecture
 
-Three main Python algorithm variants share a common simulator infrastructure:
+Four main Python algorithm variants share a common simulator infrastructure:
 
 | Directory | Algorithm | Key Characteristics |
 |-----------|-----------|-------------------|
-| `AGVNS/` | **Adaptive GA + VNS** (Proposed) | Population 40, generations 20, `CROSSOVER_TYPE_RATIO=1.0`, `LS_MAX=1`, `LS_METHODS` includes `'MA'` |
+| `AGVNS/` | **Adaptive GA + VNS** (Proposed) | Population 40, generations 20, `CROSSOVER_TYPE_RATIO=1.0`, `LS_MAX=1`, `LS_METHODS` includes `'MA'`; experimental ACO/GA solvers + visualization tooling |
 | `MA/` | **Memetic Algorithm** (Baseline) | Population 20, generations 20, `CROSSOVER_TYPE_RATIO=0.0`, `LS_MAX=20` |
 | `TS/` | **Tabu Search** (Baseline) | Population 20, generations 15, `CROSSOVER_TYPE_RATIO=0.0`, `LS_MAX=15`, `LS_MAX_TIME_PER_OP=5s` |
+| `MOEAD-TS/` | **Solution-based Tabu Search** (Baseline, MOEA/D-TS paper) | Single-solution TS (`tabu_search.py`), MA-style engine; `TS_TABU_LIST_SIZE=20`, `TS_NEIGHBORS_PER_OPERATOR=6`, `TS_MAX_ITERATIONS=20`; paper PDF in variant root |
 
 **Competition baselines** (not Python): `1/` (Java, Top-1), `2/` (Python, Top-2), `3/` (C++, Top-3).
 
 ### Key Files per Variant
 
-Each variant (`TS/`, `MA/`, `AGVNS/`) follows the same layout:
+Each variant (`AGVNS/`, `MA/`, `TS/`, `MOEAD-TS/`) follows the same layout:
 - `main.py` — Simulator entry point (drives simulation loop over instances)
 - `main_algorithm.py` — Algorithm entry point (called by simulator as subprocess; must print `"SUCCESS"` on completion)
 - `algorithm/main.py` — Core orchestrator (reads input, runs algorithm, writes output)
@@ -25,10 +26,20 @@ Each variant (`TS/`, `MA/`, `AGVNS/`) follows the same layout:
 - `algorithm/engine.py` — Base engine (scene restoration, cost computation, selection, delay dispatch)
 - `algorithm/local_search.py` — LS operators (PDPairExchange, BlockExchange, BlockRelocate, mPDG, 2-opt)
 - `algorithm/Object/` — Data models (`Chromosome`, `Node`, `Vehicle`, `Factory`, `OrderItem`, etc.)
-- `algorithm/Test_algorithm/` — Algorithm-specific implementations
+- `algorithm/Test_algorithm/` — Algorithm-specific implementations (see table below)
 - `src/conf/configs.py` — Simulator configuration (file paths, instance selection, pallet types)
 - `src/simulator/` — Simulator core (simpy-based discrete-event simulation)
 - `benchmark/` — 64 instances + `factory_info.csv` (154 factories) + `route_info.csv` (23,562 routes)
+- `run_parallel.py` — Queue-based parallel runner (MA/TS/MOEAD-TS); each job gets its own `data_interaction` dir, results under `algorithm/data_interaction_runs/<batch_id>/results.csv`
+
+#### Variant-specific algorithm modules
+
+| Variant | `algorithm/Test_algorithm/` contents | Core dispatch (in `algorithm/main.py`) |
+|---------|--------------------------------------|----------------------------------------|
+| `AGVNS/` | `GAVND7.py`, `new_engine.py`, `new_LS.py`, `adaptive_ratio.py`, `base_GA.py`, `GAVND.py`–`GAVND6.py` (older GA variants) | `GAVND_7()` from `GAVND7.py` |
+| `MA/` | `MA.py`, `MA_engine.py`, `GAVND7.py`, `new_engine.py`, `new_LS.py`, `adaptive_ratio.py` | `Memetic_algorithm()` from `MA.py` (also imports `GAVND_7`) |
+| `TS/` | `MA.py`, `MA_engine.py`, `tabu_search.py`, `new_engine.py`, `new_LS.py`, `adaptive_ratio.py` | Tabu search via `MA_engine.py`/`tabu_search.py` |
+| `MOEAD-TS/` | `tabu_search.py`, `MA.py`, `MA_engine.py`, `new_engine.py`, `new_LS.py`, `adaptive_ratio.py` | `Tabu_Search()` from `tabu_search.py` (pure TS, no GA population) |
 
 ### Algorithm Pipeline (common across variants)
 
@@ -42,19 +53,42 @@ Each variant (`TS/`, `MA/`, `AGVNS/`) follows the same layout:
 
 ### AGVNS-specific Architecture
 
-- `algorithm/Test_algorithm/GAVND7.py` — Best GA variant (adaptive GA + VNS)
+- `algorithm/Test_algorithm/GAVND7.py` — Best GA variant (adaptive GA + VNS), used by `algorithm/main.py`
 - `algorithm/Test_algorithm/new_engine.py` — Advanced GA ops (crossover, selection)
 - `algorithm/Test_algorithm/new_LS.py` — Advanced LS operators
 - `algorithm/Test_algorithm/adaptive_ratio.py` — Adaptive crossover ratio (erfc/KWW decay)
-- `main_with_viz.py` — Simulation + auto-visualization
-- `posthoc_visualization.py` — Folium maps + Gantt charts from algorithm outputs
+- `algorithm/Main_algorithm/` — Experimental standalone solvers (**not** used by the default pipeline): `ACO.py` (ant colony; config `POPULATION_SIZE_ACO`, `NUMBER_OF_GENERATION_ACO`, `ALPHA`, `BETA`, `Q`, `BASE_PHEROMONE`, `EVAPORATION_RATE`) and `GA.py`
+- `src/visualization/` — `visualization_recorder.py` (epoch-by-epoch snapshots → `epoch_summary.json`) and `executed_route_recorder.py` (actual executed routes → `executed_routes.json`)
+- Visualization toggles in `src/conf/configs.py`: `ENABLE_VISUALIZATION`, `VISUALIZATION_RECORD_MODE`, `VISUALIZATION_OUTPUT_DIR` (default `visualization_output/`), `ENABLE_EXECUTED_ROUTE_RECORDING`
+
+#### Visualization scripts (AGVNS only)
+
+- `main_with_viz.py` — Simulation + auto-viz (forces `ENABLE_VISUALIZATION`; builds `timeline.html`, `animated_simulation.html`, validation report)
+- `posthoc_visualization.py` — Folium maps + Gantt charts **from algorithm output JSONs** (no re-run / no algorithm changes)
+- `build_instance_timeline.py` — Timeline HTML from `epoch_summary.json`
+- `build_executed_route_viz.py` — Interactive route HTML from `executed_routes.json`
+- `extract_executed_routes_from_summary.py` — Rebuild `executed_routes.json` from `epoch_summary.json` (no re-run needed)
+- `render_animation.py` — Animated trajectory playback from `epoch_summary.json`
+- `validate_visualization.py` — Cross-checks viz data vs `solution.json`/`vehicle_info.json`
+- `test_executed_route_recorder.py` — Unit tests for `ExecutedRouteRecorder`
+- `Kết quả thử nghiệm.xlsx` — Experimental results spreadsheet (in `AGVNS/` root)
+
+### MOEAD-TS-specific Architecture
+
+- Based on the paper `Decomposition-Based_Multiobjective_Evolutionary_Optimization_With_Tabu_Search_for_Dynamic_Pickup_and_Delivery_Problems.pdf` (in `MOEAD-TS/` root)
+- `algorithm/Test_algorithm/tabu_search.py` — Core single-solution Tabu Search (`Tabu_Search`); uses neighbourhoods from `new_LS.py` and init from `new_engine.py`
+- `algorithm/main.py` calls `Tabu_Search(...)` directly on the restored scene — no GA population initialization
+- `algorithm/algorithm_config.py` `set_random_seed()` seeds `random`/`numpy` (inherited by simulator-launched subprocesses; overridable via `TS_RANDOM_SEED` env)
+- Dedicated TS params: `TS_TABU_LIST_SIZE=20`, `TS_NEIGHBORS_PER_OPERATOR=6`, `TS_SEARCH_TIME_LIMIT=8.0`, `TS_MAX_ITERATIONS=20`, `TS_STAGNATION_LIMIT=10`, `TS_OPERATOR_TIME_LIMIT=0.25`
+- Note: `MOEAD-TS/` has **no** `requirements.txt` — reuse the MA/TS dependency set
 
 ## Build, Run & Test
 
 ### Dependencies
 
-- **Common**: `simpy`, `numpy`, `pandas`, `fastapi`, `uvicorn`, `flask-socketio`, `Flask`, `flask-cors`
-- **AGVNS only**: `matplotlib`, `psutil`
+- **AGVNS** (`AGVNS/requirements.txt`): `numpy`, `simpy`, `pandas`, `psutil`, `matplotlib`
+- **MA / TS** (`requirements.txt`): `fastapi`, `uvicorn`, `simpy`, `flask-socketio`, `Flask`, `flask-cors`
+- **MOEAD-TS**: no `requirements.txt` — reuse the MA/TS dependency set
 
 Install for a specific variant:
 ```bash
@@ -86,10 +120,21 @@ cd <variant>
 python main_algorithm.py
 ```
 
-### Parallel Runs (MA/TS only)
+### Parallel Runs (MA/TS/MOEAD-TS only)
 
 ```bash
 python run_parallel.py --all --cores 0,1,2,3
+```
+
+### Visualization (AGVNS only)
+
+```bash
+cd AGVNS
+python main_with_viz.py --instance 1            # simulation + auto-viz (timeline, animation, validation)
+python posthoc_visualization.py --data-dir algorithm/data_interaction   # Folium + Gantt from outputs
+python render_animation.py                       # animated playback from latest epoch_summary.json
+python build_executed_route_viz.py visualization_output/instance_1/executed_routes.json   # route HTML
+python validate_visualization.py                 # cross-check viz vs algorithm outputs
 ```
 
 ### Simulation Flow
@@ -116,17 +161,21 @@ python run_parallel.py --all --cores 0,1,2,3
 
 See `algorithm/algorithm_config.py` in each variant. Key parameters:
 
-| Parameter | AGVNS | MA/TS |
-|-----------|-------|-------|
-| `POPULATION_SIZE` | 40 (adaptive: 10–40) | 20 |
-| `NUMBER_OF_GENERATION` | 20 | 20 (TS: 15) |
-| `MUTATION_RATE` | 0.25 | 0.25 |
-| `LS_MAX` | 1 | 20 (TS: 15) |
-| `CROSSOVER_TYPE_RATIO` | 1.0 | 0.0 |
-| `ALGO_TIME_LIMIT` | 570s | 570s |
-| `LS_MAX_TIME_PER_OP` | 8s | 8s (TS: 5s) |
+| Parameter | AGVNS | MA | TS | MOEAD-TS |
+|-----------|-------|----|----|----------|
+| `POPULATION_SIZE` | 40 (adaptive: 10–40) | 20 | 20 | 20 |
+| `NUMBER_OF_GENERATION` | 20 | 20 | 15 | 20 |
+| `MUTATION_RATE` | 0.25 | 0.25 | 0.25 | 0.25 |
+| `LS_MAX` | 1 | 20 | 15 | 20 |
+| `CROSSOVER_TYPE_RATIO` | 1.0 | 0.0 | 0.0 | 0.0 |
+| `ALGO_TIME_LIMIT` | 570s | 570s | 570s | 570s |
+| `LS_MAX_TIME_PER_OP` | 8s | 8s | 5s | 8s |
 
 The `adaptive_config(num_orders)` function adjusts `POPULATION_SIZE`, `MUTATION_RATE`, and `LS_MAX` based on order count (linearly mapped: 20 orders → pop=40, 80+ orders → pop=10).
+
+**AGVNS ACO config** (`algorithm_config.py`): `POPULATION_SIZE_ACO=20`, `NUMBER_OF_GENERATION_ACO=100`, `ALPHA=1.0`, `BETA=0.5`, `Q=100`, `BASE_PHEROMONE=0.1`, `EVAPORATION_RATE=0.85`.
+
+**MOEAD-TS dedicated TS params** (`algorithm_config.py`): `TS_TABU_LIST_SIZE=20`, `TS_NEIGHBORS_PER_OPERATOR=6` (5 neighbourhoods × 6 = ≤30 candidates), `TS_SEARCH_TIME_LIMIT=8.0s`, `TS_MAX_ITERATIONS=20`, `TS_STAGNATION_LIMIT=10`, `TS_OPERATOR_TIME_LIMIT=0.25s`.
 
 ## Benchmark
 
@@ -144,3 +193,5 @@ The `adaptive_config(num_orders)` function adjusts `POPULATION_SIZE`, `MUTATION_
 - **The `DELAY_DISPATCH` flag** in `algorithm_config.py` changes which output files are written (with/without delay time). Toggle carefully.
 - **Merge nodes before output** — `merge_node()` must be called on the solution before writing JSON, or consecutive same-factory nodes cause verification errors.
 - **New orders only**: The `restore_scene_with_single_node()` preserves ongoing plans; the algorithm should only optimize placement of truly new (unlocated) orders.
+- **Visualization (AGVNS)**: enabling `ENABLE_VISUALIZATION`/`ENABLE_EXECUTED_ROUTE_RECORDING` in `src/conf/configs.py` writes JSON snapshots into `AGVNS/visualization_output/` and slows the simulator; `main_with_viz.py` forces these flags on, plain `main.py` does not.
+- **`MOEAD-TS` has no `requirements.txt`** — install the MA/TS dependency set before running.

@@ -15,27 +15,46 @@ Delta1 = 10000.0
 SLACK_TIME_THRESHOLD = 10000
 debugPeriod = "0010-0020"
 addDelta = 400000.0
-LS_METHODS = ['PDPairExchange', 'BlockExchange', 'BlockRelocate', 'mPDG', '2opt']
+# MOEA/D--TS delegates to the four active AGVNS ``new_LS`` operators.  Keep
+# these labels aligned with AGVNS/algorithm/Test_algorithm/GAVND7.py so
+# instrumentation on a Chromosome cannot advertise obsolete TS-only moves.
+LS_METHODS = ['PDPairExchange', 'BlockExchange', 'BlockRelocate', 'mPDG']
 BEGIN_TIME = 0
-ALGO_TIME_LIMIT = 570
+# The paper and the simulator both impose a 600-second total process limit.
+# Reserve only the final seconds for mandatory archive/JSON output; this time
+# remains part of the same 600-second budget.
+ALGO_TIME_LIMIT = 600
+OUTPUT_RESERVE_SECONDS = 15.0
 DELAY_DISPATCH = False
 CROSSOVER_TYPE_RATIO = 0.0  
 USE_ADAPTIVE_ORDER_DISCRIMINATE = True
 WAITING_WEIGHT = 0
 
-# Classical Tabu Search configuration.
-#
-# Comparison scale: MA evaluates up to 20 offspring in each of 20 generations
-# (about 400 solutions); AGVNS uses 40 individuals for 20 generations
-# (about 800).  TS therefore evaluates up to 30 neighbours in each of 20
-# iterations (about 600), which sits between those two baselines.  The 8-second
-# cap is deliberately per dynamic dispatch decision: using the shared 570s
-# process limit here would again make a multi-tick DPDP simulation impractical.
-TS_RANDOM_SEED = 0
-TS_TABU_LIST_SIZE = 20
-TS_NEIGHBORS_PER_OPERATOR = 6  # 5 neighbourhoods x 6 = at most 30 candidates.
+# Published MOEA/D--TS parameters.
+MOEAD_POPULATION_SIZE = 6       # paper: N=6
+MOEAD_NEIGHBOR_SIZE = 2         # paper: T=2
+MOEAD_MAX_GENERATIONS = 50      # paper: max 50 outer iterations
+MOEAD_DELTA = 0.9                # reproduction assumption; not disclosed
+MOEAD_MAX_REPLACEMENTS = 2      # reproduction assumption; not disclosed
+
+# Algorithm 4 parameters not disclosed in the paper.  Keep them configurable
+# and log them as implementation choices in the algorithm manifest.
+MOEAD_TS_TABU_LIST_SIZE = 20
+MOEAD_TS_NEIGHBOR_THRESHOLD = 30
+MOEAD_TS_MAX_ITERATIONS = 20
+# A production interval must retain time for other subproblems and JSON I/O.
+# Small routes finish their complete neighbourhood before this cap; large
+# routes use the best feasible candidate found in this bounded slice.
+MOEAD_TS_OPERATOR_TIME_LIMIT = 1.0
+MOEAD_INITIALIZATION_TIME_FRACTION = 0.25
+MOEAD_INITIALIZATION_MAX_SECONDS = 90.0
+MOEAD_RANDOM_SEED = 0
+# Backward-compatible aliases for external scripts during migration.
+TS_RANDOM_SEED = MOEAD_RANDOM_SEED
+TS_TABU_LIST_SIZE = MOEAD_TS_TABU_LIST_SIZE
+TS_MAX_ITERATIONS = MOEAD_TS_MAX_ITERATIONS
+TS_NEIGHBORS_PER_OPERATOR = 1
 TS_SEARCH_TIME_LIMIT = 8.0
-TS_MAX_ITERATIONS = 20
 TS_STAGNATION_LIMIT = 10
 TS_OPERATOR_TIME_LIMIT = 0.25
 
@@ -45,19 +64,23 @@ def set_begin_time():
     BEGIN_TIME = time.time()
 
 def set_random_seed(seed=None):
-    """Seed all random sources used by the TS child process.
+    """Seed all random sources used by the MOEA/D--TS child process.
 
-    ``TS_RANDOM_SEED`` is inherited by every simulator-launched subprocess;
-    an explicit argument is useful for focused tests.
+    ``MOEAD_RANDOM_SEED`` is inherited by every simulator-launched subprocess;
+    the old ``TS_RANDOM_SEED`` name remains a compatibility fallback.
     """
-    global TS_RANDOM_SEED
+    global MOEAD_RANDOM_SEED, TS_RANDOM_SEED
     if seed is None:
-        seed = os.environ.get("TS_RANDOM_SEED", TS_RANDOM_SEED)
-    TS_RANDOM_SEED = int(seed)
-    random.seed(TS_RANDOM_SEED)
+        seed = os.environ.get(
+            "MOEAD_RANDOM_SEED",
+            os.environ.get("TS_RANDOM_SEED", MOEAD_RANDOM_SEED),
+        )
+    MOEAD_RANDOM_SEED = int(seed)
+    TS_RANDOM_SEED = MOEAD_RANDOM_SEED
+    random.seed(MOEAD_RANDOM_SEED)
     if np is not None:
-        np.random.seed(TS_RANDOM_SEED)
-    return TS_RANDOM_SEED
+        np.random.seed(MOEAD_RANDOM_SEED)
+    return MOEAD_RANDOM_SEED
 
 def is_timeout() -> bool:
     """Check if algorithm has exceeded time limit"""
@@ -66,6 +89,50 @@ def is_timeout() -> bool:
 def get_remaining_time() -> float:
     """Get remaining time in seconds"""
     return max(0, ALGO_TIME_LIMIT - (time.time() - BEGIN_TIME))
+
+
+def search_deadline() -> float:
+    """Return the global optimization deadline with output safety margin."""
+    if BEGIN_TIME == 0:
+        set_begin_time()
+    return BEGIN_TIME + ALGO_TIME_LIMIT - OUTPUT_RESERVE_SECONDS
+
+
+def moead_parameter_manifest() -> dict:
+    """Return paper parameters separately from reproduction assumptions."""
+    return {
+        "algorithm": "MOEAD-TS",
+        "paper": {
+            "population_size": MOEAD_POPULATION_SIZE,
+            "neighborhood_size": MOEAD_NEIGHBOR_SIZE,
+            "max_outer_iterations": MOEAD_MAX_GENERATIONS,
+            "alpha": Delta,
+            "normalization": False,
+            "tabu_operators": [
+                "PDPairExchange", "BlockExchange",
+                "BlockRelocate", "mPDG",
+            ],
+        },
+        "implementation_choice": {
+            "delta": MOEAD_DELTA,
+            "max_replacements": MOEAD_MAX_REPLACEMENTS,
+            "tabu_list_size": MOEAD_TS_TABU_LIST_SIZE,
+            "ts_max_iterations": MOEAD_TS_MAX_ITERATIONS,
+            "neighbor_threshold": MOEAD_TS_NEIGHBOR_THRESHOLD,
+            "ts_operator_time_limit": MOEAD_TS_OPERATOR_TIME_LIMIT,
+            "local_search_source": (
+                "AGVNS/algorithm/Test_algorithm/new_LS.py"
+            ),
+            "local_search_dispatch": (
+                "dynamic load once per MOEA/D--TS subprocess"
+            ),
+            "initialization_time_fraction": MOEAD_INITIALIZATION_TIME_FRACTION,
+            "initialization_max_seconds": MOEAD_INITIALIZATION_MAX_SECONDS,
+            "insertion": "exhaustive feasible positions until global deadline",
+            "total_runtime_limit": ALGO_TIME_LIMIT,
+            "output_reserve_seconds": OUTPUT_RESERVE_SECONDS,
+        },
+    }
 
 
 """GA configuration"""

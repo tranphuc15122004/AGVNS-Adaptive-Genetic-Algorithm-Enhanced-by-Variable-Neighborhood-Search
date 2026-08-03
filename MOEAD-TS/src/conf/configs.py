@@ -2,7 +2,10 @@ import os
 
 
 def _parse_selected_instances_from_env():
-    raw_value = os.environ.get("MA_SELECTED_INSTANCES")
+    raw_value = os.environ.get(
+        "MOEAD_SELECTED_INSTANCES",
+        os.environ.get("MA_SELECTED_INSTANCES"),
+    )
     if raw_value is None:
         return [1]
 
@@ -61,7 +64,11 @@ class Configs(object):
     factory_info_file_path = os.path.join(benchmark_folder_path, factory_info_file)
 
     algorithm_data_interaction_folder_path = os.path.abspath(
-        os.environ.get("MA_DATA_INTERACTION_DIR", os.path.join(algorithm_folder_path, "data_interaction"))
+        os.environ.get(
+            "MOEAD_DATA_INTERACTION_DIR",
+            os.environ.get("MA_DATA_INTERACTION_DIR",
+                           os.path.join(algorithm_folder_path, "data_interaction")),
+        )
     )
     if not os.path.exists(algorithm_data_interaction_folder_path):
         os.makedirs(algorithm_data_interaction_folder_path)
