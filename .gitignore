@@ -36,7 +36,10 @@ Thumbs.db
 *.tmp
 
 # Runtime JSON data (generated during simulation)
-algorithm/data_interaction/
+**/algorithm/data_interaction/
+**/algorithm/data_interaction_runs/
+**/algorithm/data_interaction_debug/
+**/algorithm/data_interaction_test/
 src/output/
 
 # Compiled object files (not executable binaries)

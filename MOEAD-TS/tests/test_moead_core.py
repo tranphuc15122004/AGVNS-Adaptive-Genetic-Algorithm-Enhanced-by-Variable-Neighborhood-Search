@@ -1,14 +1,17 @@
+import copy
 import math
 import random
 import time
 
 from algorithm.Object import Chromosome, Factory, Node, OrderItem, Vehicle
 from algorithm.engine import (
-    _restore_canonical_route_after, get_route_after, isFeasible, merge_node,
-    repair_restored_lifo_routes,
+    _restore_canonical_route_after, cost_of_a_route, get_route_after,
+    isFeasible, merge_node, repair_restored_lifo_routes, total_cost,
 )
+import algorithm.engine as engine
 import algorithm.Test_algorithm.MOEAD_TS as moead_ts_operators
 import algorithm.Test_algorithm.moead_core as moead_core
+import algorithm.Test_algorithm.moead_objectives as moead_objectives
 from algorithm.Test_algorithm.moead_core import (
     DispatchUnit,
     _insert_unit_best,
@@ -103,6 +106,76 @@ def test_evaluator_averages_distance_over_all_vehicles():
     context = EvaluationContext(route_map, vehicles, factories, {item.id: item})
     objectives = evaluate_solution(solution, context)
     assert objectives.average_distance == 1.0
+
+
+def test_evaluator_uses_the_shared_engine_for_f1_f2_and_total_cost():
+    factories, route_map, vehicles, item = _fixture()
+    solution = {
+        "V_1": [Node("B", [], [item]), Node("C", [item], [])],
+    }
+    context = EvaluationContext(route_map, vehicles, factories, {item.id: item})
+    objectives = evaluate_solution(solution, context)
+    normalized = canonicalize_solution(solution, vehicles)
+    vehicle = vehicles["V_1"]
+
+    weighted_f1 = cost_of_a_route(
+        normalized["V_1"], vehicle, vehicles, route_map, normalized,
+        mode="overtime",
+    )
+    f2 = cost_of_a_route(
+        normalized["V_1"], vehicle, vehicles, route_map, normalized,
+        mode="distance",
+    )
+    f1, f2_from_total, scalar = total_cost(
+        vehicles, route_map, normalized, mode="components",
+    )
+
+    # All three values must originate from the same full-fleet total-cost
+    # evaluation. The per-route function is only a parity oracle here.
+    assert f1 == weighted_f1 / config.Delta
+    assert f2_from_total == f2
+    assert objectives.tardiness == f1
+    assert objectives.average_distance == f2_from_total
+    assert objectives.tc == scalar
+    assert scalar == total_cost(vehicles, route_map, normalized)
+
+
+def test_evaluator_requests_all_components_from_one_total_cost_call(monkeypatch):
+    factories, route_map, vehicles, item = _fixture()
+    context = EvaluationContext(route_map, vehicles, factories, {item.id: item})
+    calls = []
+
+    def total_with_components(_vehicles, _route_map, _plan, mode="total"):
+        calls.append(mode)
+        return 12.0, 3.0, 36.0
+
+    monkeypatch.setattr(moead_objectives, "total_cost", total_with_components)
+    objectives = moead_objectives.evaluate_solution(
+        {"V_1": [Node("B", [], [item]), Node("C", [item], [])]},
+        context, validate=False,
+    )
+
+    assert calls == ["components"]
+    assert objectives == Objectives(12.0, 3.0, 36.0)
+
+
+def test_route_evaluator_delegates_to_one_full_total_cost_call(monkeypatch):
+    factories, route_map, vehicles, item = _fixture()
+    plan = {"V_1": [Node("B", [], [item]), Node("C", [item], [])]}
+    calls = []
+
+    def total_with_components(_vehicles, _route_map, _plan, mode="total"):
+        calls.append(mode)
+        return 5.0, 7.0, 17.0
+
+    monkeypatch.setattr(engine, "total_cost", total_with_components)
+    value = cost_of_a_route(
+        plan["V_1"], vehicles["V_1"], vehicles, route_map, plan,
+        mode="distance",
+    )
+
+    assert calls == ["components"]
+    assert value == 7.0
 
 
 def test_evaluator_matches_the_consecutive_factory_nodes_sent_to_simulator():
@@ -362,34 +435,27 @@ def test_exchange_operators_return_the_best_pair_from_the_full_neighborhood():
         moead_ts_operators._ACTIVE_OBJECTIVE_CONTEXT = previous_context
 
 
-def test_tabu_search_invokes_the_shared_agvns_operator_source(monkeypatch):
+def test_tabu_search_samples_single_moves_from_all_four_operators(monkeypatch):
     chromosome, context = _single_order_relocation_fixture()
     monkeypatch.setattr(config, "MOEAD_TS_MAX_ITERATIONS", 1)
     monkeypatch.setattr(config, "MOEAD_TS_NEIGHBOR_THRESHOLD", 4)
-    from algorithm.Test_algorithm.agvns_ls_bridge import (
-        agvns_ls_source_path, load_agvns_ls,
-    )
-    shared_ls = load_agvns_ls()
     calls = []
     operator_names = (
-        "PDPairExchange", "BlockExchange", "BlockRelocate", "mPDG",
+        "pdg_exchange", "block_exchange", "pdg_relocate", "block_relocate",
     )
-    source_functions = {
-        "PDPairExchange": "new_inter_couple_exchange",
-        "BlockExchange": "new_block_exchange",
-        "BlockRelocate": "new_block_relocate",
-        "mPDG": "new_multi_pd_group_relocate",
-    }
 
-    def make_operator(name):
-        def operator(plan, vehicles, route_map, limit_time, is_limited):
-            calls.append((name, plan, vehicles, route_map, limit_time, is_limited))
-            return False
-        return operator
+    def make_sampler(name):
+        def sampler(current, deadline):
+            calls.append(name)
+            return None
+        return sampler
 
-    for name, function_name in source_functions.items():
-        assert callable(getattr(shared_ls, function_name))
-        monkeypatch.setattr(shared_ls, function_name, make_operator(name))
+    for name in operator_names:
+        monkeypatch.setattr(
+            moead_ts_operators,
+            "sample_{}_move".format(name),
+            make_sampler(name),
+        )
     selected_operators = iter(operator_names)
     monkeypatch.setattr(
         moead_core.random, "choice", lambda _operators: next(selected_operators)
@@ -398,12 +464,44 @@ def test_tabu_search_invokes_the_shared_agvns_operator_source(monkeypatch):
 
     result = tabu_search(chromosome, context, time.time() + 1.0)
 
-    assert [call[0] for call in calls] == list(operator_names)
-    assert all(call[5] is False for call in calls)
-    assert agvns_ls_source_path().as_posix().endswith(
-        "/AGVNS/algorithm/Test_algorithm/new_LS.py"
-    )
+    assert calls == list(operator_names)
     assert get_route_after(result.solution, {}) == get_route_after(chromosome.solution, {})
+
+
+def test_tabu_search_tabus_the_applied_move(monkeypatch):
+    chromosome, context = _single_order_relocation_fixture()
+    monkeypatch.setattr(config, "MOEAD_TS_MAX_ITERATIONS", 2)
+    monkeypatch.setattr(config, "MOEAD_TS_NEIGHBOR_THRESHOLD", 1)
+    monkeypatch.setattr(config, "MOEAD_TS_TABU_LIST_SIZE", 4)
+
+    item = chromosome.solution["V_1"][0].pickup_item_list[0]
+
+    def improving_relocate(current, deadline):
+        plan = copy.deepcopy(current.solution)
+        plan["V_1"] = []
+        plan["V_2"] = []
+        plan["V_3"] = [
+            Node("B", [], [item]), Node("C", [item], []),
+        ]
+        candidate = Chromosome(plan, current.route_map, current.id_to_vehicle)
+        return candidate, ("pdg_relocate", ("I-1",), "V_3", 0, 1)
+
+    monkeypatch.setattr(
+        moead_ts_operators, "sample_pdg_relocate_move", improving_relocate
+    )
+    monkeypatch.setattr(
+        moead_core.random, "choice",
+        lambda _operators: "pdg_relocate",
+    )
+    config.set_begin_time()
+
+    result = tabu_search(chromosome, context, time.time() + 1.0)
+
+    # First outer iteration applies the sampled relocate; the move key is
+    # tabued so the second iteration cannot re-apply the same move.
+    assert result.solution["V_1"] == []
+    assert [node.id for node in result.solution["V_3"]] == ["B", "C"]
+    assert result._moead_tc < chromosome.fitness
 
 
 def test_archive_round_trip_preserves_cross_order_lifo_sequence():

@@ -47,11 +47,6 @@ def _initialization_deadline(deadline: float) -> float:
     return min(deadline, _now() + budget)
 
 
-def _operator_deadline(deadline: float) -> float:
-    """Bound one exhaustive local-search operator on large route sets."""
-    return min(deadline, _now() + float(config.MOEAD_TS_OPERATOR_TIME_LIMIT))
-
-
 def _copy_candidate(candidate: Chromosome) -> Chromosome:
     result = Chromosome(
         copy.deepcopy(candidate.solution), candidate.route_map, candidate.id_to_vehicle
@@ -469,65 +464,73 @@ def _select_parents(pool: Sequence[int]) -> Tuple[int, int]:
     return pool[0], pool[0]
 
 
+_TS_OPERATOR_NAMES = (
+    "pdg_exchange",      # couple-exchange
+    "block_exchange",    # block-exchange
+    "pdg_relocate",      # couple-relocate
+    "block_relocate",    # block-relocate
+)
+
+
+def _sample_single_move(operator_name: str, current: Chromosome,
+                        deadline: float) -> Optional[Tuple[Chromosome, Tuple[str, ...]]]:
+    """Construct one random single-move neighbour for Algorithm 4."""
+    from algorithm.Test_algorithm.MOEAD_TS import (
+        sample_block_exchange_move,
+        sample_block_relocate_move,
+        sample_pdg_exchange_move,
+        sample_pdg_relocate_move,
+    )
+    samplers = {
+        "pdg_exchange": sample_pdg_exchange_move,
+        "block_exchange": sample_block_exchange_move,
+        "pdg_relocate": sample_pdg_relocate_move,
+        "block_relocate": sample_block_relocate_move,
+    }
+    return samplers[operator_name](current, deadline)
+
+
 def tabu_search(child: Chromosome, context: EvaluationContext,
                 deadline: float) -> Chromosome:
-    """Algorithm 4 with the four shared AGVNS local-search operators only."""
+    """Algorithm 4: one random single move per inner iteration, move tabu list.
+
+    Each inner iteration generates exactly one neighbour (one move) with a
+    randomly selected operator, exactly as the pseudocode in the paper.  The
+    tabu list stores the applied move keys, so a recently used move cannot be
+    reapplied even if it produces a different final route.
+    """
     current = _copy_candidate(child)
     best = _copy_candidate(current)
-    tabu_fifo: List[str] = []
-    tabu_set: Set[str] = set()
-    tabu_set.add(_signature(current))
-    tabu_fifo.append(_signature(current))
-
-    # AGVNS is the single source of truth for these methods.  In particular,
-    # future AGVNS fixes to intra-route exchange or one-block relocation will
-    # automatically be used by the next MOEA/D--TS dispatch subprocess.
-    from algorithm.Test_algorithm.agvns_ls_bridge import load_agvns_ls
-    agvns_ls = load_agvns_ls()
-    operators = {
-        "PDPairExchange": agvns_ls.new_inter_couple_exchange,
-        "BlockExchange": agvns_ls.new_block_exchange,
-        "BlockRelocate": agvns_ls.new_block_relocate,
-        "mPDG": agvns_ls.new_multi_pd_group_relocate,
-    }
+    tabu_fifo: List[Tuple[str, ...]] = []
+    tabu_set: Set[Tuple[str, ...]] = set()
 
     for _ in range(config.MOEAD_TS_MAX_ITERATIONS):
         if _deadline_reached(deadline):
             break
         best_neighbor = current
-        tried_operators: Set[str] = set()
+        best_neighbor_move: Optional[Tuple[str, ...]] = None
         for _ in range(config.MOEAD_TS_NEIGHBOR_THRESHOLD):
             if _deadline_reached(deadline):
                 break
-            operator_name = random.choice(tuple(operators))
-            tried_operators.add(operator_name)
-            candidate_plan = copy.deepcopy(current.solution)
-            local_deadline = _operator_deadline(deadline)
-            limit_time = max(0.0, local_deadline - _now())
-            improved = operators[operator_name](
-                candidate_plan, current.id_to_vehicle, current.route_map,
-                limit_time, False,
-            )
-            if not improved:
+            operator_name = random.choice(_TS_OPERATOR_NAMES)
+            sampled = _sample_single_move(operator_name, current, deadline)
+            if sampled is None:
                 continue
-            candidate = _candidate(candidate_plan, context)
+            candidate, move_key = sampled
+            if move_key in tabu_set:
+                continue
             candidate_objectives = _evaluate(candidate, context)
             if not math.isfinite(candidate_objectives.tc):
                 continue
-            signature = _signature(candidate)
-            if signature in tabu_set:
-                continue
             if candidate_objectives.tc < _evaluate(best_neighbor, context).tc:
                 best_neighbor = candidate
+                best_neighbor_move = move_key
         if best_neighbor is current:
-            if len(tried_operators) == len(operators):
-                break
             continue
         current = best_neighbor
-        signature = _signature(current)
-        if signature not in tabu_set:
-            tabu_fifo.append(signature)
-            tabu_set.add(signature)
+        if best_neighbor_move is not None:
+            tabu_fifo.append(best_neighbor_move)
+            tabu_set.add(best_neighbor_move)
             while len(tabu_fifo) > config.MOEAD_TS_TABU_LIST_SIZE:
                 tabu_set.discard(tabu_fifo.pop(0))
         if _evaluate(current, context).tc < _evaluate(best, context).tc:

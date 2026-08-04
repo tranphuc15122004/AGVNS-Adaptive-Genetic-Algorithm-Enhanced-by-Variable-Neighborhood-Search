@@ -1,30 +1,34 @@
 """Objective and feasibility primitives for the paper's MOEA/D--TS.
 
-The simulator's public score is ``alpha * tardiness + distance / K``.  The
-MOEA/D population keeps the two components separately because replacement is
-performed with a Tchebycheff scalarisation while the inner tabu search uses
-the public score (Algorithm 4 in the paper).
+MOEA/D keeps two objectives for decomposition, but their values must match the
+established DPDP cost implementation used by the shared AGVNS local search.
+The production scoring path therefore obtains ``f1``, ``f2`` and ``TC`` from
+one complete ``total_cost`` simulation instead of maintaining a second fleet
+simulator or evaluating the components independently.
 """
 
 from collections import Counter
 import copy
 from dataclasses import dataclass
-import heapq
 import math
 from typing import Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
 from algorithm.Object import Factory, Node, OrderItem, Vehicle
-from algorithm.engine import isFeasible
+from algorithm.engine import isFeasible, total_cost
 import algorithm.algorithm_config as config
 
 
 @dataclass(frozen=True)
 class Objectives:
+    """Raw paper objectives plus the scalar cost from the shared engine."""
     tardiness: float
     average_distance: float
+    tc_value: Optional[float] = None
 
     @property
     def tc(self) -> float:
+        if self.tc_value is not None:
+            return self.tc_value
         return config.Delta * self.tardiness + self.average_distance
 
     def as_tuple(self) -> Tuple[float, float]:
@@ -37,32 +41,6 @@ class EvaluationContext:
     id_to_vehicle: Mapping[str, Vehicle]
     id_to_factory: Mapping[str, Factory]
     all_items: Mapping[str, OrderItem]
-
-
-def _travel(route_map: Mapping[Tuple[str, str], Tuple[float, int]],
-            source: Optional[str], target: str) -> Tuple[float, int]:
-    if not source or source == target:
-        return 0.0, 0
-    edge = route_map.get((source, target))
-    if edge is None:
-        raise ValueError("missing route edge {} -> {}".format(source, target))
-    return float(edge[0]), int(edge[1])
-
-
-def _dock_start(intervals: Dict[str, List[Tuple[float, float]]],
-                factory: str, arrival: float, duration: float,
-                capacity: int) -> Tuple[float, float]:
-    """Return service start/end for a finite-capacity dock resource."""
-    capacity = max(1, int(capacity or 1))
-    start = float(arrival)
-    slots = intervals.setdefault(factory, [])
-    while True:
-        active = [end for begin, end in slots if begin <= start < end]
-        if len(active) < capacity:
-            end = start + duration
-            slots.append((start, end))
-            return start, end
-        start = min(active)
 
 
 def _items_on_nodes(route: Iterable[Node]) -> Set[str]:
@@ -232,16 +210,18 @@ def validate_solution(solution: Mapping[str, List[Node]],
     return True
 
 
-def evaluate_solution(solution: Mapping[str, List[Node]],
-                      context: EvaluationContext,
-                      validate: bool = True) -> Objectives:
-    """Schedule the fleet and return raw tardiness and average distance.
+def _evaluate_solution_legacy(solution: Mapping[str, List[Node]],
+                              context: EvaluationContext,
+                              validate: bool = True) -> Objectives:
+    """Deprecated compatibility evaluator; production uses the engine path.
 
     Arrival time is used for tardiness, matching the simulator history and
     the paper's Eq. (1).  Existing dock reservations are seeded from the
     current vehicle state, and each route is simulated as an event stream so
     vehicle identifiers do not need to be contiguous.
     """
+    return evaluate_solution(solution, context, validate)
+
     normalized_solution = canonicalize_solution(solution, context.id_to_vehicle)
     if validate and not validate_solution(normalized_solution, context):
         return Objectives(math.inf, math.inf)
@@ -326,6 +306,40 @@ def evaluate_solution(solution: Mapping[str, List[Node]],
     )
     divisor = max(1, len(context.id_to_vehicle))
     return Objectives(float(tardiness), float(total_distance) / divisor)
+
+
+def evaluate_solution(solution: Mapping[str, List[Node]],
+                      context: EvaluationContext,
+                      validate: bool = True) -> Objectives:
+    """Evaluate via the shared engine's f1, f2, and total-cost formulas.
+
+    Validation and canonicalisation remain local to protect the immutable
+    destination/LIFO contract. ``total_cost(..., mode='components')`` then
+    runs one complete dock-aware fleet simulation and returns raw tardiness
+    ``f1``, average distance ``f2``, and the scalar cost ``TC`` together.
+    """
+    normalized_solution = canonicalize_solution(solution, context.id_to_vehicle)
+    if validate and not validate_solution(normalized_solution, context):
+        return Objectives(math.inf, math.inf, math.inf)
+    if not context.id_to_vehicle:
+        return Objectives(0.0, 0.0, 0.0)
+
+    try:
+        tardiness, average_distance, scalar_cost = total_cost(
+            context.id_to_vehicle, context.route_map, normalized_solution,
+            mode="components",
+        )
+    except (KeyError, TypeError, ValueError, ZeroDivisionError):
+        return Objectives(math.inf, math.inf, math.inf)
+
+    if not all(math.isfinite(value) for value in (
+            tardiness, average_distance, scalar_cost)):
+        return Objectives(math.inf, math.inf, math.inf)
+    return Objectives(
+        float(tardiness),
+        float(average_distance),
+        float(scalar_cost),
+    )
 
 
 def tchebycheff(objectives: Objectives, weight: Tuple[float, float],

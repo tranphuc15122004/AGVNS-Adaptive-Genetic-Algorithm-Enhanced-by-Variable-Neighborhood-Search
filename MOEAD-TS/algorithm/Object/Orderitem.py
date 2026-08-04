@@ -1,6 +1,3 @@
-from algorithm.Object import *
-
-
 class OrderItem:
     def __init__(self, id: str = '', type: str = '', order_id: str = '', demand: float = 0.0, pickup_factory_id: str = '', delivery_factory_id: str = '', creation_time=None, committed_completion_time=None, load_time: int = 0, unload_time: int = 0, delivery_state: int = 0):
         self.id = id

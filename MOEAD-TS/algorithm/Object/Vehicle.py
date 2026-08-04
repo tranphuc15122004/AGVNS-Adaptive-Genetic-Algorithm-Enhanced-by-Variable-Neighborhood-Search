@@ -1,5 +1,5 @@
 from typing import List, Optional
-from algorithm.Object import *
+from algorithm.Object.Node import Node
 
 class Vehicle:
     def __init__(self, id: str, gps_id: str, operation_time: int, board_capacity: int, carrying_items: List['OrderItem'], des: Node = None):

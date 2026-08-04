@@ -1,5 +1,4 @@
 from typing import List, Optional
-from algorithm.Object import *
 
 
 class VehicleInfo:

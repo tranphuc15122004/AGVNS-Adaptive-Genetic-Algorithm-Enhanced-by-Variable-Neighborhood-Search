@@ -15,9 +15,10 @@ Delta1 = 10000.0
 SLACK_TIME_THRESHOLD = 10000
 debugPeriod = "0010-0020"
 addDelta = 400000.0
-# MOEA/D--TS delegates to the four active AGVNS ``new_LS`` operators.  Keep
-# these labels aligned with AGVNS/algorithm/Test_algorithm/GAVND7.py so
-# instrumentation on a Chromosome cannot advertise obsolete TS-only moves.
+# The four Algorithm-4 operators implemented as single-move samplers in
+# MOEAD_TS.py (couple-exchange, block-exchange, couple-relocate, block-relocate).
+# ``LS_METHODS`` is kept aligned with AGVNS/algorithm/Test_algorithm/GAVND7.py
+# so instrumentation on a Chromosome cannot advertise obsolete TS-only moves.
 LS_METHODS = ['PDPairExchange', 'BlockExchange', 'BlockRelocate', 'mPDG']
 BEGIN_TIME = 0
 # The paper and the simulator both impose a 600-second total process limit.
@@ -42,9 +43,9 @@ MOEAD_MAX_REPLACEMENTS = 2      # reproduction assumption; not disclosed
 MOEAD_TS_TABU_LIST_SIZE = 20
 MOEAD_TS_NEIGHBOR_THRESHOLD = 30
 MOEAD_TS_MAX_ITERATIONS = 20
-# A production interval must retain time for other subproblems and JSON I/O.
-# Small routes finish their complete neighbourhood before this cap; large
-# routes use the best feasible candidate found in this bounded slice.
+# Retained for backward compatibility with external scripts.  Algorithm 4 now
+# generates single random moves per inner iteration, so this per-operator time
+# slice is no longer applied by ``tabu_search``.
 MOEAD_TS_OPERATOR_TIME_LIMIT = 1.0
 MOEAD_INITIALIZATION_TIME_FRACTION = 0.25
 MOEAD_INITIALIZATION_MAX_SECONDS = 90.0
@@ -109,8 +110,8 @@ def moead_parameter_manifest() -> dict:
             "alpha": Delta,
             "normalization": False,
             "tabu_operators": [
-                "PDPairExchange", "BlockExchange",
-                "BlockRelocate", "mPDG",
+                "pdg_exchange", "block_exchange",
+                "pdg_relocate", "block_relocate",
             ],
         },
         "implementation_choice": {
@@ -119,12 +120,10 @@ def moead_parameter_manifest() -> dict:
             "tabu_list_size": MOEAD_TS_TABU_LIST_SIZE,
             "ts_max_iterations": MOEAD_TS_MAX_ITERATIONS,
             "neighbor_threshold": MOEAD_TS_NEIGHBOR_THRESHOLD,
-            "ts_operator_time_limit": MOEAD_TS_OPERATOR_TIME_LIMIT,
-            "local_search_source": (
-                "AGVNS/algorithm/Test_algorithm/new_LS.py"
-            ),
-            "local_search_dispatch": (
-                "dynamic load once per MOEA/D--TS subprocess"
+            "tabu_item": "move key, not solution signature",
+            "neighbor_generation": (
+                "one random single move per inner iteration via "
+                "sample_*_move in MOEAD_TS.py"
             ),
             "initialization_time_fraction": MOEAD_INITIALIZATION_TIME_FRACTION,
             "initialization_max_seconds": MOEAD_INITIALIZATION_MAX_SECONDS,

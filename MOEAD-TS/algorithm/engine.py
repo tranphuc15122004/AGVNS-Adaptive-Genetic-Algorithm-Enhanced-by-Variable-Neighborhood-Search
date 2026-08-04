@@ -8,9 +8,9 @@ import random
 import re
 import sys
 import tempfile
-from typing import Dict , List, Optional, Tuple
+from typing import Dict , List, Optional, Tuple, Union
 
-from algorithm.Object import *
+from algorithm.Object import Factory, Node, OrderItem, Vehicle
 import algorithm.algorithm_config as config
 from src.conf.configs import Configs
 
@@ -1038,7 +1038,7 @@ def isFeasible(route_node_list : List[Node] , carrying_items : List[OrderItem] ,
 
 
 
-def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple] , vehicleid_to_plan: Dict[str , list[Node]] , mode = 'total') -> float:
+def _cost_of_a_route_legacy (temp_route_node_list : List[Node] , vehicle: Vehicle , id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple] , vehicleid_to_plan: Dict[str , list[Node]] , mode = 'total') -> Union[float, Tuple[float, float, float]]:
     curr_factoryID = vehicle.cur_factory_id
     driving_dis  : float = 0.0
     overtime_Sum : float = 0.0
@@ -1261,6 +1261,12 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
     # Weight for waiting time; falls back to config.Delta if no dedicated setting is present
     waiting_weight = config.WAITING_WEIGHT
     objF = (config.Delta * overtime_Sum) + (driving_dis / float(len(id_to_vehicle))) + (waiting_weight * waiting_Sum)
+    if mode == 'components':
+        return (
+            overtime_Sum,
+            driving_dis / float(len(id_to_vehicle)),
+            objF,
+        )
     if mode == 'overtime':
         return (config.Delta * overtime_Sum)
     elif mode  == 'distance':
@@ -1270,7 +1276,14 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
     return objF
 
 
-def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple] , vehicleid_to_plan: Dict[str , list[Node]]) -> float:
+def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple] , vehicleid_to_plan: Dict[str , list[Node]] , mode: str = 'total') -> Union[float, Tuple[float, float, float]]:
+    """Evaluate the whole fleet once and return TC or its coupled components.
+
+    ``mode='components'`` returns ``(f1, f2, TC)`` from the same dock-aware
+    fleet simulation.  It is deliberately not a shortcut: f1 (tardiness) and
+    f2 (average distance) both depend on the complete vehicle schedule.
+    Existing callers keep the default scalar ``TC`` behaviour unchanged.
+    """
     driving_dis  : float = 0.0
     overtime_Sum : float = 0.0
     waiting_Sum  : float = 0.0
@@ -1442,9 +1455,51 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
     # Weight for waiting time; falls back to config.Delta if no dedicated setting is present
     waiting_weight = config.WAITING_WEIGHT
     objF = (config.Delta * overtime_Sum) + (driving_dis / float(len(id_to_vehicle))) + (waiting_weight * waiting_Sum)
+    if mode == 'components':
+        return (
+            overtime_Sum,
+            driving_dis / float(len(id_to_vehicle)),
+            objF,
+        )
     if objF < 0:
         print("the objective function less than 0" , file= sys.stderr)
     return objF
+
+
+def cost_of_a_route(temp_route_node_list: List[Node], vehicle: Vehicle,
+                    id_to_vehicle: Dict[str, Vehicle],
+                    route_map: Dict[tuple, tuple],
+                    vehicleid_to_plan: Dict[str, list[Node]],
+                    mode: str = 'total') -> Union[float, Tuple[float, float, float]]:
+    """Evaluate a route-replacement candidate through the canonical fleet cost.
+
+    Local-search callers provide only the tentative route of ``vehicle``.
+    Dock contention makes its f1 and f2 depend on all other vehicle routes, so
+    the candidate must be placed in the complete plan and evaluated by one
+    ``total_cost(..., mode='components')`` execution.  This replaces the
+    historical duplicated simulator and prevents one component from being
+    calculated under a different fleet state from the other.
+    """
+    carrying_items: List[OrderItem] = (
+        vehicle.carrying_items if vehicle.des else []
+    )
+    if temp_route_node_list and not isFeasible(
+            temp_route_node_list, carrying_items, vehicle.board_capacity):
+        return math.inf
+
+    candidate_plan = dict(vehicleid_to_plan)
+    candidate_plan[vehicle.id] = temp_route_node_list
+    tardiness, average_distance, scalar_cost = total_cost(
+        id_to_vehicle, route_map, candidate_plan, mode='components'
+    )
+    if mode == 'components':
+        return tardiness, average_distance, scalar_cost
+    if mode == 'overtime':
+        return config.Delta * tardiness
+    if mode == 'distance':
+        return average_distance
+    return scalar_cost
+
 
 def get_UnongoingSuperNode (vehicleid_to_plan: Dict[str , List[Node]] , id_to_vehicle: Dict[str , Vehicle] ) -> Tuple[Dict[int , Dict[str, Node]] , Dict[str , List[Node]]]:
     UnongoingSuperNodes : Dict[int , Dict[str , Node]] = {}

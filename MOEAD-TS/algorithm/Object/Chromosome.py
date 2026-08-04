@@ -3,10 +3,8 @@ import random
 import sys
 import time
 from typing import Dict, List, Optional, Tuple
-from algorithm.Object import *
+from algorithm.Object import Node, Vehicle
 import algorithm.algorithm_config as config
-from algorithm.engine import dispatch_nodePair, total_cost
-from algorithm.local_search import *
 
 class Chromosome:
     def __init__(self, vehicleid_to_plan: Dict[str, List[Node]], route_map: Dict[Tuple, Tuple], id_to_vehicle: Dict[str, Vehicle]):
@@ -21,6 +19,7 @@ class Chromosome:
     def fitness(self) -> float:
         if hasattr(self, "_moead_tc"):
             return float(self._moead_tc)
+        from algorithm.engine import total_cost
         return total_cost(self.id_to_vehicle, self.route_map, self.solution)
 
     def mutate(self  ,is_limited = False , is_1LS : bool = False):
@@ -34,9 +33,18 @@ class Chromosome:
         return child_solution
 
     def __repr__(self):
+        from algorithm.engine import get_route_after
         return f'Chromosome(Fitness: {self.fitness}, Solution: {get_route_after(self.solution , {})})'
 
 def mutate_solution(indivisual : Chromosome , is_limited = False , is_1LS : bool = False):
+    from algorithm.engine import total_cost
+    from algorithm.local_search import (
+        block_exchange,
+        block_relocate,
+        improve_ci_path_by_2_opt,
+        inter_couple_exchange,
+        multi_pd_group_relocate,
+    )
     if is_1LS:
         n1 = 0
         i  = 1
@@ -85,6 +93,7 @@ def mutate_solution(indivisual : Chromosome , is_limited = False , is_1LS : bool
 
 
 def crossover_solutions(parent1: Chromosome , parent2: Chromosome , PDG_map : Dict[str , List[Node]]):
+    from algorithm.engine import dispatch_nodePair, random_dispatch_nodePair
     # Early timeout guard: return the better parent to keep GA stable
     if config.is_timeout():
         try:
