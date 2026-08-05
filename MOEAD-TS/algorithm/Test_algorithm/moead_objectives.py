@@ -327,7 +327,7 @@ def evaluate_solution(solution: Mapping[str, List[Node]],
     try:
         tardiness, average_distance, scalar_cost = total_cost(
             context.id_to_vehicle, context.route_map, normalized_solution,
-            mode="components",
+            mode="components", id_to_factory=context.id_to_factory,
         )
     except (KeyError, TypeError, ValueError, ZeroDivisionError):
         return Objectives(math.inf, math.inf, math.inf)

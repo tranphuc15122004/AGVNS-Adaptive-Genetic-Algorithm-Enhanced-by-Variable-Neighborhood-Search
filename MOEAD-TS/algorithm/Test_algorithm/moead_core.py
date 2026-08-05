@@ -16,8 +16,8 @@ from algorithm.Object import Chromosome, Factory, Node, OrderItem, Vehicle
 from algorithm.engine import isFeasible, repair_restored_lifo_routes
 import algorithm.algorithm_config as config
 from .moead_objectives import (
-    EvaluationContext, Objectives, canonicalize_route, ensure_destination_prefix,
-    evaluate_solution, tchebycheff, validate_solution,
+    EvaluationContext, Objectives, canonicalize_route, canonicalize_solution,
+    ensure_destination_prefix, evaluate_solution, tchebycheff, validate_solution,
 )
 
 
@@ -80,9 +80,12 @@ def _evaluate(candidate: Chromosome, context: EvaluationContext,
 def _signature(candidate: Chromosome) -> str:
     if not hasattr(candidate, "_moead_signature"):
         parts = []
-        for vehicle_id in sorted(candidate.solution):
+        canonical_solution = canonicalize_solution(
+            candidate.solution, candidate.id_to_vehicle
+        )
+        for vehicle_id in sorted(canonical_solution):
             nodes = []
-            for node in candidate.solution[vehicle_id]:
+            for node in canonical_solution[vehicle_id]:
                 nodes.append((
                     node.id,
                     tuple(item.id for item in node.pickup_item_list or []),
@@ -264,11 +267,11 @@ def initialize_population(base_plan: Dict[str, List[Node]], units: Sequence[Disp
             if math.isfinite(candidate._moead_tc):
                 population.append(candidate)
 
-    if not population:
-        return []
-    while len(population) < config.MOEAD_POPULATION_SIZE:
-        population.append(_copy_candidate(population[len(population) % len(population)]))
-    return population[:config.MOEAD_POPULATION_SIZE]
+    # Do not fill an incomplete population by cloning a candidate.  Clones
+    # falsely advertise the N randomized CI starts required by MOEA/D while
+    # providing no diversity.  The caller runs the remaining budget with the
+    # actual set of feasible constructions instead.
+    return population
 
 
 def construct_safe_fallback(base_plan: Dict[str, List[Node]],
@@ -492,23 +495,24 @@ def _sample_single_move(operator_name: str, current: Chromosome,
 
 def tabu_search(child: Chromosome, context: EvaluationContext,
                 deadline: float) -> Chromosome:
-    """Algorithm 4: one random single move per inner iteration, move tabu list.
+    """Algorithm 4: one random single move per inner iteration, solution tabu list.
 
     Each inner iteration generates exactly one neighbour (one move) with a
     randomly selected operator, exactly as the pseudocode in the paper.  The
-    tabu list stores the applied move keys, so a recently used move cannot be
-    reapplied even if it produces a different final route.
+    tabu list stores canonical solution signatures: a candidate ``x_tmp`` is
+    tabu when its complete route plan matches a recently visited solution.
+    This follows the paper's solution-level ``x_tmp is non-tabu`` test rather
+    than imposing a tabu restriction on a move attribute.
     """
     current = _copy_candidate(child)
     best = _copy_candidate(current)
-    tabu_fifo: List[Tuple[str, ...]] = []
-    tabu_set: Set[Tuple[str, ...]] = set()
+    tabu_fifo: List[str] = [_signature(current)]
+    tabu_set: Set[str] = set(tabu_fifo)
 
     for _ in range(config.MOEAD_TS_MAX_ITERATIONS):
         if _deadline_reached(deadline):
             break
-        best_neighbor = current
-        best_neighbor_move: Optional[Tuple[str, ...]] = None
+        best_neighbor: Optional[Chromosome] = None
         for _ in range(config.MOEAD_TS_NEIGHBOR_THRESHOLD):
             if _deadline_reached(deadline):
                 break
@@ -516,23 +520,23 @@ def tabu_search(child: Chromosome, context: EvaluationContext,
             sampled = _sample_single_move(operator_name, current, deadline)
             if sampled is None:
                 continue
-            candidate, move_key = sampled
-            if move_key in tabu_set:
+            candidate, _move_key = sampled
+            if _signature(candidate) in tabu_set:
                 continue
             candidate_objectives = _evaluate(candidate, context)
             if not math.isfinite(candidate_objectives.tc):
                 continue
-            if candidate_objectives.tc < _evaluate(best_neighbor, context).tc:
+            if (best_neighbor is None or
+                    candidate_objectives.tc < _evaluate(best_neighbor, context).tc):
                 best_neighbor = candidate
-                best_neighbor_move = move_key
-        if best_neighbor is current:
-            continue
+        if best_neighbor is None:
+            break
         current = best_neighbor
-        if best_neighbor_move is not None:
-            tabu_fifo.append(best_neighbor_move)
-            tabu_set.add(best_neighbor_move)
-            while len(tabu_fifo) > config.MOEAD_TS_TABU_LIST_SIZE:
-                tabu_set.discard(tabu_fifo.pop(0))
+        current_signature = _signature(current)
+        tabu_fifo.append(current_signature)
+        tabu_set.add(current_signature)
+        while len(tabu_fifo) > config.MOEAD_TS_TABU_LIST_SIZE:
+            tabu_set.discard(tabu_fifo.pop(0))
         if _evaluate(current, context).tc < _evaluate(best, context).tc:
             best = _copy_candidate(current)
     return best
@@ -604,10 +608,7 @@ def run_moead_ts(base_plan: Dict[str, List[Node]], route_map,
                 "MOEA/D-TS could not construct a feasible initial population "
                 "or a safe fallback for this dynamic interval"
             )
-        population = [
-            _copy_candidate(fallback)
-            for _ in range(config.MOEAD_POPULATION_SIZE)
-        ]
+        population = [_copy_candidate(fallback)]
 
     carrying_ids = {
         item.id
@@ -620,7 +621,8 @@ def run_moead_ts(base_plan: Dict[str, List[Node]], route_map,
         min((vehicle.board_capacity for vehicle in id_to_vehicle.values()), default=0),
     )
 
-    weights = uniform_weights(config.MOEAD_POPULATION_SIZE)
+    population_size = len(population)
+    weights = uniform_weights(population_size)
     neighborhoods = build_neighborhoods(weights, config.MOEAD_NEIGHBOR_SIZE)
     objective_values = [_evaluate(candidate, context) for candidate in population]
     ideal = (
@@ -631,7 +633,7 @@ def run_moead_ts(base_plan: Dict[str, List[Node]], route_map,
     for generation in range(config.MOEAD_MAX_GENERATIONS):
         if _deadline_reached(deadline):
             break
-        for index in range(config.MOEAD_POPULATION_SIZE):
+        for index in range(population_size):
             if _deadline_reached(deadline):
                 break
             pool = neighborhoods[index] if random.random() < config.MOEAD_DELTA else list(range(len(population)))

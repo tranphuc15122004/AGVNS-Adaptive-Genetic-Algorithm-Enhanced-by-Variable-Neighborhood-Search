@@ -16,9 +16,18 @@ couple-relocate, block-relocate) and generates exactly one single-move
 neighbour from it. The move constructors are the `sample_*_move` functions in
 `algorithm/Test_algorithm/MOEAD_TS.py`; they reuse the same feasibility,
 destination-prefix and coverage checks as the `generate_*_neighbors`
-enumerators. The tabu list stores the applied move keys (operator + moved
-unit(s) + target vehicle/positions), not whole-solution signatures, so a
-recently used move cannot be reapplied even from a different route layout.
+enumerators. The tabu list stores canonical signatures of complete solutions.
+Consequently, a candidate `x_tmp` is tabu when it duplicates a recently
+visited route plan, matching the solution-level tabu condition in Algorithm 4
+of the paper. Move descriptors are retained only to construct and test a
+single local-search neighbour.
+
+For every TS outer iteration, the best feasible non-tabu neighbour becomes
+the next current solution even if it is worse than the TS-best solution. This
+permits the search to leave a local optimum; `x_best` is still updated only by
+a strict `TC` improvement. If initial construction finishes early, the search
+uses only its actually constructed candidates rather than cloning one solution
+to fill the nominal population size.
 
 The two MOEA/D objectives and scalar `TC` are obtained atomically from one
 full-fleet call to `total_cost(..., mode="components")`, which returns

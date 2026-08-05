@@ -3,8 +3,8 @@
 The public ``MOEAD_TS`` function delegates to ``moead_core``.  Algorithm 4
 (``tabu_search``) generates exactly one neighbour per inner iteration by
 sampling a random single move from one of the four operators (couple-exchange,
-block-exchange, couple-relocate, block-relocate) and records the applied move
-in a move-based tabu list, as described in the paper.  The ``generate_*_neighbors``
+block-exchange, couple-relocate, block-relocate).  The tabu list itself is
+solution-based and is maintained by ``moead_core``.  The ``generate_*_neighbors``
 enumerators below are kept for focused regression tests of DPDP move invariants.
 """
 
@@ -28,7 +28,8 @@ from algorithm.Test_algorithm.moead_objectives import (
 
 SolutionSignature = bytes
 
-# A move-based tabu item: (operator kind, moved unit(s), target vehicle, positions).
+# A generated move descriptor: (operator kind, moved unit(s), target vehicle, positions).
+# It is returned for traceability; Algorithm 4 tabus complete solutions in moead_core.
 MoveKey = Tuple[str, ...]
 
 _ACTIVE_OBJECTIVE_CONTEXT = None
@@ -52,7 +53,7 @@ class PdgUnit:
 
 
 def solution_signature(solution: Dict[str, List[Node]]) -> SolutionSignature:
-    """Return the compact BLAKE2b tabu item for one canonical solution."""
+    """Return a compact solution identity for neighbourhood de-duplication."""
     route_after = get_route_after(solution, {})
     return hashlib.blake2b(
         route_after.encode("utf-8"),
@@ -61,7 +62,7 @@ def solution_signature(solution: Dict[str, List[Node]]) -> SolutionSignature:
 
 
 def _cached_signature(candidate: Chromosome) -> SolutionSignature:
-    """Return a candidate's immutable tabu signature without reserialising it."""
+    """Return a candidate's immutable neighbourhood signature."""
     signature = getattr(candidate, "_ts_signature", None)
     if signature is None:
         signature = solution_signature(candidate.solution)
@@ -770,9 +771,9 @@ def MOEAD_TS(Base_vehicleid_to_plan: Dict[str, List[Node]],
              new_order_itemIDs: List[str]) -> Optional[Chromosome]:
     """Public MOEA/D--TS adapter implementing Algorithms 2--4.
 
-    The production entry point is the decomposition-based population search;
-    Algorithm 4 in ``moead_core.tabu_search`` samples single moves from the
-    four ``sample_*_move`` constructors above and tabus the applied moves.
+    The production entry point is the decomposition-based population search.
+    Algorithm 4 in ``moead_core.tabu_search`` samples the four move types
+    below and tabus complete canonical solutions.
     """
     from algorithm.Test_algorithm.moead_core import run_moead_ts
     return run_moead_ts(

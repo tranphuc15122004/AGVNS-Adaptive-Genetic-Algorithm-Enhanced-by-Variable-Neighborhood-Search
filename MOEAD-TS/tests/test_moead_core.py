@@ -145,8 +145,9 @@ def test_evaluator_requests_all_components_from_one_total_cost_call(monkeypatch)
     context = EvaluationContext(route_map, vehicles, factories, {item.id: item})
     calls = []
 
-    def total_with_components(_vehicles, _route_map, _plan, mode="total"):
-        calls.append(mode)
+    def total_with_components(_vehicles, _route_map, _plan, mode="total",
+                              id_to_factory=None):
+        calls.append((mode, id_to_factory))
         return 12.0, 3.0, 36.0
 
     monkeypatch.setattr(moead_objectives, "total_cost", total_with_components)
@@ -155,7 +156,7 @@ def test_evaluator_requests_all_components_from_one_total_cost_call(monkeypatch)
         context, validate=False,
     )
 
-    assert calls == ["components"]
+    assert calls == [("components", factories)]
     assert objectives == Objectives(12.0, 3.0, 36.0)
 
 
@@ -468,7 +469,7 @@ def test_tabu_search_samples_single_moves_from_all_four_operators(monkeypatch):
     assert get_route_after(result.solution, {}) == get_route_after(chromosome.solution, {})
 
 
-def test_tabu_search_tabus_the_applied_move(monkeypatch):
+def test_tabu_search_tabus_solutions_not_move_keys(monkeypatch):
     chromosome, context = _single_order_relocation_fixture()
     monkeypatch.setattr(config, "MOEAD_TS_MAX_ITERATIONS", 2)
     monkeypatch.setattr(config, "MOEAD_TS_NEIGHBOR_THRESHOLD", 1)
@@ -476,14 +477,21 @@ def test_tabu_search_tabus_the_applied_move(monkeypatch):
 
     item = chromosome.solution["V_1"][0].pickup_item_list[0]
 
+    calls = []
+
     def improving_relocate(current, deadline):
+        target_vehicle = "V_2" if not calls else "V_3"
+        calls.append(target_vehicle)
         plan = copy.deepcopy(current.solution)
-        plan["V_1"] = []
-        plan["V_2"] = []
-        plan["V_3"] = [
+        for vehicle_id in plan:
+            plan[vehicle_id] = []
+        plan[target_vehicle] = [
             Node("B", [], [item]), Node("C", [item], []),
         ]
         candidate = Chromosome(plan, current.route_map, current.id_to_vehicle)
+        # Deliberately keep the move key identical. A move-based tabu list
+        # would reject the second, better solution; a solution tabu list must
+        # accept it because its complete route plan is different.
         return candidate, ("pdg_relocate", ("I-1",), "V_3", 0, 1)
 
     monkeypatch.setattr(
@@ -497,11 +505,76 @@ def test_tabu_search_tabus_the_applied_move(monkeypatch):
 
     result = tabu_search(chromosome, context, time.time() + 1.0)
 
-    # First outer iteration applies the sampled relocate; the move key is
-    # tabued so the second iteration cannot re-apply the same move.
+    assert calls == ["V_2", "V_3"]
     assert result.solution["V_1"] == []
     assert [node.id for node in result.solution["V_3"]] == ["B", "C"]
     assert result._moead_tc < chromosome.fitness
+
+
+def test_tabu_search_can_leave_its_best_solution(monkeypatch):
+    chromosome, context = _single_order_relocation_fixture()
+    monkeypatch.setattr(config, "MOEAD_TS_MAX_ITERATIONS", 3)
+    monkeypatch.setattr(config, "MOEAD_TS_NEIGHBOR_THRESHOLD", 1)
+
+    item = chromosome.solution["V_1"][0].pickup_item_list[0]
+    observed_current = []
+    target_vehicles = iter(("V_3", "V_2"))
+
+    def relocate(current, deadline):
+        observed_current.append(moead_core._signature(current))
+        try:
+            target_vehicle = next(target_vehicles)
+        except StopIteration:
+            return None
+        plan = {vehicle_id: [] for vehicle_id in current.solution}
+        plan[target_vehicle] = [
+            Node("B", [], [item]), Node("C", [item], []),
+        ]
+        return Chromosome(plan, current.route_map, current.id_to_vehicle), (
+            "pdg_relocate", ("I-1",), target_vehicle, 0, 1,
+        )
+
+    monkeypatch.setattr(moead_ts_operators, "sample_pdg_relocate_move", relocate)
+    monkeypatch.setattr(
+        moead_core.random, "choice", lambda _operators: "pdg_relocate"
+    )
+    config.set_begin_time()
+
+    result = tabu_search(chromosome, context, time.time() + 1.0)
+
+    # V_3 is the TS-best route, then V_2 is deliberately accepted as the
+    # current route even though it is worse. The returned solution remains V_3.
+    expected_current = Chromosome(
+        {"V_1": [], "V_2": [Node("B", [], [item]), Node("C", [item], [])], "V_3": []},
+        chromosome.route_map, chromosome.id_to_vehicle,
+    )
+    assert observed_current[2] == moead_core._signature(expected_current)
+    assert [node.id for node in result.solution["V_3"]] == ["B", "C"]
+
+
+def test_solution_signature_canonicalizes_adjacent_factory_nodes():
+    factories, route_map, vehicles, first = _fixture()
+    second = OrderItem(
+        "I-2", "PALLET", "O-2", 1.0, "B", "C", 0, 50, 1, 1, 1
+    )
+    unmerged = Chromosome({
+        "V_1": [
+            Node("B", [], [first]), Node("B", [], [second]),
+            Node("C", [second, first], []),
+        ],
+    }, route_map, vehicles)
+    merged = Chromosome({
+        "V_1": [
+            Node("B", [], [first, second]), Node("C", [second, first], []),
+        ],
+    }, route_map, vehicles)
+
+    assert moead_core._signature(unmerged) == moead_core._signature(merged)
+
+
+def test_dock_limit_uses_factory_metadata():
+    assert engine._dock_limit("B", {"B": Factory("B", 0.0, 0.0, 2)}) == 2
+    assert engine._dock_limit("missing", {}) == 6
 
 
 def test_archive_round_trip_preserves_cross_order_lifo_sequence():

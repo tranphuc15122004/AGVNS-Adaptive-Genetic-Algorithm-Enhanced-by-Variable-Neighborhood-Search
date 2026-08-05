@@ -120,7 +120,8 @@ def moead_parameter_manifest() -> dict:
             "tabu_list_size": MOEAD_TS_TABU_LIST_SIZE,
             "ts_max_iterations": MOEAD_TS_MAX_ITERATIONS,
             "neighbor_threshold": MOEAD_TS_NEIGHBOR_THRESHOLD,
-            "tabu_item": "move key, not solution signature",
+            "tabu_item": "canonical solution signature",
+            "tabu_transition": "best non-tabu neighbor; may worsen current",
             "neighbor_generation": (
                 "one random single move per inner iteration via "
                 "sample_*_move in MOEAD_TS.py"
@@ -128,6 +129,7 @@ def moead_parameter_manifest() -> dict:
             "initialization_time_fraction": MOEAD_INITIALIZATION_TIME_FRACTION,
             "initialization_max_seconds": MOEAD_INITIALIZATION_MAX_SECONDS,
             "insertion": "exhaustive feasible positions until global deadline",
+            "incomplete_initialization": "use only constructed candidates; do not clone",
             "total_runtime_limit": ALGO_TIME_LIMIT,
             "output_reserve_seconds": OUTPUT_RESERVE_SECONDS,
         },

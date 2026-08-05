@@ -1276,13 +1276,23 @@ def _cost_of_a_route_legacy (temp_route_node_list : List[Node] , vehicle: Vehicl
     return objF
 
 
-def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple] , vehicleid_to_plan: Dict[str , list[Node]] , mode: str = 'total') -> Union[float, Tuple[float, float, float]]:
+def _dock_limit(factory_id: str,
+                id_to_factory: Optional[Dict[str, Factory]]) -> int:
+    """Return the number of usable docks for a factory, with legacy fallback."""
+    factory = id_to_factory.get(factory_id) if id_to_factory else None
+    if factory is None:
+        return 6
+    return max(1, int(factory.dock_num))
+
+
+def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple] , vehicleid_to_plan: Dict[str , list[Node]] , mode: str = 'total', id_to_factory: Optional[Dict[str, Factory]] = None) -> Union[float, Tuple[float, float, float]]:
     """Evaluate the whole fleet once and return TC or its coupled components.
 
     ``mode='components'`` returns ``(f1, f2, TC)`` from the same dock-aware
     fleet simulation.  It is deliberately not a shortcut: f1 (tardiness) and
     f2 (average distance) both depend on the complete vehicle schedule.
-    Existing callers keep the default scalar ``TC`` behaviour unchanged.
+    When factory metadata is supplied, its per-factory dock capacity is used;
+    legacy callers retain the benchmark-compatible fallback of six docks.
     """
     driving_dis  : float = 0.0
     overtime_Sum : float = 0.0
@@ -1397,10 +1407,11 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
                     print("------------ timeslot.start > minT --------------", file = sys.stderr)
                     i += 1
 
-        if len(usedEndTime) < 6:
+        dock_limit = _dock_limit(minTNode.id, id_to_factory)
+        if len(usedEndTime) < dock_limit:
             tTrue = minT
         else:
-            idx = len(usedEndTime) - 6
+            idx = len(usedEndTime) - dock_limit
             usedEndTime.sort()
             tTrue = usedEndTime[idx]
 
