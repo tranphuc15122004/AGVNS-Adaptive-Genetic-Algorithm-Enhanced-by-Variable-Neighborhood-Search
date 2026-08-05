@@ -92,6 +92,37 @@ def test_moead_ts_inserts_and_returns_complete_pair(monkeypatch):
         route_map, vehicles, factories, {item.id: item}
     )).tc
     assert math.isfinite(result.fitness)
+    assert result._moead_initial_population_size == config.MOEAD_POPULATION_SIZE
+    assert math.isfinite(result._moead_initial_population_mean_tc)
+
+
+def test_moead_ts_reports_the_mean_cost_of_its_initial_population(monkeypatch):
+    factories, route_map, vehicles, item = _fixture()
+    monkeypatch.setattr(config, "MOEAD_MAX_GENERATIONS", 0)
+    monkeypatch.setattr(config, "MOEAD_POPULATION_SIZE", 2)
+
+    def fixed_initial_population(_plan, _units, context, _deadline):
+        first = moead_core._candidate({
+            "V_1": [Node("B", [], [item]), Node("C", [item], [])],
+        }, context)
+        second = moead_core._candidate({
+            "V_1": [Node("B", [], [item]), Node("C", [item], [])],
+        }, context)
+        first._moead_objectives = Objectives(0.0, 0.0, 10.0)
+        first._moead_tc = 10.0
+        second._moead_objectives = Objectives(0.0, 0.0, 30.0)
+        second._moead_tc = 30.0
+        return [first, second]
+
+    monkeypatch.setattr(moead_core, "initialize_population", fixed_initial_population)
+    config.set_begin_time()
+    result = run_moead_ts(
+        {"V_1": []}, route_map, vehicles, factories, {item.id: item}, [item.id]
+    )
+
+    assert result is not None
+    assert result._moead_initial_population_size == 2
+    assert result._moead_initial_population_mean_tc == 20.0
 
 
 def test_evaluator_averages_distance_over_all_vehicles():
@@ -245,6 +276,38 @@ def test_locked_destination_does_not_bypass_capacity_or_lifo_validation():
     assert not validate_solution(solution, context)
 
 
+def test_ci_pair_positions_follow_the_large_route_dispatch_branch():
+    """CI keeps every ordered (pickup, delivery) pair for a large route."""
+    vehicle = Vehicle("V_1", "G_1", 24, 15, [])
+    vehicle.set_cur_position_info("A", 0, 0, 0)
+    route = [Node("X{}".format(index), [], []) for index in range(9)]
+    pickup = Node("B", [], [])
+
+    candidates = list(moead_core._ci_pair_positions(route, vehicle, pickup))
+
+    assert [(pickup_pos, delivery_pos)
+            for pickup_pos, delivery_pos, _ in candidates] == [
+                (pickup_pos, delivery_pos)
+                for pickup_pos in range(10)
+                for delivery_pos in range(pickup_pos + 1, 11)
+            ]
+    assert all(route_with_pickup[pickup_pos] is pickup
+               for pickup_pos, _delivery_pos, route_with_pickup in candidates)
+
+
+def test_ci_pair_positions_never_insert_before_a_committed_destination():
+    destination = Node("A", [], [])
+    vehicle = Vehicle("V_1", "G_1", 24, 15, [], destination)
+    vehicle.set_cur_position_info("", 0, 0, 0)
+    route = [destination] + [Node("X{}".format(index), [], []) for index in range(9)]
+    pickup = Node("A", [], [])
+
+    candidates = list(moead_core._ci_pair_positions(route, vehicle, pickup))
+
+    assert candidates
+    assert min(pickup_pos for pickup_pos, _delivery_pos, _route in candidates) == 1
+
+
 def test_ci_checks_the_true_best_position_beyond_the_old_scan_cap(monkeypatch):
     factories = {name: Factory(name, 0.0, 0.0, 6) for name in ("B", "C")}
     vehicle = Vehicle("V_1", "G_1", 24, 15, [])
@@ -273,6 +336,94 @@ def test_ci_checks_the_true_best_position_beyond_the_old_scan_cap(monkeypatch):
     route = result["V_1"]
     assert next(index for index, node in enumerate(route) if node.id == "B") == 18
     assert next(index for index, node in enumerate(route) if node.id == "C") == 21
+
+
+def test_crossover_repair_follows_algorithm_three_vehicle_order():
+    factories = {
+        name: Factory(name, float(index), 0.0, 6)
+        for index, name in enumerate(("A", "B", "C", "D", "E", "F", "G"))
+    }
+    route_map = {
+        (source, target): (1.0, 10)
+        for source in factories
+        for target in factories
+        if source != target
+    }
+    vehicles = {}
+    for vehicle_id in ("V_1", "V_2", "V_10"):
+        vehicle = Vehicle(vehicle_id, "G_" + vehicle_id, 24, 15, [])
+        vehicle.set_cur_position_info("A", 0, 0, 0)
+        vehicles[vehicle_id] = vehicle
+    first = OrderItem("I-1", "PALLET", "O-1", 1.0, "B", "C", 0, 1000, 1, 1, 1)
+    duplicate = OrderItem("I-2", "PALLET", "O-2", 1.0, "D", "E", 0, 1000, 1, 1, 1)
+    plan = {
+        "V_1": [Node("B", [], [first]), Node("C", [first], [])],
+        "V_2": [Node("D", [], [duplicate]), Node("E", [duplicate], [])],
+        "V_10": [Node("D", [], [duplicate]), Node("E", [duplicate], [])],
+    }
+    context = EvaluationContext(
+        route_map, vehicles, factories, {first.id: first, duplicate.id: duplicate}
+    )
+
+    covered = moead_core._repair_selected_routes(
+        plan, context, moead_core._paper_vehicle_order(vehicles)
+    )
+
+    assert covered == {first.id, duplicate.id}
+    assert [item.id for node in plan["V_2"] for item in node.pickup_item_list] == [
+        duplicate.id
+    ]
+    assert plan["V_10"] == []
+
+
+def test_crossover_repair_keeps_delivery_only_for_currently_carried_item():
+    factories = {name: Factory(name, 0.0, 0.0, 6) for name in ("A", "B", "C")}
+    vehicle = Vehicle("V_1", "G_1", 24, 15, [])
+    vehicle.set_cur_position_info("A", 0, 0, 0)
+    carried = OrderItem("I-1", "PALLET", "O-1", 1.0, "B", "C", 0, 1000, 1, 1, 1)
+    vehicle.carrying_items = [carried]
+    plan = {"V_1": [Node("C", [carried], [])]}
+    context = EvaluationContext({}, {"V_1": vehicle}, factories, {carried.id: carried})
+
+    covered = moead_core._repair_selected_routes(plan, context, ["V_1"])
+
+    assert covered == {carried.id}
+    assert [item.id for item in plan["V_1"][0].delivery_item_list] == [carried.id]
+
+
+def test_route_crossover_repairs_after_each_route_copy(monkeypatch):
+    factories, route_map, vehicles, first = _fixture()
+    second_vehicle = Vehicle("V_2", "G_2", 24, 15, [])
+    second_vehicle.set_cur_position_info("A", 0, 0, 0)
+    vehicles["V_2"] = second_vehicle
+    second = OrderItem("I-2", "PALLET", "O-2", 1.0, "D", "C", 0, 1000, 1, 1, 1)
+    solution = {
+        "V_1": [Node("B", [], [first]), Node("C", [first], [])],
+        "V_2": [Node("D", [], [second]), Node("C", [second], [])],
+    }
+    parent = Chromosome(solution, route_map, vehicles)
+    context = EvaluationContext(
+        route_map, vehicles, factories, {first.id: first, second.id: second}
+    )
+    calls = []
+    original_repair = moead_core._repair_selected_routes
+
+    def record_repair(plan, repair_context, vehicle_order=None):
+        calls.append(tuple(
+            vehicle_id for vehicle_id, route in plan.items() if route
+        ))
+        return original_repair(plan, repair_context, vehicle_order)
+
+    monkeypatch.setattr(moead_core, "_repair_selected_routes", record_repair)
+    config.set_begin_time()
+    child = moead_core.route_crossover(
+        parent, parent,
+        [DispatchUnit((first.id,), (first,)), DispatchUnit((second.id,), (second,))],
+        context, (0.5, 0.5), (0.0, 0.0), time.time() + 1.0,
+    )
+
+    assert child is not None
+    assert calls == [("V_1",), ("V_1", "V_2")]
 
 
 def test_couple_exchange_generates_a_feasible_intra_route_neighbor():
@@ -511,7 +662,7 @@ def test_tabu_search_tabus_solutions_not_move_keys(monkeypatch):
     assert result._moead_tc < chromosome.fitness
 
 
-def test_tabu_search_can_leave_its_best_solution(monkeypatch):
+def test_tabu_search_retains_current_when_no_neighbor_improves(monkeypatch):
     chromosome, context = _single_order_relocation_fixture()
     monkeypatch.setattr(config, "MOEAD_TS_MAX_ITERATIONS", 3)
     monkeypatch.setattr(config, "MOEAD_TS_NEIGHBOR_THRESHOLD", 1)
@@ -542,14 +693,59 @@ def test_tabu_search_can_leave_its_best_solution(monkeypatch):
 
     result = tabu_search(chromosome, context, time.time() + 1.0)
 
-    # V_3 is the TS-best route, then V_2 is deliberately accepted as the
-    # current route even though it is worse. The returned solution remains V_3.
+    # V_3 improves the initial route.  V_2 is then worse than V_3 and must not
+    # replace x_current: Algorithm 4 starts x_bestNeighbor at x_current and
+    # accepts only a strictly lower TC.
     expected_current = Chromosome(
-        {"V_1": [], "V_2": [Node("B", [], [item]), Node("C", [item], [])], "V_3": []},
+        {"V_1": [], "V_2": [], "V_3": [Node("B", [], [item]), Node("C", [item], [])]},
         chromosome.route_map, chromosome.id_to_vehicle,
     )
     assert observed_current[2] == moead_core._signature(expected_current)
     assert [node.id for node in result.solution["V_3"]] == ["B", "C"]
+
+
+def test_tabu_search_continues_outer_iterations_without_an_improvement(monkeypatch):
+    chromosome, context = _single_order_relocation_fixture()
+    monkeypatch.setattr(config, "MOEAD_TS_MAX_ITERATIONS", 3)
+    monkeypatch.setattr(config, "MOEAD_TS_NEIGHBOR_THRESHOLD", 1)
+    calls = []
+
+    def no_neighbor(current, deadline):
+        calls.append(moead_core._signature(current))
+        return None
+
+    monkeypatch.setattr(
+        moead_ts_operators, "sample_pdg_relocate_move", no_neighbor
+    )
+    monkeypatch.setattr(
+        moead_core.random, "choice", lambda _operators: "pdg_relocate"
+    )
+    config.set_begin_time()
+
+    result = tabu_search(chromosome, context, time.time() + 1.0)
+
+    # Algorithm 4 keeps x_bestNeighbor = x_current and proceeds to the next
+    # outer iteration rather than terminating when this sample finds no move.
+    assert len(calls) == 3
+    assert moead_core._signature(result) == moead_core._signature(chromosome)
+
+
+def test_tabu_search_stops_immediately_without_a_movable_pdg_unit(monkeypatch):
+    factories, route_map, vehicles, _item = _fixture()
+    context = EvaluationContext(route_map, vehicles, factories, {})
+    child = moead_core._candidate({"V_1": []}, context)
+
+    def sampler_must_not_run(*_args):
+        raise AssertionError("a TS sampler ran despite an empty neighbourhood")
+
+    monkeypatch.setattr(moead_core, "_sample_single_move", sampler_must_not_run)
+    monkeypatch.setattr(config, "MOEAD_TS_MAX_ITERATIONS", 20)
+    monkeypatch.setattr(config, "MOEAD_TS_NEIGHBOR_THRESHOLD", 30)
+    config.set_begin_time()
+
+    result = tabu_search(child, context, time.time() + 1.0)
+
+    assert moead_core._signature(result) == moead_core._signature(child)
 
 
 def test_solution_signature_canonicalizes_adjacent_factory_nodes():
@@ -703,10 +899,25 @@ def test_combined_node_is_expanded_before_local_search_and_can_move():
 def test_safe_fallback_prevents_empty_population_failure(monkeypatch):
     factories, route_map, vehicles, item = _fixture()
     monkeypatch.setattr(config, "MOEAD_MAX_GENERATIONS", 0)
-    monkeypatch.setattr(moead_core, "initialize_population", lambda *_args: [])
+    # Force every exhaustive CI sequence to fail.  Initialisation must still
+    # construct all N members through the sequence-preserving fallback.
+    monkeypatch.setattr(moead_core, "_insert_unit_best", lambda *_args, **_kwargs: None)
     config.set_begin_time()
     result = run_moead_ts(
         {"V_1": []}, route_map, vehicles, factories, {item.id: item}, [item.id]
     )
     assert result is not None
+    assert result._moead_initial_population_size == config.MOEAD_POPULATION_SIZE
     assert validate_solution(result.solution, result._moead_context)
+
+
+def test_no_new_order_interval_keeps_the_full_population_invariant(monkeypatch):
+    factories, route_map, vehicles, _item = _fixture()
+    monkeypatch.setattr(config, "MOEAD_POPULATION_SIZE", 3)
+    config.set_begin_time()
+    result = run_moead_ts(
+        {"V_1": []}, route_map, vehicles, factories, {}, []
+    )
+    assert result is not None
+    assert result._moead_initial_population_size == 3
+    assert result._moead_initial_population_mean_tc == result._moead_tc

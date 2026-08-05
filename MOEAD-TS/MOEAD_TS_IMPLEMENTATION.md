@@ -22,12 +22,39 @@ visited route plan, matching the solution-level tabu condition in Algorithm 4
 of the paper. Move descriptors are retained only to construct and test a
 single local-search neighbour.
 
-For every TS outer iteration, the best feasible non-tabu neighbour becomes
-the next current solution even if it is worse than the TS-best solution. This
-permits the search to leave a local optimum; `x_best` is still updated only by
-a strict `TC` improvement. If initial construction finishes early, the search
-uses only its actually constructed candidates rather than cloning one solution
-to fill the nominal population size.
+For every TS outer iteration, Algorithm 4 initializes `x_bestNeighbor` with
+`x_current`. A feasible non-tabu neighbour replaces it only on a strict `TC`
+improvement, so `x_current` is retained when none of the
+`NeighborThreshold` samples improves it. `x_best` is likewise updated only by
+a strict `TC` improvement. This is the literal paper behavior; diversity comes
+from route crossover and random selection among the four operators, not from
+accepting a worse TS transition. Initialisation always produces the nominal
+six population members; an unfinished CI sequence is completed by a feasible
+sequence-preserving fallback rather than dropping that member or cloning a
+previous result.
+
+Early stopping (implementation choices, not in the paper): the Algorithm-4
+outer loop stops after `MOEAD_TS_STAGNATION_LIMIT` consecutive iterations that
+find no strictly improving neighbour, and the MOEA/D generation loop stops
+after `MOEAD_STAGNATION_GENERATIONS` consecutive generations with zero
+population replacements. Both mechanisms only terminate the search sooner when
+no progress is observed, so the accepted moves and the behaviour up to that
+point match the paper. Setting either limit to 0 restores the paper's
+fixed-iteration behaviour exactly.
+
+Before the TS loops start, the implementation exits immediately when no
+movable pickup--delivery unit exists. All four Algorithm-4 operators require
+such a unit, so this is an exact empty-neighbourhood termination and avoids
+repeating empty samples for `MaxIter × NeighborThreshold` iterations.
+
+`route_crossover` follows Algorithm 3 literally: it starts with an empty
+offspring, copies route `r_k` from a random parent for `k = 1, ..., K`, and
+repairs the partial offspring immediately after each copy. Vehicle IDs are
+ordered numerically (`V_2` before `V_10`) so the first copied route retains a
+duplicate order. The remaining orders are then inserted by the current
+subproblem's Tchebycheff value. In the dynamic adaptation, a committed
+destination and the delivery-only action of an item already carried by a
+vehicle are preserved during repair.
 
 The two MOEA/D objectives and scalar `TC` are obtained atomically from one
 full-fleet call to `total_cost(..., mode="components")`, which returns
@@ -36,11 +63,24 @@ route-replacement candidate, delegates to that same full-fleet evaluator. This
 prevents MOEA/D and local search from scoring f1 and f2 using separate partial
 evaluations.
 
+The initial population uses the large-route (`model_nodes_num > 8`) cheapest
+insertion mechanism from `dispatch_nodePair`: for every dispatch unit it
+examines each vehicle and every ordered pair of pickup/delivery positions.
+Before score evaluation, the candidate route is canonicalised as it will be
+for simulator output and checked for LIFO and capacity feasibility. The winner
+is chosen from a dock-aware full-fleet evaluation, not a one-route surrogate.
+The small-route permutation tables are intentionally not used here: they
+reorder existing work and can alter an immutable dynamic destination prefix.
+
 The paper and simulator impose a 600-second total process limit. The search
 reserves 15 seconds for atomic archive and JSON output. Initial population
-construction is bounded to a configurable fraction of that budget and falls
-back to a complete feasible incumbent when exhaustive construction cannot
-finish. `MOEAD_TS_OPERATOR_TIME_LIMIT` is retained only for backward
+construction is bounded to a configurable fraction of that budget. It always
+materialises all `N = 6` members: each member starts from its own shuffled
+order sequence; if exhaustive CI cannot complete that sequence within the
+reserved time, a feasible pair-by-pair fallback completes that same sequence.
+This is deliberately not a one-member fallback. When no new order arrives,
+the six independent chromosomes are necessarily equivalent copies of the
+restored scene. `MOEAD_TS_OPERATOR_TIME_LIMIT` is retained only for backward
 compatibility; per-operator time slicing no longer applies. Run a focused test
 with:
 

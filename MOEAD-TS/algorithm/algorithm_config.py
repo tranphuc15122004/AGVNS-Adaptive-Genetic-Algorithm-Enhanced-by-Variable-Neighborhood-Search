@@ -40,9 +40,26 @@ MOEAD_MAX_REPLACEMENTS = 2      # reproduction assumption; not disclosed
 
 # Algorithm 4 parameters not disclosed in the paper.  Keep them configurable
 # and log them as implementation choices in the algorithm manifest.
-MOEAD_TS_TABU_LIST_SIZE = 20
+MOEAD_TS_TABU_LIST_SIZE = 20000000
 MOEAD_TS_NEIGHBOR_THRESHOLD = 30
 MOEAD_TS_MAX_ITERATIONS = 20
+# Early-stopping extensions (implementation choices, not in the paper; 0 disables
+# each mechanism).  They only end the search sooner when no progress is observed,
+# so the accepted moves and the behaviour up to that point match the paper.
+MOEAD_TS_STAGNATION_LIMIT = 3     # stop the Algorithm-4 outer loop after N consecutive non-improving iterations
+MOEAD_STAGNATION_GENERATIONS = 5  # stop the MOEA/D loop after N consecutive generations with zero replacements
+# Debug capture: when the reported "TC after optimization" jumps upward
+# dramatically versus the previous epoch, snapshot the epoch's data_interaction
+# JSONs into MOEAD_DEBUG_SNAPSHOT_DIR (diagnostics only - never alters the
+# search).  Set MOEAD_DEBUG_CAPTURE_TC_JUMP=False or the threshold to a
+# negative value to disable.  Snapshots land under the variant's
+# algorithm/data_interaction_tc_jump/ (gitignored).
+MOEAD_DEBUG_CAPTURE_TC_JUMP = os.environ.get("MOEAD_DEBUG_CAPTURE_TC_JUMP", "1") != "0"
+MOEAD_DEBUG_TC_JUMP_THRESHOLD = 100.0  # absolute TC increase that counts as a jump
+MOEAD_DEBUG_SNAPSHOT_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "algorithm", "data_interaction_tc_jump",
+)
 # Retained for backward compatibility with external scripts.  Algorithm 4 now
 # generates single random moves per inner iteration, so this per-operator time
 # slice is no longer applied by ``tabu_search``.
@@ -120,18 +137,35 @@ def moead_parameter_manifest() -> dict:
             "tabu_list_size": MOEAD_TS_TABU_LIST_SIZE,
             "ts_max_iterations": MOEAD_TS_MAX_ITERATIONS,
             "neighbor_threshold": MOEAD_TS_NEIGHBOR_THRESHOLD,
+            "ts_stagnation_limit": MOEAD_TS_STAGNATION_LIMIT,
+            "stagnation_generations": MOEAD_STAGNATION_GENERATIONS,
             "tabu_item": "canonical solution signature",
-            "tabu_transition": "best non-tabu neighbor; may worsen current",
+            "tabu_transition": (
+                "strictly improving non-tabu neighbor; otherwise retain current"
+            ),
+            "tabu_empty_neighborhood": "return offspring when no movable PDG unit exists",
             "neighbor_generation": (
                 "one random single move per inner iteration via "
                 "sample_*_move in MOEAD_TS.py"
             ),
             "initialization_time_fraction": MOEAD_INITIALIZATION_TIME_FRACTION,
             "initialization_max_seconds": MOEAD_INITIALIZATION_MAX_SECONDS,
-            "insertion": "exhaustive feasible positions until global deadline",
-            "incomplete_initialization": "use only constructed candidates; do not clone",
+            "insertion": (
+                "dispatch_nodePair large-route CI: enumerate every ordered "
+                "pickup/delivery position, canonical LIFO/capacity filter, "
+                "then dock-aware fleet evaluation"
+            ),
+            "incomplete_initialization": (
+                "complete each failed CI sequence with a feasible "
+                "sequence-preserving fallback; always build N members"
+            ),
             "total_runtime_limit": ALGO_TIME_LIMIT,
             "output_reserve_seconds": OUTPUT_RESERVE_SECONDS,
+            "debug_capture_tc_jump": {
+                "enabled": MOEAD_DEBUG_CAPTURE_TC_JUMP,
+                "threshold": MOEAD_DEBUG_TC_JUMP_THRESHOLD,
+                "snapshot_dir": MOEAD_DEBUG_SNAPSHOT_DIR,
+            },
         },
     }
 
