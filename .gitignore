@@ -40,6 +40,11 @@ Thumbs.db
 **/algorithm/data_interaction_runs/
 **/algorithm/data_interaction_debug/
 **/algorithm/data_interaction_test/
+**/algorithm/data_interaction_tc_jump/
+**/algorithm/data_interaction_replay/
+**/algorithm/data_interaction_epoch_log/
+**/algorithm/data_interaction_compare/
+replay_comparison/
 src/output/
 
 # Compiled object files (not executable binaries)

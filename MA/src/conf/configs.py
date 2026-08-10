@@ -46,7 +46,8 @@ class Configs(object):
 
     # 文件路径
     root_folder_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    benchmark_folder_path = os.path.join(root_folder_path, "benchmark")
+    # Dùng chung bộ dữ liệu benchmark ở thư mục chính (cấp trên của variant)
+    benchmark_folder_path = os.path.join(os.path.dirname(root_folder_path), "benchmark")
     src_folder_path = os.path.join(root_folder_path, "src")
     algorithm_folder_path = os.path.join(root_folder_path, "algorithm")
     output_folder = os.path.join(src_folder_path, "output")

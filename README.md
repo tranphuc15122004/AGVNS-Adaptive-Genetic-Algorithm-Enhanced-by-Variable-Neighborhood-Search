@@ -28,6 +28,7 @@ Repository này chứa **thuật toán chính nghiên cứu (AGVNS)** và các *
 
 ```
 New_DPDP/
+├── benchmark/                      # 64 benchmark instances + factory/route CSVs (dùng chung cho mọi variant)
 ├── AGVNS/                          # Thuật toán chính: Adaptive GA + VNS
 │   ├── main.py                     # Simulator entry point
 │   ├── main_algorithm.py           # Algorithm entry point (gọi từ simulator)
@@ -46,7 +47,7 @@ New_DPDP/
 │   ├── src/                        # Simulator source
 │   │   ├── conf/configs.py         # Simulator config
 │   │   └── simulator/
-│   └── benchmark/                  # 64 benchmark instances + factory/route CSVs
+│   └── (dùng chung benchmark/ ở thư mục chính)
 │
 ├── MA/                             # Baseline: Memetic Algorithm
 │   ├── main.py                     # Simulator entry point
@@ -57,7 +58,7 @@ New_DPDP/
 │   │   │   ├── MA.py               # Memetic_algorithm implementation
 │   │   │   └── MA_engine.py        # MA-specific fitness engine
 │   │   └── ... (shared structure với AGVNS)
-│   └── benchmark/
+│   └── (dùng chung benchmark/ ở thư mục chính)
 │
 ├── 1/
 │   ├── compiled_files/             # Gold Algorithm (Java .class)

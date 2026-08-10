@@ -7,12 +7,36 @@ import random
 import re
 import sys
 from typing import Dict , List, Optional, Tuple
+
 from algorithm.Object import *
 import algorithm.algorithm_config as config
 from src.conf.configs import Configs
 
 
 input_directory = Configs.algorithm_data_interaction_folder_path   
+
+
+def _vehicle_sort_key(vehicle_id: str) -> Tuple[int, str, int, str]:
+    """Sort conventional ``V_<number>`` IDs numerically and deterministically."""
+    match = re.match(r"^(.*)_(\d+)$", vehicle_id)
+    if match:
+        return 0, match.group(1), int(match.group(2)), ""
+    return 1, vehicle_id, 0, vehicle_id
+
+
+def _item_sort_key(item_id: str, delivery: bool = False) -> Tuple[int, str, int, str]:
+    """Sort item IDs by numeric suffix, preserving FILO delivery order.
+
+    Pickup items are loaded in increasing sequence.  Items delivered from the
+    same pickup group must be visited in the reverse sequence, because
+    ``isFeasible`` consumes delivery lists from the top of the FILO stack.
+    """
+    match = re.match(r"^(.*)-(\d+)$", item_id)
+    if match:
+        sequence = int(match.group(2))
+        return 0, match.group(1), -sequence if delivery else sequence, item_id
+    return 1, item_id, 0, item_id
+
 
 def _restore_canonical_route_after(
         route_after: str,
@@ -22,15 +46,10 @@ def _restore_canonical_route_after(
         complete_item_ids: List[str],
         on_vehicle_item_ids: List[str],
 ) -> bool:
-    """Restore the canonical JSON route representation into ``vehicleid_to_plan``.
+    """Restore the canonical JSON representation emitted by ``get_route_after``.
 
-    The MOEA/D--TS variant serialises ``route_after`` as canonical JSON, e.g.
-    ``[["V_1",[]],["V_2",[["<factory_id>",["<pickup_id>",...],["<delivery_id>",...]],...]]]``.
-    Unlike the legacy ``V_x:[p1_id d1_id ...]`` string, the canonical format
-    carries the full item lists per node, so arbitrary multi-item orders can be
-    restored faithfully.  Returning ``False`` signals the legacy human-readable
-    representation so ``solution.json`` files produced by this variant itself
-    (which still uses the legacy format) fall back to the original parser.
+    ``False`` signals the legacy, human-readable representation so old
+    ``solution.json`` files can still be restored by the compatibility path.
     """
     try:
         encoded_routes = json.loads(route_after)
@@ -83,7 +102,6 @@ def _restore_canonical_route_after(
         vehicleid_to_plan[vehicle_id] = restored_route
     return True
 
-
 def restore_scene_with_single_node(vehicleid_to_plan: Dict[str , List[Node]], id_to_ongoing_items: Dict[str , OrderItem], id_to_unlocated_items: Dict[str , OrderItem], id_to_vehicle: Dict[str , Vehicle] , id_to_factory: Dict[str , Factory], id_to_allorder: Dict[str , OrderItem]) -> List[str]:
     onVehicleOrderItems = ''
     unallocatedOrderItems = ''
@@ -117,18 +135,17 @@ def restore_scene_with_single_node(vehicleid_to_plan: Dict[str , List[Node]], id
                 curr_on_vehicle_items : List[str] = onVehicleOrderItems.split(" ")
                 completeOrderItems = ' '.join([item for item in last_on_vehicle_items if item not in curr_on_vehicle_items]).strip()
                 complete_item_array = completeOrderItems.split(" ")
+                print(complete_item_array)
                 
                 last_unallocated_items : List[str] = before_solution.get("unallocated_order_items", "").split()
                 curr_unallocated_items : List[str] = unallocatedOrderItems.split(" ")
                 newOrderItems = ' '.join([item for item in curr_unallocated_items if item not in last_unallocated_items]).strip()
                 
+                
                 config.IMPROVED_IN_CROSS = int(before_solution.get("improved_in_cross" , 0))
                 config.IMPROVED_IN_MUTATION  = int(before_solution.get("improved_in_mutation" , 0))
                 config.IMPROVED_IN_DIVER  = int(before_solution.get("improved_in_diver" , 0))
-
-                # The MOEA/D--TS variant writes a canonical JSON route_after.
-                # If that format is detected, parse it and skip the legacy
-                # string parser below (which cannot encode arbitrary item lists).
+                
                 restored_canonical_route = _restore_canonical_route_after(
                     routeBefore,
                     vehicleid_to_plan,
@@ -157,52 +174,69 @@ def restore_scene_with_single_node(vehicleid_to_plan: Dict[str , List[Node]], id
                     node_list : List[str] = list(route_nodes)
                     
                     # bao gồm các node (đại diện bởi itemID) cò tới thời điểm của time interval hiện tại
-                    node_list = [
+                    """ node_list = [
                         node for node in node_list
                         if not (
                             (node.startswith("d") and node.split("_")[1] in complete_item_array) or
                             (node.startswith("p") and node.split("_")[1] in curr_on_vehicle_items)
                         )
-                    ]
+                    ] """
+                    
+                    # Do NOT pre-filter nodes by string; decode first, then prune items per state
+                    
                     
                     if len(node_list) > 0:
                         planroute : List[Node] = []
                         
                         for node in node_list:
-                            deliveryItemList : List[OrderItem] = []
-                            pickupItemList : List[OrderItem] = []
-                            temp : OrderItem = None
-                            op = node[0][0:1]           #chỉ thị trạng thái của node (pickup / delivery) (p/d)
-                            opNumstr = node.split("_")
-                            opItemNum = int(opNumstr[0][1 :]) #p3 -> 3
-                            orderItemID = node.split("_")[1]
-                            idEndNumber = int(orderItemID.split("-")[1]) #số hiệu lớn nhất của đơn hàng
-                            
-                            # nếu là node giao
+                            deliveryItemList: List[OrderItem] = []
+                            pickupItemList: List[OrderItem] = []
+                            op = node[0]  # 'p' or 'd'
+                            try:
+                                header, payload = node.split("_", 1)
+                            except ValueError:
+                                # Malformed token, skip
+                                continue
+                            # Decode multi-base and multi-suffix payload into item IDs
+                            item_ids: List[str] = []
+                            for seg in payload.split("+"):
+                                if not seg:
+                                    continue
+                                parts = seg.split("-")
+                                if not parts:
+                                    continue
+                                base = parts[0]
+                                for suf in parts[1:]:
+                                    if suf:
+                                        item_ids.append(f"{base}-{suf}")
+
+                            # Prune per current state
                             if op == 'd':
-                                for i in range(opItemNum):
-                                    temp = id_to_allorder[orderItemID]
-                                    deliveryItemList.append(temp)
-                                    
-                                    idEndNumber -= 1
-                                    orderItemID =  orderItemID.split("-")[0] + "-" + str(idEndNumber)
-                            # nếu là node nhận
+                                for item_id in item_ids:
+                                    if item_id in complete_item_array:
+                                        continue  # already delivered
+                                    tmp = id_to_allorder.get(item_id)
+                                    if tmp is not None:
+                                        deliveryItemList.append(tmp)
+                            else:  # pickup
+                                for item_id in item_ids:
+                                    if (item_id in curr_on_vehicle_items) or (item_id in complete_item_array):
+                                        continue  # already picked or completed
+                                    tmp = id_to_allorder.get(item_id)
+                                    if tmp is not None:
+                                        pickupItemList.append(tmp)
+
+                            # Skip empty after pruning
+                            if (not deliveryItemList) and (not pickupItemList):
+                                continue
+
+                            # Determine factory and append node
+                            if deliveryItemList:
+                                factory_id = deliveryItemList[0].delivery_factory_id
                             else:
-                                for i in range(opItemNum):
-                                    temp = id_to_allorder[orderItemID]
-                                    pickupItemList.append(temp)
-                                    
-                                    idEndNumber += 1
-                                    orderItemID =  orderItemID.split("-")[0] + "-" + str(idEndNumber)
-                            
-                            factoryID = ""
-                            if op == 'd':
-                                factoryID = temp.delivery_factory_id
-                            else:
-                                factoryID = temp.pickup_factory_id
-                            factory = id_to_factory[factoryID]
-                            
-                            planroute.append(Node(factoryID , deliveryItemList , pickupItemList ,None ,None , factory.lng , factory.lat))
+                                factory_id = pickupItemList[0].pickup_factory_id
+                            factory = id_to_factory[factory_id]
+                            planroute.append(Node(factory_id, deliveryItemList, pickupItemList, None, None, factory.lng, factory.lat))
                             
                         if len(planroute) > 0:
                             vehicleid_to_plan[vehicleID] = planroute
@@ -213,7 +247,7 @@ def restore_scene_with_single_node(vehicleid_to_plan: Dict[str , List[Node]], id
         completeOrderItems = ""
         routeBefore = ""
         delta_t = "0000-0010"
-        
+    
     new_order_itemIDs = newOrderItems.split()
     
     return new_order_itemIDs
@@ -376,57 +410,44 @@ def merge_node(id_to_vehicle: Dict[str , Vehicle], vehicleid_to_plan: Dict[str, 
                     i += 1  # Chỉ tăng index khi không xóa phần tử
         vehicleid_to_plan[vehicle_id] = origin_planned_route
         
-def get_route_after(vehicleid_to_plan: Dict[str , list[Node]], vehicleid_to_destination : Dict[str , Node]):
-    
-    route_str = ""
-    vehicle_num = len(vehicleid_to_plan)
-    vehicle_routes = [""] * vehicle_num
-    index = 0
-    
-    if vehicleid_to_destination is None or len(vehicleid_to_destination) == 0:
-        for i in range(vehicle_num):
-            vehicle_routes[i] = "["
-    for vehicle_id, first_node in vehicleid_to_destination.items():
-        if first_node is not None:
-            pickup_size = len(first_node.pickup_item_list) if first_node.pickup_item_list else 0
-            delivery_size = len(first_node.delivery_item_list) if first_node.delivery_item_list else 0
-            
-            if delivery_size > 0:
-                vehicle_routes[index] = f"[d{delivery_size}_{first_node.delivery_item_list[0].id} "
-            if pickup_size > 0:
-                if delivery_size == 0:
-                    vehicle_routes[index] = f"[p{pickup_size}_{first_node.pickup_item_list[0].id} "
-                else:
-                    vehicle_routes[index] = vehicle_routes[index].strip()
-                    vehicle_routes[index] += f"p{pickup_size}_{first_node.pickup_item_list[0].id} "
-        else:
-            vehicle_routes[index] = "["
-        index += 1
-    
-    index = 0
-    for vehicle_id, id2_node_list in vehicleid_to_plan.items():
-        if id2_node_list and len(id2_node_list) > 0:
-            for node in id2_node_list:
-                pickup_size = len(node.pickup_item_list)
-                delivery_size = len(node.delivery_item_list)
-                
-                if delivery_size > 0:
-                    vehicle_routes[index] += f"d{delivery_size}_{node.delivery_item_list[0].id} "
-                if pickup_size > 0:
-                    if delivery_size > 0:
-                        vehicle_routes[index] = vehicle_routes[index].strip()
-                    vehicle_routes[index] += f"p{pickup_size}_{node.pickup_item_list[0].id} "
-            
-            vehicle_routes[index] = vehicle_routes[index].strip()
-        vehicle_routes[index] += "]"
-        index += 1
+def get_route_after(vehicleid_to_plan: Dict[str, List[Node]],
+                    vehicleid_to_destination: Optional[Dict[str, Node]]) -> str:
+    """Serialize a solution canonically for restoration and tabu signatures.
 
-    for i in range(vehicle_num):
-        car_id = f"V_{i + 1}"
-        route_str += f"{car_id}:{vehicle_routes[i]} "
-    
-    route_str = route_str.strip()
-    return route_str
+    The JSON array records the actual vehicle ID, then each route node as
+    ``[factory_id, sorted_pickup_item_ids, sorted_delivery_item_ids]``.  This
+    makes the representation independent of dictionary insertion order while
+    retaining route-node order and every item assigned to that node.
+    """
+    destinations = vehicleid_to_destination or {}
+    vehicle_ids = sorted(
+        set(vehicleid_to_plan).union(destinations),
+        key=_vehicle_sort_key,
+    )
+    encoded_routes = []
+    for vehicle_id in vehicle_ids:
+        nodes: List[Node] = []
+        destination = destinations.get(vehicle_id)
+        if destination is not None:
+            nodes.append(destination)
+        nodes.extend(vehicleid_to_plan.get(vehicle_id) or [])
+
+        encoded_nodes = [
+            [
+                node.id,
+                sorted(
+                    (item.id for item in (node.pickup_item_list or [])),
+                    key=_item_sort_key,
+                ),
+                sorted(
+                    (item.id for item in (node.delivery_item_list or [])),
+                    key=lambda item_id: _item_sort_key(item_id, delivery=True),
+                ),
+            ]
+            for node in nodes
+        ]
+        encoded_routes.append([vehicle_id, encoded_nodes])
+    return json.dumps(encoded_routes, ensure_ascii=False, separators=(",", ":"))
 
 
 
@@ -823,6 +844,7 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
     return isExhausive , bestInsertVehicleID, bestInsertPosI, bestInsertPosJ , bestNodeList
 
 
+# tinhf nghi
 def random_dispatch_nodePair(node_list: list[Node], id_to_vehicle: Dict[str, Vehicle], vehicleid_to_plan: Dict[str, list[Node]]):
     """
     Randomly insert a pickup-delivery pair into a vehicle route without:
@@ -834,10 +856,6 @@ def random_dispatch_nodePair(node_list: list[Node], id_to_vehicle: Dict[str, Veh
         return
 
     is_inserted = False
-    attempts = 0
-    MAX_ATTEMPTS = 500
-    # Probability to try simple end-extension (append pickup & delivery at tail)
-    p_extend_end = 1
     while not is_inserted:
         selected_vehicleID = random.choice(list(id_to_vehicle.keys()))
         selected_vehicle = id_to_vehicle[selected_vehicleID]
@@ -857,121 +875,51 @@ def random_dispatch_nodePair(node_list: list[Node], id_to_vehicle: Dict[str, Veh
             route.append(selected_vehicle.des)
             old_len = 1  # destination preserved at index 0
 
-        pickup_node = None
-        delivery_node = None
-        if node_list[0].pickup_item_list and not node_list[0].delivery_item_list:
-            pickup_node , delivery_node = node_list[0] , node_list[-1]
-        else: 
-            delivery_node , pickup_node = node_list[0] , node_list[-1]
-            
-
-        # Helper: get current carrying items as Python list (bottom -> top)
-        def _get_carrying_list(v: Vehicle) -> List[OrderItem]:
-            ci = getattr(v, 'carrying_items', None)
-            # Try to deep copy stack-like object
-            try:
-                ci_copy = copy.deepcopy(ci)
-            except Exception:
-                ci_copy = ci
-            # Stack-like: has is_empty/pop
-            try:
-                items_top_first: List[OrderItem] = []
-                while ci_copy is not None and hasattr(ci_copy, 'is_empty') and not ci_copy.is_empty():
-                    items_top_first.append(ci_copy.pop())
-                # convert top->bottom to bottom->top for isFeasible
-                return list(reversed(items_top_first)) if items_top_first else (list(ci_copy) if isinstance(ci_copy, list) else [])
-            except Exception:
-                # list-like
-                try:
-                    return list(ci_copy) if ci_copy is not None else []
-                except Exception:
-                    return []
+        pickup_node = node_list[0]
+        delivery_node = node_list[-1]
 
         if old_len == 0:
             # No destination and no existing route -> simply append pair (feasibility-checked)
             route.extend([pickup_node, delivery_node])
-            carrying_items = _get_carrying_list(selected_vehicle)
+            carrying_items = selected_vehicle.carrying_items if selected_vehicle.des else []
             if isFeasible(route, carrying_items, selected_vehicle.board_capacity):
                 is_inserted = True
             else:
                 # revert and retry with another vehicle
                 route.pop(); route.pop()
         else:
-            # Branch 1: try end-extension with probability p_extend_end
-            did_try_extend = False
-            if random.random() < p_extend_end:
-                did_try_extend = True
-                route.append(pickup_node)
-                route.append(delivery_node)
-                carrying_items = _get_carrying_list(selected_vehicle)
-                # Validate destination position & feasibility
-                if (selected_vehicle.des and route[0].id != selected_vehicle.des.id) or not isFeasible(route, carrying_items, selected_vehicle.board_capacity):
-                    # Revert
-                    route.pop(); route.pop()
-                else:
-                    is_inserted = True
+            # Try random feasible positions for pickup and delivery (delivery strictly after pickup)
+            feasible_position1 = [i for i in range(begin_pos, len(route) + 1)]
+            random.shuffle(feasible_position1)
+            for insert_posI in feasible_position1:
+                feasible_position2 = [i for i in range(insert_posI + 1, len(route) + 2)]
+                random.shuffle(feasible_position2)
+                for insert_posJ in feasible_position2:
+                    route.insert(insert_posI, pickup_node)
+                    route.insert(insert_posJ, delivery_node)
 
-            # Branch 2: general random insertion search if not inserted yet
-            if not is_inserted and not did_try_extend:
-                # Try random feasible positions for pickup and delivery (delivery strictly after pickup)
-                feasible_position1 = [i for i in range(begin_pos, len(route) + 1)]
-                random.shuffle(feasible_position1)
-                for insert_posI in feasible_position1:
-                    feasible_position2 = [i for i in range(insert_posI + 1, len(route) + 2)]
-                    random.shuffle(feasible_position2)
-                    for insert_posJ in feasible_position2:
-                        route.insert(insert_posI, pickup_node)
-                        route.insert(insert_posJ, delivery_node)
-
-                        # Do not allow changing destination position at index 0
-                        if selected_vehicle.des and route and route[0].id != selected_vehicle.des.id:
-                            # revert immediately if destination got shifted
-                            route.pop(insert_posJ)
-                            route.pop(insert_posI)
-                            continue
-
-                        carrying_items = _get_carrying_list(selected_vehicle)
-                        if isFeasible(route, carrying_items, selected_vehicle.board_capacity):
-                            check_end = True
-                            break
-
-                        # Revert failed attempt
+                    # Do not allow changing destination position at index 0
+                    if selected_vehicle.des and route and route[0].id != selected_vehicle.des.id:
+                        # revert immediately if destination got shifted
                         route.pop(insert_posJ)
                         route.pop(insert_posI)
-                    if check_end:
+                        continue
+
+                    carrying_items = selected_vehicle.carrying_items if selected_vehicle.des else []
+                    if isFeasible(route, carrying_items, selected_vehicle.board_capacity):
+                        check_end = True
                         break
+
+                    # Revert failed attempt
+                    route.pop(insert_posJ)
+                    route.pop(insert_posI)
+                if check_end:
+                    break
 
         # Confirm exactly two nodes were added and, if applicable, destination preserved
         if len(route) == old_len + 2:
             if not selected_vehicle.des or (route and route[0].id == selected_vehicle.des.id):
                 is_inserted = True
-
-        attempts += 1
-        if not is_inserted and attempts >= MAX_ATTEMPTS:
-            # Fallback: try exhaustive feasible insertion over all vehicles/positions deterministically
-            for vID, v in id_to_vehicle.items():
-                r = vehicleid_to_plan.get(vID)
-                if r is None:
-                    r = []
-                    vehicleid_to_plan[vID] = r
-                begin_pos2 = 1 if v.des else 0
-                base_len = len(r)
-                if base_len == 0 and v.des is not None:
-                    r.append(v.des); base_len = 1
-                for i in range(begin_pos2, len(r) + 1):
-                    for j in range(i + 1, len(r) + 2):
-                        r.insert(i, pickup_node)
-                        r.insert(j, delivery_node)
-                        # keep destination header
-                        if v.des and r and r[0].id != v.des.id:
-                            r.pop(j); r.pop(i)
-                            continue
-                        if isFeasible(r, _get_carrying_list(v), v.board_capacity):
-                            return
-                        r.pop(j); r.pop(i)
-            # If still not inserted, log and return without modification (caller may handle)
-            print("[random_dispatch_nodePair] Failed to insert PD pair after exhaustive search", file=sys.stderr)
-            return
 
 
 def isFeasible(route_node_list : List[Node] , carrying_items : List[OrderItem] , capacity : float ):
@@ -1030,24 +978,7 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
     waiting_Sum  : float = 0.0
     objF : float = 0.0
     capacity = vehicle.board_capacity
-    # Build carrying items as list (bottom -> top) for correct feasibility check
-    def _get_carrying_list(v: Vehicle) -> List[OrderItem]:
-        ci = getattr(v, 'carrying_items', None)
-        try:
-            ci_copy = copy.deepcopy(ci)
-        except Exception:
-            ci_copy = ci
-        try:
-            items_top_first: List[OrderItem] = []
-            while ci_copy is not None and hasattr(ci_copy, 'is_empty') and not ci_copy.is_empty():
-                items_top_first.append(ci_copy.pop())
-            return list(reversed(items_top_first)) if items_top_first else (list(ci_copy) if isinstance(ci_copy, list) else [])
-        except Exception:
-            try:
-                return list(ci_copy) if ci_copy is not None else []
-            except Exception:
-                return []
-    carrying_Items : List[OrderItem] = _get_carrying_list(vehicle)
+    carrying_Items : List[OrderItem] = vehicle.carrying_items if vehicle.des else []
     
     if (temp_route_node_list) and (not isFeasible(temp_route_node_list , carrying_Items , capacity)):
         return math.inf
@@ -1626,7 +1557,7 @@ def deal_old_solution_file(id2VehicleMap):
                 return
 
         # Xóa file solution.json nếu tồn tại
-        file_path = "./algorithm/data_interaction/solution.json"
+        file_path = os.path.join(Configs.algorithm_data_interaction_folder_path, "solution.json")
         if os.path.exists(file_path):
             os.remove(file_path)
             

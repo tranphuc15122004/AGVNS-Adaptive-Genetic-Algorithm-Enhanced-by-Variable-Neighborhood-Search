@@ -837,8 +837,8 @@ def main():
                         default='algorithm/data_interaction',
                         help='Path to data_interaction folder')
     parser.add_argument('--benchmark-dir', type=str,
-                        default='benchmark',
-                        help='Path to benchmark folder')
+                        default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'benchmark'),
+                        help='Path to benchmark folder (default: shared root benchmark)')
     parser.add_argument('--output', type=str,
                         default='visualization_output/posthoc_map.html',
                         help='Output HTML file path')

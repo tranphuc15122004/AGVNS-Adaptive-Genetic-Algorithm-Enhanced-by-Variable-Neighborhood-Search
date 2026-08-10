@@ -107,8 +107,10 @@ def main() -> None:
     os.environ["MOEAD_DATA_INTERACTION_DIR"] = sandbox_dir
 
     # A replay is a diagnostics run: never let it touch the real TC-jump
-    # snapshot/state machinery under ``data_interaction_tc_jump``.
+    # snapshot/state machinery under ``data_interaction_tc_jump`` nor the
+    # per-epoch plan log.
     os.environ["MOEAD_DEBUG_CAPTURE_TC_JUMP"] = "0"
+    os.environ["DPDP_EPOCH_PLAN_LOG"] = "0"
 
     print("Replaying epoch from {} ...".format(sandbox_dir))
     from algorithm.main import main  # noqa: E402  (import after env override)

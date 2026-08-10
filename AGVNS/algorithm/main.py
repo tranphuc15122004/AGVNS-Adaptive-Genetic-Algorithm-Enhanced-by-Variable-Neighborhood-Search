@@ -1,8 +1,10 @@
 import sys
 import time
 import copy
+import os
 from typing import Dict , List
 from algorithm.In_and_Out import *
+from algorithm.epoch_plan_log import append_current_solution
 from algorithm.Object import Chromosome
 from algorithm.engine import *
 from algorithm.Test_algorithm.new_engine import *
@@ -79,6 +81,10 @@ def main():
         
         write_destination_json_to_file_with_delay_timme(vehicleid_to_destination  ,emer_index , id_to_vehicle , input_directory)
         write_route_json_to_file_with_delay_time(best_chromosome.solution , emer_index , id_to_vehicle , input_directory)
+
+    # Archive the final plan (route_after) of this epoch for cross-variant
+    # comparison (diagnostics only; see algorithm/epoch_plan_log.py).
+    append_current_solution(best_chromosome.fitness, os.path.join(input_directory, "solution.json"))
 
 if __name__ == '__main__':
     main()

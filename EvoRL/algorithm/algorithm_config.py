@@ -15,84 +15,16 @@ Delta1 = 10000.0
 SLACK_TIME_THRESHOLD = 10000
 debugPeriod = "0010-0020"
 addDelta = 400000.0
-# The four Algorithm-4 operators implemented as single-move samplers in
-# MOEAD_TS.py (couple-exchange, block-exchange, couple-relocate, block-relocate).
-# ``LS_METHODS`` is kept aligned with AGVNS/algorithm/Test_algorithm/GAVND7.py
-# so instrumentation on a Chromosome cannot advertise obsolete TS-only moves.
-LS_METHODS = ['PDPairExchange', 'BlockExchange', 'BlockRelocate', 'mPDG']
+LS_METHODS = ['PDPairExchange', 'BlockExchange', 'BlockRelocate', 'mPDG', '2opt']
 BEGIN_TIME = 0
-# The paper and the simulator both impose a 600-second total process limit.
-# Reserve only the final seconds for mandatory archive/JSON output; this time
-# remains part of the same 600-second budget.
-ALGO_TIME_LIMIT = 600
-OUTPUT_RESERVE_SECONDS = 15.0
+ALGO_TIME_LIMIT = 570
 DELAY_DISPATCH = False
 CROSSOVER_TYPE_RATIO = 0.0  
 USE_ADAPTIVE_ORDER_DISCRIMINATE = True
 WAITING_WEIGHT = 0
 
-# Published MOEA/D--TS parameters.
-MOEAD_POPULATION_SIZE = 6       # paper: N=6
-MOEAD_NEIGHBOR_SIZE = 2         # paper: T=2
-MOEAD_MAX_GENERATIONS = 50      # paper: max 50 outer iterations
-MOEAD_DELTA = 0.3                # reproduction assumption; not disclosed
-MOEAD_MAX_REPLACEMENTS = 1      # reproduction assumption; not disclosed
-
-# Algorithm 4 parameters not disclosed in the paper.  Keep them configurable
-# and log them as implementation choices in the algorithm manifest.
-MOEAD_TS_TABU_LIST_SIZE = 20000000
-MOEAD_TS_NEIGHBOR_THRESHOLD = 30
-MOEAD_TS_MAX_ITERATIONS = 20
-# Early-stopping extensions (implementation choices, not in the paper; 0 disables
-# each mechanism).  They only end the search sooner when no progress is observed,
-# so the accepted moves and the behaviour up to that point match the paper.
-MOEAD_TS_STAGNATION_LIMIT = 3     # stop the Algorithm-4 outer loop after N consecutive non-improving iterations
-MOEAD_STAGNATION_GENERATIONS = 5  # stop the MOEA/D loop after N consecutive generations with zero replacements
-# Debug capture: when the reported "TC after optimization" jumps upward
-# dramatically versus the previous epoch, snapshot the epoch's data_interaction
-# JSONs into MOEAD_DEBUG_SNAPSHOT_DIR (diagnostics only - never alters the
-# search).  Set MOEAD_DEBUG_CAPTURE_TC_JUMP=False or the threshold to a
-# negative value to disable.  Snapshots land under the variant's
-# algorithm/data_interaction_tc_jump/ (gitignored).
-MOEAD_DEBUG_CAPTURE_TC_JUMP = os.environ.get("MOEAD_DEBUG_CAPTURE_TC_JUMP", "1") != "0"
-MOEAD_DEBUG_TC_JUMP_THRESHOLD = 100.0  # absolute TC increase that counts as a jump
-MOEAD_DEBUG_SNAPSHOT_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "algorithm", "data_interaction_tc_jump",
-)
-# Dual-run comparison: run AGVNS on the SAME restored scene in parallel with
-# MOEA/D--TS and collect only its plan/TC for diagnostics.  The simulator-facing
-# output always stays MOEA/D--TS; the AGVNS worker (AGVNS/run_epoch_compare.py)
-# runs on a sandbox copy of the scene and never writes outside it.  Results land
-# under MOEAD_DUAL_RUN_DIR (gitignored).  Set MOEAD_DUAL_RUN_AGVNS=0 to disable.
-MOEAD_DUAL_RUN_AGVNS = os.environ.get("MOEAD_DUAL_RUN_AGVNS", "1") != "0"
-MOEAD_DUAL_RUN_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "algorithm", "data_interaction_compare",
-)
-MOEAD_DUAL_RUN_TIMEOUT = 480.0  # max seconds to wait for the AGVNS worker per epoch
-MOEAD_AGVNS_DIR = os.environ.get(
-    "MOEAD_AGVNS_DIR",
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-        "AGVNS",
-    ),
-)
-# Retained for backward compatibility with external scripts.  Algorithm 4 now
-# generates single random moves per inner iteration, so this per-operator time
-# slice is no longer applied by ``tabu_search``.
-MOEAD_TS_OPERATOR_TIME_LIMIT = 1.0
-MOEAD_INITIALIZATION_TIME_FRACTION = 0.25
-MOEAD_INITIALIZATION_MAX_SECONDS = 90.0
-MOEAD_RANDOM_SEED = 0
-# Backward-compatible aliases for external scripts during migration.
-TS_RANDOM_SEED = MOEAD_RANDOM_SEED
-TS_TABU_LIST_SIZE = MOEAD_TS_TABU_LIST_SIZE
-TS_MAX_ITERATIONS = MOEAD_TS_MAX_ITERATIONS
-TS_NEIGHBORS_PER_OPERATOR = 1
-TS_SEARCH_TIME_LIMIT = 8.0
-TS_STAGNATION_LIMIT = 10
-TS_OPERATOR_TIME_LIMIT = 0.25
+# Random seed chung cho thuật toán. Simulator kế thừa qua env EVORL_RANDOM_SEED.
+RANDOM_SEED = 0
 
 def set_begin_time():
     """Set the start time for algorithm execution"""
@@ -100,23 +32,19 @@ def set_begin_time():
     BEGIN_TIME = time.time()
 
 def set_random_seed(seed=None):
-    """Seed all random sources used by the MOEA/D--TS child process.
+    """Seed all random sources used by the algorithm child process.
 
-    ``MOEAD_RANDOM_SEED`` is inherited by every simulator-launched subprocess;
-    the old ``TS_RANDOM_SEED`` name remains a compatibility fallback.
+    ``RANDOM_SEED`` is inherited by every simulator-launched subprocess;
+    an explicit argument is useful for focused tests.
     """
-    global MOEAD_RANDOM_SEED, TS_RANDOM_SEED
+    global RANDOM_SEED
     if seed is None:
-        seed = os.environ.get(
-            "MOEAD_RANDOM_SEED",
-            os.environ.get("TS_RANDOM_SEED", MOEAD_RANDOM_SEED),
-        )
-    MOEAD_RANDOM_SEED = int(seed)
-    TS_RANDOM_SEED = MOEAD_RANDOM_SEED
-    random.seed(MOEAD_RANDOM_SEED)
+        seed = os.environ.get("EVORL_RANDOM_SEED", RANDOM_SEED)
+    RANDOM_SEED = int(seed)
+    random.seed(RANDOM_SEED)
     if np is not None:
-        np.random.seed(MOEAD_RANDOM_SEED)
-    return MOEAD_RANDOM_SEED
+        np.random.seed(RANDOM_SEED)
+    return RANDOM_SEED
 
 def is_timeout() -> bool:
     """Check if algorithm has exceeded time limit"""
@@ -125,67 +53,6 @@ def is_timeout() -> bool:
 def get_remaining_time() -> float:
     """Get remaining time in seconds"""
     return max(0, ALGO_TIME_LIMIT - (time.time() - BEGIN_TIME))
-
-
-def search_deadline() -> float:
-    """Return the global optimization deadline with output safety margin."""
-    if BEGIN_TIME == 0:
-        set_begin_time()
-    return BEGIN_TIME + ALGO_TIME_LIMIT - OUTPUT_RESERVE_SECONDS
-
-
-def moead_parameter_manifest() -> dict:
-    """Return paper parameters separately from reproduction assumptions."""
-    return {
-        "algorithm": "MOEAD-TS",
-        "paper": {
-            "population_size": MOEAD_POPULATION_SIZE,
-            "neighborhood_size": MOEAD_NEIGHBOR_SIZE,
-            "max_outer_iterations": MOEAD_MAX_GENERATIONS,
-            "alpha": Delta,
-            "normalization": False,
-            "tabu_operators": [
-                "pdg_exchange", "block_exchange",
-                "pdg_relocate", "block_relocate",
-            ],
-        },
-        "implementation_choice": {
-            "delta": MOEAD_DELTA,
-            "max_replacements": MOEAD_MAX_REPLACEMENTS,
-            "tabu_list_size": MOEAD_TS_TABU_LIST_SIZE,
-            "ts_max_iterations": MOEAD_TS_MAX_ITERATIONS,
-            "neighbor_threshold": MOEAD_TS_NEIGHBOR_THRESHOLD,
-            "ts_stagnation_limit": MOEAD_TS_STAGNATION_LIMIT,
-            "stagnation_generations": MOEAD_STAGNATION_GENERATIONS,
-            "tabu_item": "canonical solution signature",
-            "tabu_transition": (
-                "strictly improving non-tabu neighbor; otherwise retain current"
-            ),
-            "tabu_empty_neighborhood": "return offspring when no movable PDG unit exists",
-            "neighbor_generation": (
-                "one random single move per inner iteration via "
-                "sample_*_move in MOEAD_TS.py"
-            ),
-            "initialization_time_fraction": MOEAD_INITIALIZATION_TIME_FRACTION,
-            "initialization_max_seconds": MOEAD_INITIALIZATION_MAX_SECONDS,
-            "insertion": (
-                "dispatch_nodePair large-route CI: enumerate every ordered "
-                "pickup/delivery position, canonical LIFO/capacity filter, "
-                "then dock-aware fleet evaluation"
-            ),
-            "incomplete_initialization": (
-                "complete each failed CI sequence with a feasible "
-                "sequence-preserving fallback; always build N members"
-            ),
-            "total_runtime_limit": ALGO_TIME_LIMIT,
-            "output_reserve_seconds": OUTPUT_RESERVE_SECONDS,
-            "debug_capture_tc_jump": {
-                "enabled": MOEAD_DEBUG_CAPTURE_TC_JUMP,
-                "threshold": MOEAD_DEBUG_TC_JUMP_THRESHOLD,
-                "snapshot_dir": MOEAD_DEBUG_SNAPSHOT_DIR,
-            },
-        },
-    }
 
 
 """GA configuration"""

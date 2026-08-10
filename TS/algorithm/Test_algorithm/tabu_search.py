@@ -579,7 +579,7 @@ def Tabu_Search(Base_vehicleid_to_plan: Dict[str, List[Node]],
             id_to_unlocated_items,
             new_order_itemIDs,
         )
-        initial = Chromosome(initial_plan, route_map, id_to_vehicle)
+        current = Chromosome(initial_plan, route_map, id_to_vehicle)
     except Exception:
         # Fallback: return a Chromosome from the base plan itself
         return None

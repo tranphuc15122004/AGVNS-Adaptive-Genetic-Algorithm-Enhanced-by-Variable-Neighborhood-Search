@@ -285,5 +285,6 @@ def validate(summary_path, data_dir, benchmark_dir):
 if __name__ == '__main__':
     summary_path = sys.argv[1] if len(sys.argv) > 1 else 'visualization_output/instance_1/epoch_summary.json'
     data_dir = sys.argv[2] if len(sys.argv) > 2 else 'algorithm/data_interaction'
-    benchmark_dir = sys.argv[3] if len(sys.argv) > 3 else 'benchmark'
+    benchmark_dir = sys.argv[3] if len(sys.argv) > 3 else os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'benchmark')
     validate(summary_path, data_dir, benchmark_dir)
