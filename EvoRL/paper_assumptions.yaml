@@ -1,0 +1,53 @@
+# EvoRL-paper reproduction manifest.
+# Values absent from the paper are explicit implementation assumptions, not
+# claims about the authors' unpublished source code.
+name: EvoRL-paper
+paper: "A collaborative evolutionary reinforcement learning approach to dynamic pickup and delivery challenges"
+algorithm: "Algorithm 1"
+simulator: icaps_official
+inference_runs_ga: true
+# The primary contract follows Algorithm 1: GA is in the training loop and
+# the better RPPO/GA phenotype is also selected at each inference epoch.
+primary_mode: EvoRL-paper-repro
+# Policy-only deployment is retained strictly as an ablation.
+policy_only_ablation_mode: EvoRL-ICAPS
+paper_reproduction_mode: EvoRL-paper-repro
+ga_transition_buffer: separate_teacher_distillation
+decoder: canonical_transactional_insertion
+action: sequential_order_to_vehicle
+allow_defer: true
+defer_is_learned_action: false
+capacity: 15
+epoch_seconds: 600
+population_size: 20
+ga_generations: 20
+ga_elite_size: 1
+ga_selection: fitness_proportional_shifted
+ga_crossover: pmx_fragment_repair
+ga_mutation: fleet_order_swap_or_move
+ppo:
+  kind: recurrent_ppo
+  hidden_dim: 128
+  learning_rate: 0.0003
+  clip_epsilon: 0.2
+  gamma: 0.99
+  gae_lambda: 0.95
+  tbptt_steps: 16
+  value_coefficient: 0.5
+  entropy_coefficient: 0.01
+  max_gradient_norm: 0.5
+reward:
+  utility_convention: maximize_negative_penalty
+  benchmark_distance_weight: 1.0
+  benchmark_overtime_weight: 2.777777777777778
+  waiting_is_diagnostic_only: true
+data_protocol:
+  primary: benchmark_heldout
+  secondary: paper_transductive
+  learner_seeds: [0, 1, 2, 3, 4]
+  simulator_seeds: [0, 1, 2, 3, 4]
+notes:
+  - "The paper does not publish a complete network/hyperparameter table."
+  - "Eq. 29/33 mix cost-like values with argmax; implementation maximizes negative cost."
+  - "Algorithm 1 uses GA during training while Section 5.5 states inference has no GA."
+  - "RPPO recurrence is operationalized with detached rollout snapshots and TBPTT chunks of 16 for optimization; the paper does not specify TBPTT."

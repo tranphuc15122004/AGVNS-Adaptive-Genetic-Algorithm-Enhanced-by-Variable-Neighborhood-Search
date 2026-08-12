@@ -48,6 +48,18 @@ def _parse_args():
         default=0,
         help="Seed used by the algorithm subprocesses (default: 0).",
     )
+    parser.add_argument(
+        "--checkpoint",
+        help=(
+            "RPPO checkpoint used for inference.  The simulator refuses to "
+            "run without it unless --allow-heuristic is explicitly supplied."
+        ),
+    )
+    parser.add_argument(
+        "--allow-heuristic",
+        action="store_true",
+        help="Explicitly allow the legacy heuristic path (debug/compatibility only).",
+    )
     return parser.parse_args()
 
 
@@ -55,6 +67,26 @@ def _configure_runtime(args):
     # The simulator calls main_algorithm.py in a fresh subprocess on every
     # dispatch tick.  Environment propagation keeps that child deterministic.
     os.environ["EVORL_RANDOM_SEED"] = str(args.seed)
+
+    # A baseline run must be an actual EvoRL policy run.  Requiring the
+    # checkpoint here prevents a missing environment variable from silently
+    # turning an evaluation into the legacy heuristic implementation.
+    if args.checkpoint:
+        checkpoint = os.path.abspath(args.checkpoint)
+        if not os.path.isfile(checkpoint):
+            raise FileNotFoundError("EvoRL checkpoint does not exist: %s" % checkpoint)
+        os.environ["EVORL_CHECKPOINT"] = checkpoint
+        os.environ["EVORL_REQUIRE_CHECKPOINT"] = "1"
+        os.environ["EVORL_LEGACY_FALLBACK"] = "0"
+    elif args.allow_heuristic:
+        os.environ.pop("EVORL_CHECKPOINT", None)
+        os.environ["EVORL_REQUIRE_CHECKPOINT"] = "0"
+        os.environ["EVORL_LEGACY_FALLBACK"] = "1"
+    else:
+        raise ValueError(
+            "EvoRL inference requires --checkpoint; use --allow-heuristic "
+            "only for an explicit compatibility/debug run."
+        )
 
     if args.data_dir:
         os.environ["MA_DATA_INTERACTION_DIR"] = os.path.abspath(args.data_dir)

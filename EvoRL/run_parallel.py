@@ -171,6 +171,15 @@ def _parse_args() -> argparse.Namespace:
         default=sys.executable,
         help="Python executable used to launch each worker.",
     )
+    parser.add_argument(
+        "--checkpoint",
+        help="RPPO checkpoint passed to every worker (required for EvoRL runs).",
+    )
+    parser.add_argument(
+        "--allow-heuristic",
+        action="store_true",
+        help="Explicitly allow the legacy heuristic path for compatibility/debugging.",
+    )
     return parser.parse_args()
 
 
@@ -257,7 +266,11 @@ def _build_jobs(
     return jobs
 
 
-def _build_worker_env(data_dir: str) -> Dict[str, str]:
+def _build_worker_env(
+    data_dir: str,
+    checkpoint: Optional[str] = None,
+    allow_heuristic: bool = False,
+) -> Dict[str, str]:
     env = os.environ.copy()
     # The EvoRL Configs class currently uses this compatibility variable name.
     env["MA_DATA_INTERACTION_DIR"] = os.path.abspath(data_dir)
@@ -267,6 +280,14 @@ def _build_worker_env(data_dir: str) -> Dict[str, str]:
     env.setdefault("NUMEXPR_NUM_THREADS", "1")
     env.setdefault("PYTHONIOENCODING", "utf-8")
     env.setdefault("PYTHONUNBUFFERED", "1")
+    if checkpoint:
+        env["EVORL_CHECKPOINT"] = os.path.abspath(checkpoint)
+        env["EVORL_REQUIRE_CHECKPOINT"] = "1"
+        env["EVORL_LEGACY_FALLBACK"] = "0"
+    elif allow_heuristic:
+        env.pop("EVORL_CHECKPOINT", None)
+        env["EVORL_REQUIRE_CHECKPOINT"] = "0"
+        env["EVORL_LEGACY_FALLBACK"] = "1"
     return env
 
 
@@ -371,6 +392,8 @@ def _launch_job(
     batch_root: str,
     python_exec: str,
     core: int,
+    checkpoint: Optional[str] = None,
+    allow_heuristic: bool = False,
 ) -> Dict[str, Any]:
     workspace = job["workspace"]
     os.makedirs(workspace, exist_ok=True)
@@ -388,6 +411,10 @@ def _launch_job(
         "--seed",
         str(job["seed"]),
     ]
+    if checkpoint:
+        command.extend(["--checkpoint", os.path.abspath(checkpoint)])
+    elif allow_heuristic:
+        command.append("--allow-heuristic")
     started_at = _utc_now()
     started_monotonic = time.monotonic()
     process = None
@@ -397,7 +424,11 @@ def _launch_job(
             cwd=os.path.dirname(os.path.abspath(__file__)),
             stdout=log_handle,
             stderr=subprocess.STDOUT,
-            env=_build_worker_env(workspace),
+            env=_build_worker_env(
+                workspace,
+                checkpoint=checkpoint,
+                allow_heuristic=allow_heuristic,
+            ),
             text=True,
         )
         if hasattr(os, "sched_setaffinity"):
@@ -586,6 +617,13 @@ def _run_batch(
 ) -> Tuple[str, List[Dict[str, Any]]]:
     if args.repetitions <= 0:
         raise ValueError("--repetitions must be positive.")
+    if not args.checkpoint and not args.allow_heuristic:
+        raise ValueError(
+            "Parallel EvoRL inference requires --checkpoint; use "
+            "--allow-heuristic only for an explicit compatibility/debug run."
+        )
+    if args.checkpoint and not os.path.isfile(args.checkpoint):
+        raise FileNotFoundError("EvoRL checkpoint does not exist: %s" % args.checkpoint)
     batch_id, batch_root = _new_batch_root(
         os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), args.run_root))
     )
@@ -609,6 +647,8 @@ def _run_batch(
         "seed_formula": "base_seed + instance_id * 1000 + repetition",
         "job_order": "instance-major",
         "runtime_source": "simulate() elapsed return value logged by EvoRL/main.py",
+        "checkpoint": os.path.abspath(args.checkpoint) if args.checkpoint else None,
+        "allow_heuristic": bool(args.allow_heuristic),
     }
     _write_json(os.path.join(batch_root, "manifest.json"), manifest)
     _persist_progress(batch_root, manifest, [], "RUNNING")
@@ -631,7 +671,11 @@ def _run_batch(
                 job = pending.popleft()
                 core = available_cores.popleft()
                 try:
-                    worker = _launch_job(job, batch_root, args.python, core)
+                    worker = _launch_job(
+                        job, batch_root, args.python, core,
+                        checkpoint=args.checkpoint,
+                        allow_heuristic=args.allow_heuristic,
+                    )
                 except Exception as exc:
                     workspace = job["workspace"]
                     os.makedirs(workspace, exist_ok=True)

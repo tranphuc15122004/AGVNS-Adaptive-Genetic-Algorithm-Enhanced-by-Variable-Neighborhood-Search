@@ -1,0 +1,16 @@
+{
+    "no.": "144",
+    "deltaT": "1450-1460",
+    "complete_order_items": [],
+    "onvehicle_order_items": "2314350050-1",
+    "ongoing_order_items": "",
+    "unongoing_order_items": "",
+    "unallocated_order_items": "",
+    "new_order_items": [],
+    "used_time": 2.4901950359344482,
+    "route_before": "[[\"V_1\",[]],[\"V_2\",[]],[\"V_3\",[]],[\"V_4\",[]],[\"V_5\",[[\"32ab2049f3fb437881ff3912470d7840\",[\"2314350050-1\"],[]],[\"f6faef4b36e743328800b961aced4a2c\",[],[\"2314350050-1\"]]]]]",
+    "route_after": "[[\"V_1\",[]],[\"V_2\",[]],[\"V_3\",[]],[\"V_4\",[]],[\"V_5\",[[\"f6faef4b36e743328800b961aced4a2c\",[],[\"2314350050-1\"]]]]]",
+    "improved_in_cross": 0,
+    "improved_in_mutation": 0,
+    "improved_in_diver": 0
+}

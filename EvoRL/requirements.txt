@@ -4,3 +4,8 @@ simpy
 flask-socketio
 Flask
 flask-cors
+numpy
+pandas
+pyyaml
+# Install a CUDA-compatible PyTorch wheel separately when using the T4.
+torch

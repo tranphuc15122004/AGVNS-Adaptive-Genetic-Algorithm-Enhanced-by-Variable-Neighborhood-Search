@@ -395,7 +395,30 @@ def merge_node(id_to_vehicle: Dict[str , Vehicle], vehicleid_to_plan: Dict[str, 
             while (i < len(origin_planned_route)):
                 next_node = origin_planned_route[i]
 
+                # The first node mirrors the simulator's committed
+                # destination when ``vehicle.des`` is set.  Merging a
+                # same-factory suffix into it changes the immutable prefix
+                # (and can add future pickups to a node already in transit).
+                # Keep the boundary explicit; only mutable suffix nodes may
+                # be merged. / Không gộp vào destination đã cam kết.
+                if i == 1 and vehicle.des is not None and before_node.id == vehicle.des.id:
+                    before_node = next_node
+                    i += 1
+                    continue
+
                 if before_node.id == next_node.id:
+                    # A same-factory pickup followed by its delivery is two
+                    # ordered operations, not one mergeable node: Checker
+                    # unloads before it loads.  Keep that pair explicit so a
+                    # pickup/delivery-at-the-same-factory item remains valid
+                    # at the JSON boundary. / Giữ thứ tự lấy-giao.
+                    before_pickups = {item.id for item in (before_node.pickup_item_list or [])}
+                    next_pickups = {item.id for item in (next_node.pickup_item_list or [])}
+                    next_deliveries = {item.id for item in (next_node.delivery_item_list or [])}
+                    if (before_pickups & next_deliveries) or (next_pickups & next_deliveries):
+                        before_node = next_node
+                        i += 1
+                        continue
                     # Gộp danh sách pickupItemList
                     if next_node.pickup_item_list:
                         before_node.pickup_item_list.extend(next_node.pickup_item_list)  
@@ -484,7 +507,17 @@ def create_Pickup_Delivery_nodes(tmp_itemList: list[OrderItem] , id_to_factory: 
     delivery_item_list = []
     for item in reversed(tmp_itemList):
         delivery_item_list.append(item)
-    delivery_node = Node(delivery_factory.factory_id,delivery_item_list,[],delivery_factory.lng,delivery_factory.lat)
+    # Use keyword arguments: legacy Node's positional signature is
+    # (factory_id, delivery_items, pickup_items, arrive, leave, lng, lat).
+    delivery_node = Node(
+        factory_id=delivery_factory.factory_id,
+        delivery_item_list=delivery_item_list,
+        pickup_item_list=[],
+        arrive_time=0,
+        leave_time=0,
+        lng=delivery_factory.lng,
+        lat=delivery_factory.lat,
+    )
 
     res.extend([pickup_node, delivery_node])
     return res
@@ -991,6 +1024,7 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
     dock_table: Dict[str, List[List[int]]] = {}
     n: int = 0
     vehicle_num: int = len(id_to_vehicle)
+    vehicle_ids = list(id_to_vehicle.keys())
 
     curr_node: List[int] = [0] * vehicle_num
     curr_time: List[int] = [0] * vehicle_num
@@ -998,6 +1032,10 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
 
     n_node: List[int] = [0] * vehicle_num
     index = 0
+    # Aggregate completion by original order.  The previous implementation
+    # charged each item (and sometimes each delivery node) independently.
+    order_completion_time: Dict[str, float] = {}
+    order_deadline: Dict[str, float] = {}
     
     for vehicleID , otherVehicle in id_to_vehicle.items():
         distance = 0
@@ -1101,9 +1139,7 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
                 minT = curr_time[i]
                 minT2VehicleIndex = i
         
-        minT2VehicleIndex += 1
-        minT2VehicleID = "V_" + str(minT2VehicleIndex)
-        minT2VehicleIndex -= 1
+        minT2VehicleID = vehicle_ids[minT2VehicleIndex]
         
         minTNodeList: List[Node] = []
         if minT2VehicleID == vehicle.id:
@@ -1113,14 +1149,13 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
         minTNode = minTNodeList[curr_node[minT2VehicleIndex]]
         
         if minTNode.delivery_item_list and len(minTNode.delivery_item_list) > 0:
-            beforeOrderID = ""
-            nextOrderID = ""
             for order_item in minTNode.delivery_item_list:
-                nextOrderID = order_item.id
-                if beforeOrderID != nextOrderID:
-                    commitCompleteTime = order_item.committed_completion_time
-                    overtime_Sum += max(0 , curr_time[minT2VehicleIndex] - commitCompleteTime)
-                beforeOrderID = nextOrderID
+                order_id = order_item.order_id
+                order_completion_time[order_id] = max(
+                    order_completion_time.get(order_id, float("-inf")),
+                    float(curr_time[minT2VehicleIndex]),
+                )
+                order_deadline[order_id] = float(order_item.committed_completion_time)
         
         usedEndTime : List[int] = []
         timeSlots : List[List[int]] =  dock_table.get(minTNode.id, [])
@@ -1157,15 +1192,13 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
             delivery_item_list = minTNodeList[curr_node[minT2VehicleIndex]].delivery_item_list
             
             if delivery_item_list and len(delivery_item_list) > 0:
-                before_order_id = ""
-                next_order_id = ""
-
                 for order_item in delivery_item_list:
-                    next_order_id = order_item.order_id
-                    if before_order_id != next_order_id:
-                        commit_complete_time = order_item.committed_completion_time
-                        overtime_Sum += max(0, curr_time[minT2VehicleIndex] - commit_complete_time)
-                    before_order_id = next_order_id
+                    order_id = order_item.order_id
+                    order_completion_time[order_id] = max(
+                        order_completion_time.get(order_id, float("-inf")),
+                        float(curr_time[minT2VehicleIndex]),
+                    )
+                    order_deadline[order_id] = float(order_item.committed_completion_time)
 
             service_time += minTNodeList[curr_node[minT2VehicleIndex]].service_time
             curr_node[minT2VehicleIndex] += 1
@@ -1191,6 +1224,10 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
         tw_list.append(tw)
         dock_table[minTNode.id] = tw_list
     
+    overtime_Sum = sum(
+        max(0.0, completion - order_deadline.get(order_id, completion))
+        for order_id, completion in order_completion_time.items()
+    )
     # Weight for waiting time; falls back to config.Delta if no dedicated setting is present
     waiting_weight = config.WAITING_WEIGHT
     objF = (config.Delta * overtime_Sum) + (driving_dis / float(len(id_to_vehicle))) + (waiting_weight * waiting_Sum)
@@ -1211,9 +1248,12 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
     dock_table: Dict[str, List[List[int]]] = {}
     n: int = 0
     vehicle_num: int = len(id_to_vehicle)
+    vehicle_ids = list(id_to_vehicle.keys())
     curr_node: List[int] = [0] * vehicle_num
     curr_time: List[int] = [0] * vehicle_num
     leave_last_node_time: List[int] = [0] * vehicle_num
+    order_completion_time: Dict[str, float] = {}
+    order_deadline: Dict[str, float] = {}
 
     n_node: List[int] = [0] * vehicle_num
     index = 0
@@ -1284,23 +1324,20 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
                 minT = curr_time[i]
                 minT2VehicleIndex = i
         
-        minT2VehicleIndex += 1
-        minT2VehicleID = "V_" + str(minT2VehicleIndex)
-        minT2VehicleIndex -= 1
+        minT2VehicleID = vehicle_ids[minT2VehicleIndex]
         
         minTNodeList: List[Node] = []
         minTNodeList = vehicleid_to_plan.get(minT2VehicleID)
         minTNode = minTNodeList[curr_node[minT2VehicleIndex]]
         
         if minTNode.delivery_item_list and len(minTNode.delivery_item_list) > 0:
-            beforeOrderID = ""
-            nextOrderID = ""
             for order_item in minTNode.delivery_item_list:
-                nextOrderID = order_item.id
-                if beforeOrderID != nextOrderID:
-                    commitCompleteTime = order_item.committed_completion_time
-                    overtime_Sum += max(0 , curr_time[minT2VehicleIndex] - commitCompleteTime)
-                beforeOrderID = nextOrderID
+                order_id = order_item.order_id
+                order_completion_time[order_id] = max(
+                    order_completion_time.get(order_id, float("-inf")),
+                    float(curr_time[minT2VehicleIndex]),
+                )
+                order_deadline[order_id] = float(order_item.committed_completion_time)
         
         usedEndTime : List[int] = []
         timeSlots : List[List[int]] =  dock_table.get(minTNode.id, [])
@@ -1338,15 +1375,13 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
             delivery_item_list = minTNodeList[curr_node[minT2VehicleIndex]].delivery_item_list
             
             if delivery_item_list and len(delivery_item_list) > 0:
-                before_order_id = ""
-                next_order_id = ""
-
                 for order_item in delivery_item_list:
-                    next_order_id = order_item.order_id
-                    if before_order_id != next_order_id:
-                        commit_complete_time = order_item.committed_completion_time
-                        overtime_Sum += max(0, curr_time[minT2VehicleIndex] - commit_complete_time)
-                    before_order_id = next_order_id
+                    order_id = order_item.order_id
+                    order_completion_time[order_id] = max(
+                        order_completion_time.get(order_id, float("-inf")),
+                        float(curr_time[minT2VehicleIndex]),
+                    )
+                    order_deadline[order_id] = float(order_item.committed_completion_time)
 
             service_time += minTNodeList[curr_node[minT2VehicleIndex]].service_time
             curr_node[minT2VehicleIndex] += 1
@@ -1372,6 +1407,10 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
         tw_list.append(tw)
         dock_table[minTNode.id] = tw_list
     
+    overtime_Sum = sum(
+        max(0.0, completion - order_deadline.get(order_id, completion))
+        for order_id, completion in order_completion_time.items()
+    )
     # Weight for waiting time; falls back to config.Delta if no dedicated setting is present
     waiting_weight = config.WAITING_WEIGHT
     objF = (config.Delta * overtime_Sum) + (driving_dis / float(len(id_to_vehicle))) + (waiting_weight * waiting_Sum)

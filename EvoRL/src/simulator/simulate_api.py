@@ -21,6 +21,7 @@
 import datetime
 import os
 import random
+import re
 import time
 import traceback
 
@@ -87,8 +88,33 @@ def __initial_position_of_vehicles(id_to_factory: dict, id_to_vehicle: dict, ini
         logger.info(f"Initial position of {vehicle_id} is {factory_id}")
 
 
-def simulate(factory_info_file: str, route_info_file: str, instance: str , algorithm_name : str = 'GA'):
+def simulate(
+    factory_info_file: str,
+    route_info_file: str,
+    instance: str,
+    algorithm_name: str = 'GA',
+    *,
+    simulator_seed: int | None = None,
+):
     _start_wall = time.time()
+    if simulator_seed is not None:
+        Configs.RANDOM_SEED = int(simulator_seed)
+    # The simulator process and the algorithm subprocess must consume the
+    # same seed.  ``Configs.RANDOM_SEED`` controls initial vehicle placement,
+    # while the algorithm reads ``EVORL_RANDOM_SEED`` in its own process.
+    # Keeping both values synchronized closes a subtle reproducibility leak
+    # where evaluation appeared seeded but policy/GA randomness stayed at 0.
+    os.environ["EVORL_RANDOM_SEED"] = str(int(Configs.RANDOM_SEED))
+    # Give every simulator episode an isolated, reproducible identity to the
+    # algorithm subprocess.  This prevents recurrent sidecars from leaking
+    # between instances when a shared data directory is used.
+    episode_key = f"{instance}-seed-{int(Configs.RANDOM_SEED)}"
+    os.environ["EVORL_EPISODE_ID"] = episode_key
+    safe_key = re.sub(r"[^A-Za-z0-9_.-]+", "_", episode_key)
+    os.environ["EVORL_HIDDEN_SIDECAR"] = os.path.join(
+        Configs.algorithm_data_interaction_folder_path,
+        f"evorl_hidden_{safe_key}.json",
+    )
     simulate_env = __initialize(factory_info_file, route_info_file, instance)
     if simulate_env is not None:
         # 模拟器仿真过程
@@ -96,3 +122,19 @@ def simulate(factory_info_file: str, route_info_file: str, instance: str , algor
     elapsed = time.time() - _start_wall
     logger.info(f"Simulation {instance} completed in {elapsed:.2f} seconds")
     return simulate_env.total_score, elapsed
+
+
+def initialize_environment(factory_info_file: str, route_info_file: str, instance_folder: str,
+                           *, simulator_seed: int | None = None):
+    """Public factory for training/parity adapters.
+
+    The competition subprocess path continues to call :func:`simulate`
+    unchanged.  Training uses this factory to obtain a fresh simulator object
+    and drives the same ``update_input``/Checker/vehicle-control primitives in
+    process, avoiding an alias to a previously mutated episode.
+    """
+
+    if simulator_seed is not None:
+        Configs.RANDOM_SEED = int(simulator_seed)
+        os.environ["EVORL_RANDOM_SEED"] = str(int(Configs.RANDOM_SEED))
+    return __initialize(factory_info_file, route_info_file, instance_folder)

@@ -23,6 +23,19 @@ CROSSOVER_TYPE_RATIO = 0.0
 USE_ADAPTIVE_ORDER_DISCRIMINATE = True
 WAITING_WEIGHT = 0
 
+# EvoRL v1 runtime/training contract.  ``DEFER`` is intentionally absent from
+# the action mask until pending-item restore is fixed and covered by epochs 2+.
+EVORL_ENABLE_CANONICAL_DISPATCH = os.environ.get("EVORL_ENABLE_CANONICAL_DISPATCH", "1") == "1"
+# A compatibility DEFER is represented by leaving an uncovered item in the
+# simulator's unallocated stream.  It is not a learned action and is only
+# taken when no valid DPDP insertion exists at this epoch; the next epoch
+# recomputes pending coverage from the full generated item set.
+EVORL_ALLOW_DEFER = os.environ.get("EVORL_ALLOW_DEFER", "1") == "1"
+EVORL_POLICY_DEVICE = os.environ.get("EVORL_POLICY_DEVICE", "cpu")
+EVORL_SHARED_POLICY = True
+EVORL_UNCERTAINTY_ABLATION = os.environ.get("EVORL_UNCERTAINTY_ABLATION", "0") == "1"
+EVORL_GA_TIME_LIMIT = float(os.environ.get("EVORL_GA_TIME_LIMIT", "30"))
+
 # Random seed chung cho thuật toán. Simulator kế thừa qua env EVORL_RANDOM_SEED.
 RANDOM_SEED = 0
 
