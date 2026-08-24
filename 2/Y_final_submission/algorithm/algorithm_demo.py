@@ -21,7 +21,7 @@
 import copy
 # from dpdp_competition.algorithm.algorithm_demo_split_duplicate import check_queueing
 
-from numpy import Inf
+from numpy import inf as Inf
 
 from src.common.node import Node
 from src.common.route import Map

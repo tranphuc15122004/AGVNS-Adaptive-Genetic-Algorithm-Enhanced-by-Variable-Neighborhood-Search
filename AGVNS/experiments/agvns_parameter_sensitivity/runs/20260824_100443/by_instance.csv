@@ -1,0 +1,2 @@
+instance_id,total_jobs,successful_jobs,failed_jobs,score_mean,score_standard_deviation,score_median,score_ci95,score_minimum,score_maximum,simulation_runtime_mean_seconds,simulation_runtime_standard_deviation_seconds,algorithm_runtime_mean_seconds,algorithm_runtime_standard_deviation_seconds
+1,1,1,0,127.64000000000001,0.0,127.64000000000001,0.0,127.64000000000001,127.64000000000001,254.944794,0.0,182.56896018981934,0.0

@@ -1,0 +1,93 @@
+[
+    {
+        "id": "2249420286-1",
+        "type": "BOX",
+        "order_id": "2249420286",
+        "demand": 0.25,
+        "pickup_factory_id": "d1f8de642d734931be957336196d996d",
+        "delivery_factory_id": "206128e3ee9a458d9cfd053cedc0fad6",
+        "creation_time": 1787611782,
+        "committed_completion_time": 1787626182,
+        "load_time": 60,
+        "unload_time": 60,
+        "delivery_state": 2
+    },
+    {
+        "id": "2320430289-1",
+        "type": "PALLET",
+        "order_id": "2320430289",
+        "demand": 1,
+        "pickup_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "delivery_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "creation_time": 1787613643,
+        "committed_completion_time": 1787628043,
+        "load_time": 240,
+        "unload_time": 240,
+        "delivery_state": 2
+    },
+    {
+        "id": "2320430289-2",
+        "type": "HALF_PALLET",
+        "order_id": "2320430289",
+        "demand": 0.5,
+        "pickup_factory_id": "5e2e9efa5ade4984bb18af66028bc0c8",
+        "delivery_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "creation_time": 1787613643,
+        "committed_completion_time": 1787628043,
+        "load_time": 120,
+        "unload_time": 120,
+        "delivery_state": 2
+    },
+    {
+        "id": "2347340295-1",
+        "type": "BOX",
+        "order_id": "2347340295",
+        "demand": 0.25,
+        "pickup_factory_id": "d1f8de642d734931be957336196d996d",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1787615254,
+        "committed_completion_time": 1787629654,
+        "load_time": 60,
+        "unload_time": 60,
+        "delivery_state": 2
+    },
+    {
+        "id": "2347340295-2",
+        "type": "BOX",
+        "order_id": "2347340295",
+        "demand": 0.25,
+        "pickup_factory_id": "d1f8de642d734931be957336196d996d",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1787615254,
+        "committed_completion_time": 1787629654,
+        "load_time": 60,
+        "unload_time": 60,
+        "delivery_state": 2
+    },
+    {
+        "id": "2357140300-1",
+        "type": "HALF_PALLET",
+        "order_id": "2357140300",
+        "demand": 0.5,
+        "pickup_factory_id": "d1f8de642d734931be957336196d996d",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1787615834,
+        "committed_completion_time": 1787630234,
+        "load_time": 120,
+        "unload_time": 120,
+        "delivery_state": 2
+    },
+    {
+        "id": "2346260293-1",
+        "type": "BOX",
+        "order_id": "2346260293",
+        "demand": 0.25,
+        "pickup_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "delivery_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "creation_time": 1787615186,
+        "committed_completion_time": 1787629586,
+        "load_time": 60,
+        "unload_time": 60,
+        "delivery_state": 2
+    }
+]

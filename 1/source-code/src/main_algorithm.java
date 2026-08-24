@@ -101,7 +101,10 @@ public class main_algorithm {
 		if (isTest) {
 			input_directory = "./algorithm/memory";
 		} else {
-			input_directory = "./algorithm/data_interaction";
+			String configuredInputDirectory = System.getenv("MA_DATA_INTERACTION_DIR");
+			input_directory = configuredInputDirectory == null || configuredInputDirectory.isEmpty()
+					? "./algorithm/data_interaction"
+					: configuredInputDirectory;
 		}
 		begintime = System.nanoTime();
 		readInputFile();
@@ -2315,7 +2318,7 @@ public class main_algorithm {
 					return;
 				}
 			}
-			File file = new File("./algorithm/data_interaction/solution.json");
+		File file = new File(input_directory + "/solution.json");
 			if (file.exists()) {
 				file.delete();
 

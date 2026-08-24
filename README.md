@@ -187,6 +187,20 @@ python main.py
 python main_algorithm.py
 ```
 
+Mỗi simulator cũng tạo báo cáo runtime machine-readable tại
+`algorithm/data_interaction/runtime_stats.csv` và file tổng hợp
+`runtime_stats.json`. Có thể chỉ định đường dẫn riêng:
+
+```bash
+python main.py --instances 1,2,3 --stats-file outputs/runtime_stats.csv
+```
+
+CSV có một dòng cho mỗi instance, gồm score, trạng thái, runtime toàn bộ lời
+gọi simulator, thời gian simulator tự báo cáo (nếu có), seed, PID và lỗi.
+JSON bổ sung tổng, trung bình, nhỏ nhất, lớn nhất và độ lệch chuẩn runtime của
+các instance thành công. Tùy chọn `--stats-file` có trên tất cả simulator,
+bao gồm Top-1/2/3 và EvoRL.
+
 > **Simulator** nằm trong `AGVNS/src/simulator/`.  
 > **Algorithm** nằm trong `AGVNS/algorithm/`.
 
@@ -332,14 +346,31 @@ Kết quả tất cả instances được in dưới dạng list scores và aver
 Happy Ending
 ```
 
-#### Chạy lặp nhiều instances song song (TS)
+#### Chạy lặp nhiều instances song song
 
-TS có queue runner để chạy nhiều instances và nhiều repetitions với thư mục
-riêng cho từng job. Ví dụ chạy instances 1 đến 20, mỗi instance 5 lần:
+Các target Python/Java/C++ đều có queue runner dùng chung contract với EvoRL:
+`AGVNS`, `MA`, `TS`, `MOEAD-TS`, `2/Y_final_submission`, `3`; submission Top-1
+dùng runner tại `1/compiled_files`. Ví dụ chạy instances 1 đến 20, mỗi
+instance 5 lần:
 
 ```bash
 cd TS
 python run_parallel.py --instances 1-20 --repetitions 5 --workers 20 --base-seed 0
+```
+
+Đổi `cd TS` thành `cd AGVNS`, `cd MA`, `cd MOEAD-TS`,
+`cd 2/Y_final_submission`, hoặc `cd 3` để chạy target tương ứng. Với Top-1:
+
+```bash
+cd 1/compiled_files
+python run_parallel.py --all --workers 4 --cores 0,1,2,3
+```
+
+EvoRL giữ runner riêng vì có kiểm tra checkpoint:
+
+```bash
+cd EvoRL
+python run_parallel.py --all --checkpoint checkpoints/<model>.pt --workers 4
 ```
 
 `--workers` giới hạn số job chạy đồng thời; có thể dùng `--cores 0,1,2,3`
@@ -350,10 +381,11 @@ Mỗi batch được lưu tại `TS/algorithm/data_interaction_runs/<batch_id>/`
 `manifest.json`, `results.csv`, `summary.json`, và workspace riêng trong
 `jobs/instance_<id>/repetition_<n>_seed_<seed>/`. Job lỗi được ghi nhận và
 queue tiếp tục chạy; process kết thúc với mã lỗi nếu batch có job thất bại.
-`results.csv` lưu riêng `simulation_runtime_seconds` (runtime do `simulate()`
-trả về), `wall_time_seconds` (thời gian process do queue đo), và tổng thời gian
-dispatch của algorithm. `summary.json` thống kê min/mean/max/std runtime cho
-từng instance.
+`results.csv` lưu riêng `simulation_runtime_seconds` (runtime do simulator log),
+`wall_time_seconds` (thời gian process do queue đo), và tổng thời gian dispatch
+của algorithm. `summary.json` thống kê min/mean/max/std score/runtime cho từng
+instance và ở cấp toàn batch. Mỗi job dùng thư mục `data_interaction` riêng nên không ghi đè state
+của job khác.
 
 ---
 
@@ -370,7 +402,7 @@ từng instance.
 
 1. **Gold Algorithm (Java)**: Cần Java JDK 8+ có trong `PATH`. Simulator (Python) tự động gọi `java main_algorithm` từ thư mục `1/compiled_files/`. Nhớ cài Python packages trước: `pip install -r 1/compiled_files/requirements.txt`.
 2. **Bronze Algorithm (C++)**: Binary đã được biên dịch sẵn cho Windows (`main_algorithm.exe`) và Linux (`main_algorithm.out`). Nếu cần biên dịch lại từ source, dùng `g++` (MinGW) với lệnh trong phần hướng dẫn. Simulator gọi qua wrapper Python `algorithm/algorithm_demo.py`.
-3. **Silver Algorithm**: Nếu gặp lỗi `ImportError: cannot import name 'Inf' from 'numpy.core.numeric'`, sửa thành `from numpy import Inf` trong `algorithm/algorithm_demo.py`.
+3. **Silver Algorithm**: Top-2 đã dùng import tương thích `from numpy import inf as Inf` cho NumPy hiện tại.
 4. **Thời gian chạy**: Instance càng lớn (50 → 4000 orders), thời gian simulation càng lâu. Instance 1 (50 orders) mất ~1-3 phút. Instance lớn (3000-4000 orders) có thể mất hàng giờ.
 5. **Dữ liệu cũ**: Trong thư mục `algorithm/data_interaction/` có thể còn dữ liệu từ lần chạy trước. Simulator sẽ ghi đè khi chạy mới.
 6. **Cấu hình riêng**: Mỗi thuật toán có file `src/conf/configs.py` riêng — nhớ sửa đúng file của thuật toán muốn chạy. Giá trị `selected_instances` mặc định khác nhau giữa các thuật toán (xem bảng ở mục 3).

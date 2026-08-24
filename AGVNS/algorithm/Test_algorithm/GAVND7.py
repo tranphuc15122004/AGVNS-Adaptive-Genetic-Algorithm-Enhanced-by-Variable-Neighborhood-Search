@@ -21,7 +21,7 @@ def _copy_solution(sol: Dict[str, List[Node]]) -> Dict[str, List[Node]]:
 
 def adaptive_local_configs(num_order: int, num_vehicles: int):
     params = AdaptiveRatioParams(
-        threshold_orders=80,
+        threshold_orders=config.ADAPT_THRESHOLD_ORDERS,
         kww_beta=3,
         kww_tau_factor=10.0,
         min_ratio=0.0,
@@ -44,6 +44,12 @@ def GAVND_7(initial_vehicleid_to_plan: Dict[str, List[Node]], route_map: Dict[Tu
             Base_vehicleid_to_plan: Dict[str, List[Node]]) -> Chromosome:
     
     try:
+        applied_config = config.applied_experiment_config()
+        print(
+            "Applied AGVNS experiment config: id={configuration_id} T={threshold_orders} "
+            "population={population_size} perturbation={perturbation_rate} "
+            "mutation_subset={mutation_rate} seed={random_seed}".format(**applied_config)
+        )
         current_orders = max(0, len(Unongoing_super_nodes))
         applied_params = adaptive_local_configs(current_orders, num_vehicles=len(id_to_vehicle))
         print(f"Adaptive config applied: {applied_params}")
@@ -86,7 +92,7 @@ def GAVND_7(initial_vehicleid_to_plan: Dict[str, List[Node]], route_map: Dict[Tu
             if random.uniform(0 , 1) < config.CROSSOVER_TYPE_RATIO:
                 child = new_crossver2(parent1, parent2, Base_vehicleid_to_plan, PDG_map)
             else:                
-                child = disturbance_opt(parent1.solution , id_to_vehicle , route_map , 0.5)
+                child = disturbance_opt(parent1.solution , id_to_vehicle , route_map , config.PERTURBATION_RATE)
             
             if child is None:
                 # If crossover repeatedly fails, use a safe fallback individual
@@ -322,4 +328,3 @@ def adaptive_LS_stategy(indivisual: Chromosome, PDG_map : Dict[str , List[Node]]
     total_ls_time = sum(ls_timings.values())
     timing_details = " | ".join([f"{name}:{counters[name]}({ls_timings[name]:.3f}s)" for name in method_names])
     print(f"LS: {timing_details} | TotalTime:{total_ls_time:.3f}s | Cost:{total_cost(indivisual.id_to_vehicle, indivisual.route_map, indivisual.solution):.2f}")
-

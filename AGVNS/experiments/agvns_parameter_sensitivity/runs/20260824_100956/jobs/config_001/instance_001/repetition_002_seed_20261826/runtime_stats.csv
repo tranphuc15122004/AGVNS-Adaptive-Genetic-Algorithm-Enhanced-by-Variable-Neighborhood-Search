@@ -1,0 +1,2 @@
+algorithm,instance_id,status,score,runtime_seconds,simulator_runtime_seconds,started_at_utc,finished_at_utc,seed,pid,error
+AGVNS,instance_1,SUCCESS,119.96,265.554909,,2026-08-24T10:09:56.699483+00:00,2026-08-24T10:14:22.254419+00:00,20261826,4,

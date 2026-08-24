@@ -30,7 +30,15 @@ Each variant (`AGVNS/`, `MA/`, `TS/`, `MOEAD-TS/`) follows the same layout:
 - `src/conf/configs.py` — Simulator configuration (file paths, instance selection, pallet types)
 - `src/simulator/` — Simulator core (simpy-based discrete-event simulation)
 - `benchmark/` — 64 instances + `factory_info.csv` (154 factories) + `route_info.csv` (23,562 routes)
-- `run_parallel.py` — Queue-based parallel runner (MA/TS/MOEAD-TS); each job gets its own `data_interaction` dir, results under `algorithm/data_interaction_runs/<batch_id>/results.csv`
+- `parallel_runner.py` + `run_parallel.py` adapters — Queue-based parallel runner for AGVNS/MA/TS/MOEAD-TS and submissions 1/2/3; each job gets its own `data_interaction` dir, results under `algorithm/data_interaction_runs/<batch_id>/results.csv`
+
+All eight simulator entrypoints also accept `--stats-file`. Serial runs write
+`<data-dir>/runtime_stats.csv` and `runtime_stats.json` by default; each row is
+one instance with score, status, wall runtime, timestamps, seed, PID, and any
+error. The JSON report includes total/mean/min/max/population-standard-
+deviation runtime aggregates. Parallel batches retain `results.csv` and
+`summary.json`, with the same runtime aggregates at per-instance and batch
+levels.
 
 #### Variant-specific algorithm modules
 
@@ -109,6 +117,9 @@ python main.py --instances 1,2,3
 # Custom data directory
 python main.py --instances 1 --data-dir algorithm/data_interaction_runs/test_run
 
+# Runtime report path (JSON is created next to the CSV)
+python main.py --instances 1 --stats-file outputs/runtime_stats.csv
+
 # CPU pinning (Linux)
 python main.py --cpu 0
 ```
@@ -120,9 +131,28 @@ cd <variant>
 python main_algorithm.py
 ```
 
-### Parallel Runs (MA/TS/MOEAD-TS only)
+### Parallel Runs (all targets)
 
 ```bash
+cd AGVNS
+python run_parallel.py --all --cores 0,1,2,3
+
+cd ../MA
+python run_parallel.py --all --cores 0,1,2,3
+
+cd ../TS
+python run_parallel.py --all --cores 0,1,2,3
+
+cd ../MOEAD-TS
+python run_parallel.py --all --cores 0,1,2,3
+
+cd ../1/compiled_files
+python run_parallel.py --all --cores 0,1,2,3
+
+cd ../../2/Y_final_submission
+python run_parallel.py --all --cores 0,1,2,3
+
+cd ../../3
 python run_parallel.py --all --cores 0,1,2,3
 ```
 

@@ -21,6 +21,7 @@
 import json
 import os
 import platform
+import shlex
 import subprocess
 import sys
 import time
@@ -66,8 +67,26 @@ def get_algorithm_calling_command():
                 if system == 'Windows':
                     return file
                 elif system == 'Linux':
-                    os.system(f'chmod 777 {file}')
-                    return './{}'.format(file)
+                    executable = os.environ.get(
+                        "DPDP_ALGORITHM_EXECUTABLE", "./{}".format(file)
+                    )
+                    command = shlex.quote(executable)
+                    if os.environ.get("DPDP_USE_EXPLICIT_PATHS") == "1":
+                        arguments = [
+                            Configs.factory_info_file_path,
+                            Configs.route_info_file_path,
+                            Configs.algorithm_vehicle_input_info_path,
+                            Configs.algorithm_ongoing_order_items_input_path,
+                            Configs.algorithm_unallocated_order_items_input_path,
+                            Configs.algorithm_output_planned_route_path,
+                            Configs.algorithm_output_destination_path,
+                            str(Configs.LOAD_SPEED),
+                            str(Configs.UNLOAD_SPEED),
+                            str(Configs.DOCK_APPROACHING_TIME),
+                            str(Configs.LAMDA),
+                        ]
+                        command += " " + " ".join(shlex.quote(str(item)) for item in arguments)
+                    return command
     logger.error('Can not find main_algorithm file.')
     sys.exit(-1)
 

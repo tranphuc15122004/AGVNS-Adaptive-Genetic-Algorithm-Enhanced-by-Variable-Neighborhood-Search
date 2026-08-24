@@ -1,0 +1,33 @@
+{
+  "algorithm": "AGVNS",
+  "failed_instances": 0,
+  "generated_at_utc": "2026-08-24T12:57:30.639929+00:00",
+  "instance_count": 1,
+  "per_instance": [
+    {
+      "algorithm": "AGVNS",
+      "error": "",
+      "finished_at_utc": "2026-08-24T12:57:30.639328+00:00",
+      "instance_id": "instance_25",
+      "pid": 13065,
+      "runtime_seconds": 7535.155646,
+      "score": 12232.082778,
+      "seed": 20285825,
+      "simulator_runtime_seconds": null,
+      "started_at_utc": "2026-08-24T10:51:55.483656+00:00",
+      "status": "SUCCESS"
+    }
+  ],
+  "pid": 13065,
+  "runtime_seconds": {
+    "maximum": 7535.155646,
+    "mean": 7535.155646,
+    "minimum": 7535.155646,
+    "standard_deviation": 0.0,
+    "total": 7535.155646
+  },
+  "schema_version": 1,
+  "seed": 20285825,
+  "status": "SUCCESS",
+  "successful_instances": 1
+}

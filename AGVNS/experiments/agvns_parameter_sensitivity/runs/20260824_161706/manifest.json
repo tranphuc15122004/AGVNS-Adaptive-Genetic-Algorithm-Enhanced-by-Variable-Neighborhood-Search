@@ -1,0 +1,21 @@
+{
+  "experiment": "agvns_parameter_sensitivity_screening",
+  "created_at_utc": "2026-08-24T16:17:06.576734+00:00",
+  "run_dir": "/home/tuantb/AGVNS-Adaptive-Genetic-Algorithm-Enhanced-by-Variable-Neighborhood-Search/AGVNS/experiments/agvns_parameter_sensitivity/runs/20260824_161706",
+  "expected_jobs": 800,
+  "design_jobs": 800,
+  "base_seed": 20260824,
+  "seed_formula": "base_seed + instance_id * 1000 + repetition",
+  "cores": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "workers": 8,
+  "command": "AGVNS/experiments/agvns_parameter_sensitivity/run_screening.py --execute --workers 8 --cores 0,1,2,3,4,5,6,7 --base-seed 20260824"
+}

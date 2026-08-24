@@ -508,6 +508,23 @@ def _build_summary(
     batch_status: str,
     batch_wall_time_seconds: Optional[float],
 ) -> Dict[str, Any]:
+    def runtime_distribution(values: Sequence[float]) -> Dict[str, Optional[float]]:
+        if not values:
+            return {
+                "min": None,
+                "max": None,
+                "mean": None,
+                "standard_deviation": None,
+            }
+        return {
+            "min": round(min(values), 6),
+            "max": round(max(values), 6),
+            "mean": round(statistics.mean(values), 6),
+            "standard_deviation": (
+                round(statistics.pstdev(values), 6) if len(values) > 1 else 0.0
+            ),
+        }
+
     successful = [result for result in results if result["status"] == "SUCCESS"]
     failed = [result for result in results if result["status"] != "SUCCESS"]
     per_instance: Dict[str, Dict[str, Any]] = {}
@@ -527,6 +544,7 @@ def _build_summary(
             if result["status"] == "SUCCESS"
             and result["simulation_runtime_seconds"] is not None
         ]
+        runtime_summary = runtime_distribution(simulation_runtimes)
         per_instance[str(instance)] = {
             "successful_repetitions": sum(
                 result["status"] == "SUCCESS" for result in current
@@ -541,22 +559,16 @@ def _build_summary(
                 statistics.pstdev(scores) if len(scores) > 1 else 0.0 if scores else None
             ),
             "min_simulation_runtime_seconds": (
-                min(simulation_runtimes) if simulation_runtimes else None
+                runtime_summary["min"]
             ),
             "max_simulation_runtime_seconds": (
-                max(simulation_runtimes) if simulation_runtimes else None
+                runtime_summary["max"]
             ),
             "mean_simulation_runtime_seconds": (
-                statistics.mean(simulation_runtimes)
-                if simulation_runtimes
-                else None
+                runtime_summary["mean"]
             ),
             "standard_deviation_simulation_runtime_seconds": (
-                statistics.pstdev(simulation_runtimes)
-                if len(simulation_runtimes) > 1
-                else 0.0
-                if simulation_runtimes
-                else None
+                runtime_summary["standard_deviation"]
             ),
             "mean_wall_time_seconds": (
                 statistics.mean(wall_runtimes) if wall_runtimes else None
@@ -568,6 +580,7 @@ def _build_summary(
         for result in successful
         if result["simulation_runtime_seconds"] is not None
     ]
+    runtime_summary = runtime_distribution(successful_simulation_runtimes)
     return {
         "batch_id": manifest["batch_id"],
         "status": batch_status,
@@ -580,11 +593,12 @@ def _build_summary(
         "total_simulation_runtime_seconds": round(
             sum(successful_simulation_runtimes), 3
         ),
-        "mean_simulation_runtime_seconds": (
-            statistics.mean(successful_simulation_runtimes)
-            if successful_simulation_runtimes
-            else None
-        ),
+        "min_simulation_runtime_seconds": runtime_summary["min"],
+        "max_simulation_runtime_seconds": runtime_summary["max"],
+        "mean_simulation_runtime_seconds": runtime_summary["mean"],
+        "standard_deviation_simulation_runtime_seconds": runtime_summary[
+            "standard_deviation"
+        ],
         "summed_job_wall_time_seconds": round(
             sum(result["wall_time_seconds"] for result in results), 3
         ),

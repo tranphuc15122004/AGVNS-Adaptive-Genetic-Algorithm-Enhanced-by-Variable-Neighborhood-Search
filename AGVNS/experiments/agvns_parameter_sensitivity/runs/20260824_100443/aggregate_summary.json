@@ -1,0 +1,62 @@
+{
+  "run_dir": "/home/tuantb/AGVNS-Adaptive-Genetic-Algorithm-Enhanced-by-Variable-Neighborhood-Search/AGVNS/experiments/agvns_parameter_sensitivity/runs/20260824_100443",
+  "total_rows": 1,
+  "successful_rows": 1,
+  "failed_rows": 0,
+  "summaries": {
+    "by_configuration": [
+      {
+        "configuration_id": 16,
+        "total_jobs": 1,
+        "successful_jobs": 1,
+        "failed_jobs": 0,
+        "score_mean": 127.64000000000001,
+        "score_standard_deviation": 0.0,
+        "score_median": 127.64000000000001,
+        "score_ci95": 0.0,
+        "score_minimum": 127.64000000000001,
+        "score_maximum": 127.64000000000001,
+        "simulation_runtime_mean_seconds": 254.944794,
+        "simulation_runtime_standard_deviation_seconds": 0.0,
+        "algorithm_runtime_mean_seconds": 182.56896018981934,
+        "algorithm_runtime_standard_deviation_seconds": 0.0
+      }
+    ],
+    "by_set": [
+      {
+        "set_id": 1,
+        "total_jobs": 1,
+        "successful_jobs": 1,
+        "failed_jobs": 0,
+        "score_mean": 127.64000000000001,
+        "score_standard_deviation": 0.0,
+        "score_median": 127.64000000000001,
+        "score_ci95": 0.0,
+        "score_minimum": 127.64000000000001,
+        "score_maximum": 127.64000000000001,
+        "simulation_runtime_mean_seconds": 254.944794,
+        "simulation_runtime_standard_deviation_seconds": 0.0,
+        "algorithm_runtime_mean_seconds": 182.56896018981934,
+        "algorithm_runtime_standard_deviation_seconds": 0.0
+      }
+    ],
+    "by_instance": [
+      {
+        "instance_id": 1,
+        "total_jobs": 1,
+        "successful_jobs": 1,
+        "failed_jobs": 0,
+        "score_mean": 127.64000000000001,
+        "score_standard_deviation": 0.0,
+        "score_median": 127.64000000000001,
+        "score_ci95": 0.0,
+        "score_minimum": 127.64000000000001,
+        "score_maximum": 127.64000000000001,
+        "simulation_runtime_mean_seconds": 254.944794,
+        "simulation_runtime_standard_deviation_seconds": 0.0,
+        "algorithm_runtime_mean_seconds": 182.56896018981934,
+        "algorithm_runtime_standard_deviation_seconds": 0.0
+      }
+    ]
+  }
+}

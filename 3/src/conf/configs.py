@@ -61,7 +61,12 @@ class Configs(object):
     route_info_file_path = os.path.join(benchmark_folder_path, route_info_file)
     factory_info_file_path = os.path.join(benchmark_folder_path, factory_info_file)
 
-    algorithm_data_interaction_folder_path = os.path.join(algorithm_folder_path, "data_interaction")
+    algorithm_data_interaction_folder_path = os.path.abspath(
+        os.environ.get(
+            "MA_DATA_INTERACTION_DIR",
+            os.path.join(algorithm_folder_path, "data_interaction"),
+        )
+    )
     if not os.path.exists(algorithm_data_interaction_folder_path):
         os.makedirs(algorithm_data_interaction_folder_path)
     algorithm_vehicle_input_info_path = os.path.join(algorithm_data_interaction_folder_path, "vehicle_info.json")
@@ -84,7 +89,28 @@ class Configs(object):
                               }
 
     # 随机种子
-    RANDOM_SEED = 0
+    RANDOM_SEED = int(os.environ.get("DPDP_RANDOM_SEED", "0"))
+
+    @classmethod
+    def configure_algorithm_data_dir(cls, folder_path: str):
+        """Rebind simulator interaction files to a worker-owned directory."""
+        cls.algorithm_data_interaction_folder_path = os.path.abspath(folder_path)
+        os.makedirs(cls.algorithm_data_interaction_folder_path, exist_ok=True)
+        cls.algorithm_vehicle_input_info_path = os.path.join(
+            cls.algorithm_data_interaction_folder_path, "vehicle_info.json"
+        )
+        cls.algorithm_unallocated_order_items_input_path = os.path.join(
+            cls.algorithm_data_interaction_folder_path, "unallocated_order_items.json"
+        )
+        cls.algorithm_ongoing_order_items_input_path = os.path.join(
+            cls.algorithm_data_interaction_folder_path, "ongoing_order_items.json"
+        )
+        cls.algorithm_output_destination_path = os.path.join(
+            cls.algorithm_data_interaction_folder_path, "output_destination.json"
+        )
+        cls.algorithm_output_planned_route_path = os.path.join(
+            cls.algorithm_data_interaction_folder_path, "output_route.json"
+        )
 
     # 算法运行超时时间
     MAX_RUNTIME_OF_ALGORITHM = 600

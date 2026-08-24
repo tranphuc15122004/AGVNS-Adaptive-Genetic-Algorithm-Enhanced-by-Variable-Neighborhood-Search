@@ -1,6 +1,13 @@
 # Timeout checking utilities
+import os
+import random
 import time
 from collections import deque   
+
+try:
+    import numpy as np
+except ImportError:  # pragma: no cover - numpy is part of the AGVNS requirements
+    np = None
 
 """Problem constant"""
 APPROACHING_DOCK_TIME = 1800
@@ -35,6 +42,10 @@ def get_remaining_time() -> float:
 POPULATION_SIZE = 40
 NUMBER_OF_GENERATION = 20
 MUTATION_RATE = 0.25
+ADAPT_THRESHOLD_ORDERS = 80
+PERTURBATION_RATE = 0.50
+EXPERIMENT_CONFIGURATION_ID = None
+RANDOM_SEED = int(os.environ.get("AGVNS_RANDOM_SEED", os.environ.get("DPDP_RANDOM_SEED", "0")))
 LS_MAX = 1
 IMPROVED_IN_CROSS = 0
 IMPROVED_IN_MUTATION = 0
@@ -46,6 +57,68 @@ LS_MAX_TIME_IN_SINGLE = 1
 # GA defensive guards
 # Max attempts factor for producing offspring per missing child in a generation (used to avoid infinite loops)
 OFFSPRING_ATTEMPTS_FACTOR = 10
+
+
+def _read_int(environ, key, default):
+    raw = environ.get(key)
+    return default if raw is None or raw == "" else int(raw)
+
+
+def _read_float(environ, key, default):
+    raw = environ.get(key)
+    return default if raw is None or raw == "" else float(raw)
+
+
+def parse_experiment_overrides(environ=None):
+    """Read one screening cell without silently accepting invalid values."""
+    environ = os.environ if environ is None else environ
+    values = {
+        "configuration_id": _read_int(environ, "AGVNS_EXPERIMENT_ID", None),
+        "threshold_orders": _read_int(environ, "AGVNS_EXPERIMENT_T", ADAPT_THRESHOLD_ORDERS),
+        "population_size": _read_int(environ, "AGVNS_EXPERIMENT_POPULATION", POPULATION_SIZE),
+        "perturbation_rate": _read_float(environ, "AGVNS_EXPERIMENT_PERTURBATION", PERTURBATION_RATE),
+        "mutation_rate": _read_float(environ, "AGVNS_EXPERIMENT_MUTATION_SUBSET", MUTATION_RATE),
+        "random_seed": _read_int(environ, "AGVNS_RANDOM_SEED", RANDOM_SEED),
+    }
+    if values["threshold_orders"] <= 0:
+        raise ValueError("AGVNS experiment T must be positive")
+    if values["population_size"] <= 0:
+        raise ValueError("AGVNS experiment population must be positive")
+    for name in ("perturbation_rate", "mutation_rate"):
+        if not 0.0 < values[name] <= 1.0:
+            raise ValueError("AGVNS experiment %s must be in (0, 1]" % name)
+    return values
+
+
+def apply_experiment_overrides(environ=None):
+    """Apply screening overrides and seed the algorithm process."""
+    global ADAPT_THRESHOLD_ORDERS, POPULATION_SIZE, PERTURBATION_RATE
+    global MUTATION_RATE, EXPERIMENT_CONFIGURATION_ID, RANDOM_SEED
+    values = parse_experiment_overrides(environ)
+    EXPERIMENT_CONFIGURATION_ID = values["configuration_id"]
+    ADAPT_THRESHOLD_ORDERS = values["threshold_orders"]
+    POPULATION_SIZE = values["population_size"]
+    PERTURBATION_RATE = values["perturbation_rate"]
+    MUTATION_RATE = values["mutation_rate"]
+    RANDOM_SEED = values["random_seed"]
+    random.seed(RANDOM_SEED)
+    if np is not None:
+        np.random.seed(RANDOM_SEED % (2 ** 32))
+    return values
+
+
+def applied_experiment_config():
+    return {
+        "configuration_id": EXPERIMENT_CONFIGURATION_ID,
+        "threshold_orders": ADAPT_THRESHOLD_ORDERS,
+        "population_size": POPULATION_SIZE,
+        "perturbation_rate": PERTURBATION_RATE,
+        "mutation_rate": MUTATION_RATE,
+        "random_seed": RANDOM_SEED,
+    }
+
+
+apply_experiment_overrides()
 
 
 def adaptive_config(num_orders: int, num_vehicles: int | None = None, time_budget_sec: float | None = None) -> dict:

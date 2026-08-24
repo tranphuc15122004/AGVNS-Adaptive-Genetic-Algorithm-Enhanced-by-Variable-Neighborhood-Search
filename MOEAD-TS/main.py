@@ -2,10 +2,16 @@ import argparse
 import datetime
 import os
 import sys
+import time
 import traceback
+
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 import numpy as np
 
+from runtime_stats import RuntimeStats
 from src.conf.configs import Configs
 from src.simulator.simulate_api import simulate
 from src.utils.log_utils import ini_logger, remove_file_handler_of_logging
@@ -48,6 +54,10 @@ def _parse_args():
         default=0,
         help="Seed used by MOEA/D--TS algorithm subprocesses (default: 0).",
     )
+    parser.add_argument(
+        "--stats-file",
+        help="CSV path for per-instance runtime statistics (default: <data-dir>/runtime_stats.csv).",
+    )
     return parser.parse_args()
 
 
@@ -77,6 +87,11 @@ def _get_test_instances():
 if __name__ == "__main__":
     args = _parse_args()
     _configure_runtime(args)
+    stats_file = args.stats_file or os.path.join(
+        Configs.algorithm_data_interaction_folder_path,
+        "runtime_stats.csv",
+    )
+    runtime_stats = RuntimeStats(stats_file, algorithm="MOEAD-TS", seed=args.seed)
 
     score_list = []
     failed_instances = []
@@ -93,17 +108,45 @@ if __name__ == "__main__":
             logger.info(f"CPU affinity target: core {args.cpu}")
         logger.info(f"MOEA/D--TS random seed: {args.seed}")
 
+        started = time.monotonic()
+        started_at_utc = runtime_stats.start_instance(instance)
         try:
-            score, elapsed = simulate(Configs.factory_info_file, Configs.route_info_file, instance)
-            score_list.append(score)
-            logger.info(f"Score of {instance}: {score}, runtime: {elapsed:.6f}s")
-        except Exception as exc:
-            logger.error("Failed to run simulator")
-            logger.error(f"Error: {exc}, {traceback.format_exc()}")
-            score_list.append(sys.maxsize)
-            failed_instances.append(instance)
+            try:
+                score, simulator_elapsed = simulate(
+                    Configs.factory_info_file,
+                    Configs.route_info_file,
+                    instance,
+                )
+            except Exception as exc:
+                elapsed = time.monotonic() - started
+                error = traceback.format_exc()
+                runtime_stats.record(
+                    instance,
+                    status="FAILED",
+                    runtime_seconds=elapsed,
+                    started_at_utc=started_at_utc,
+                    error=error,
+                )
+                logger.error("Failed to run simulator")
+                logger.error(f"Error: {exc}, {error}")
+                score_list.append(sys.maxsize)
+                failed_instances.append(instance)
+            else:
+                elapsed = time.monotonic() - started
+                runtime_stats.record(
+                    instance,
+                    status="SUCCESS",
+                    score=score,
+                    runtime_seconds=elapsed,
+                    simulator_runtime_seconds=simulator_elapsed,
+                    started_at_utc=started_at_utc,
+                )
+                score_list.append(score)
+                logger.info(f"Score of {instance}: {score}, runtime: {elapsed:.6f}s")
+        finally:
+            remove_file_handler_of_logging(log_file_name)
 
-        remove_file_handler_of_logging(log_file_name)
+    logger.info("Runtime statistics saved to %s and %s", runtime_stats.csv_path, runtime_stats.json_path)
 
     avg_score = np.mean(score_list)
     print(score_list)
