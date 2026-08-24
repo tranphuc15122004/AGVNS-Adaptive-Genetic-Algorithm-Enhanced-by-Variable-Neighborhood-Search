@@ -287,7 +287,10 @@ def calculate_delaytime_each_vehicle(chromosome: Chromosome) -> Dict[str , int]:
             beforeOrderID = ""
             nextOrderID = ""
             for order_item in minTNode.delivery_item_list:
-                nextOrderID = order_item.id
+                # BUG cũ (sai): nextOrderID = order_item.id
+                # `id` là ID của từng item; Gold group overtime theo order_id.
+                # Dùng order_id để các item cùng order không bị cộng trễ nhiều lần.
+                nextOrderID = order_item.order_id
                 if beforeOrderID != nextOrderID:
                     commitCompleteTime = order_item.committed_completion_time
                     overtime_per_vehicle[minT2VehicleID] += max(0 , curr_time[minT2VehicleIndex] - commitCompleteTime)

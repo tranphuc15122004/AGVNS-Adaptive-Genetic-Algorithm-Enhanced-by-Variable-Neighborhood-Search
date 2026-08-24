@@ -171,6 +171,29 @@ def test_evaluator_uses_the_shared_engine_for_f1_f2_and_total_cost():
     assert scalar == total_cost(vehicles, route_map, normalized)
 
 
+def test_total_cost_groups_first_node_delivery_by_order_id():
+    factories, route_map, vehicles, _item = _fixture()
+    first_item = OrderItem(
+        "I-1", "PALLET", "O-1", 1.0, "A", "B", 0, 0, 1, 1, 1
+    )
+    second_item = OrderItem(
+        "I-2", "PALLET", "O-1", 1.0, "A", "B", 0, 0, 1, 1, 1
+    )
+    solution = {
+        "V_1": [Node("B", [first_item, second_item], [])],
+    }
+
+    overtime, average_distance, scalar = total_cost(
+        vehicles, route_map, solution, mode="components"
+    )
+
+    # A -> B takes 10 seconds, and both items belong to O-1.  Match Gold's
+    # order-level grouping: charge the late order once, not once per item.
+    assert overtime == 10.0
+    assert average_distance == 1.0
+    assert scalar == config.Delta * 10.0 + 1.0
+
+
 def test_evaluator_requests_all_components_from_one_total_cost_call(monkeypatch):
     factories, route_map, vehicles, item = _fixture()
     context = EvaluationContext(route_map, vehicles, factories, {item.id: item})
@@ -896,19 +919,41 @@ def test_combined_node_is_expanded_before_local_search_and_can_move():
     assert all(validate_solution(neighbor.solution, context) for neighbor in neighbors)
 
 
-def test_safe_fallback_prevents_empty_population_failure(monkeypatch):
+def test_incomplete_ci_sequence_is_discarded(monkeypatch):
+    factories, route_map, vehicles, item = _fixture()
+    context = EvaluationContext(
+        route_map, vehicles, factories, {item.id: item}
+    )
+    # Force every exhaustive CI sequence to fail.  Algorithm 2 discards all
+    # failed individuals instead of replacing them with append-pair routes.
+    monkeypatch.setattr(moead_core, "_insert_unit_best", lambda *_args, **_kwargs: None)
+    config.set_begin_time()
+    population = moead_core.initialize_population(
+        {"V_1": []},
+        [DispatchUnit((item.id,), (item,))],
+        context,
+        time.time() + 1.0,
+    )
+    assert population == []
+
+
+def test_moead_accepts_only_the_retained_ci_members(monkeypatch):
     factories, route_map, vehicles, item = _fixture()
     monkeypatch.setattr(config, "MOEAD_MAX_GENERATIONS", 0)
-    # Force every exhaustive CI sequence to fail.  Initialisation must still
-    # construct all N members through the sequence-preserving fallback.
-    monkeypatch.setattr(moead_core, "_insert_unit_best", lambda *_args, **_kwargs: None)
+
+    def one_valid_ci_member(_plan, _units, context, _deadline):
+        return [moead_core._candidate({
+            "V_1": [Node("B", [], [item]), Node("C", [item], [])],
+        }, context)]
+
+    monkeypatch.setattr(moead_core, "initialize_population", one_valid_ci_member)
     config.set_begin_time()
     result = run_moead_ts(
         {"V_1": []}, route_map, vehicles, factories, {item.id: item}, [item.id]
     )
+
     assert result is not None
-    assert result._moead_initial_population_size == config.MOEAD_POPULATION_SIZE
-    assert validate_solution(result.solution, result._moead_context)
+    assert result._moead_initial_population_size == 1
 
 
 def test_no_new_order_interval_keeps_the_full_population_invariant(monkeypatch):

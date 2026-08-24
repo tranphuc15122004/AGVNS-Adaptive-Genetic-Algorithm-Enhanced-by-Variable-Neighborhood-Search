@@ -1183,7 +1183,10 @@ def _cost_of_a_route_legacy (temp_route_node_list : List[Node] , vehicle: Vehicl
             beforeOrderID = ""
             nextOrderID = ""
             for order_item in minTNode.delivery_item_list:
-                nextOrderID = order_item.id
+                # BUG cũ (sai): nextOrderID = order_item.id
+                # `id` là ID của từng item; Gold group overtime theo order_id.
+                # Dùng order_id để các item cùng order không bị cộng trễ nhiều lần.
+                nextOrderID = order_item.order_id
                 if beforeOrderID != nextOrderID:
                     commitCompleteTime = order_item.committed_completion_time
                     overtime_Sum += max(0 , curr_time[minT2VehicleIndex] - commitCompleteTime)
@@ -1386,7 +1389,10 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
             beforeOrderID = ""
             nextOrderID = ""
             for order_item in minTNode.delivery_item_list:
-                nextOrderID = order_item.id
+                # BUG cũ (sai): nextOrderID = order_item.id
+                # `id` là ID của từng item; Gold group overtime theo order_id.
+                # Dùng order_id để các item cùng order không bị cộng trễ nhiều lần.
+                nextOrderID = order_item.order_id
                 if beforeOrderID != nextOrderID:
                     commitCompleteTime = order_item.committed_completion_time
                     overtime_Sum += max(0 , curr_time[minT2VehicleIndex] - commitCompleteTime)

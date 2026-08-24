@@ -46,8 +46,8 @@ MOEAD_TS_MAX_ITERATIONS = 20
 # Early-stopping extensions (implementation choices, not in the paper; 0 disables
 # each mechanism).  They only end the search sooner when no progress is observed,
 # so the accepted moves and the behaviour up to that point match the paper.
-MOEAD_TS_STAGNATION_LIMIT = 3     # stop the Algorithm-4 outer loop after N consecutive non-improving iterations
-MOEAD_STAGNATION_GENERATIONS = 5  # stop the MOEA/D loop after N consecutive generations with zero replacements
+MOEAD_TS_STAGNATION_LIMIT = 0     # stop the Algorithm-4 outer loop after N consecutive non-improving iterations
+MOEAD_STAGNATION_GENERATIONS = 0  # stop the MOEA/D loop after N consecutive generations with zero replacements
 # Debug capture: when the reported "TC after optimization" jumps upward
 # dramatically versus the previous epoch, snapshot the epoch's data_interaction
 # JSONs into MOEAD_DEBUG_SNAPSHOT_DIR (diagnostics only - never alters the
@@ -82,8 +82,12 @@ MOEAD_AGVNS_DIR = os.environ.get(
 # generates single random moves per inner iteration, so this per-operator time
 # slice is no longer applied by ``tabu_search``.
 MOEAD_TS_OPERATOR_TIME_LIMIT = 1.0
-MOEAD_INITIALIZATION_TIME_FRACTION = 0.25
-MOEAD_INITIALIZATION_MAX_SECONDS = 90.0
+# The paper imposes no separate initialization time limit: Algorithm 2's CI
+# construction shares the single 600 s runtime budget, and the only stopping
+# criteria are the 50-iteration cap and the 600 s deadline.  The former
+# ``MOEAD_INITIALIZATION_TIME_FRACTION`` / ``MOEAD_INITIALIZATION_MAX_SECONDS``
+# caps were removed because they truncated CI on large instances and yielded a
+# population that did not match the paper.
 MOEAD_RANDOM_SEED = 0
 # Backward-compatible aliases for external scripts during migration.
 TS_RANDOM_SEED = MOEAD_RANDOM_SEED
@@ -166,16 +170,19 @@ def moead_parameter_manifest() -> dict:
                 "one random single move per inner iteration via "
                 "sample_*_move in MOEAD_TS.py"
             ),
-            "initialization_time_fraction": MOEAD_INITIALIZATION_TIME_FRACTION,
-            "initialization_max_seconds": MOEAD_INITIALIZATION_MAX_SECONDS,
+            "initialization_time_budget": (
+                "no separate cap: CI construction shares the single 600 s "
+                "runtime limit; paper stopping criteria are only 50 "
+                "iterations or 600 s"
+            ),
             "insertion": (
                 "dispatch_nodePair large-route CI: enumerate every ordered "
                 "pickup/delivery position, canonical LIFO/capacity filter, "
                 "then dock-aware fleet evaluation"
             ),
             "incomplete_initialization": (
-                "complete each failed CI sequence with a feasible "
-                "sequence-preserving fallback; always build N members"
+                "discard each incomplete or infeasible CI sequence; retain "
+                "only completed valid CI members"
             ),
             "total_runtime_limit": ALGO_TIME_LIMIT,
             "output_reserve_seconds": OUTPUT_RESERVE_SECONDS,

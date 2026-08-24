@@ -117,5 +117,5 @@ class Configs(object):
     ENABLE_EXECUTED_ROUTE_RECORDING = False
 
     # 数据集选项，列表为空则选择所有数据集，如[]，[1], [1, 2, 3], [64]
-    selected_instances = [10]
+    selected_instances = [1]
     all_test_instances = range(1, 65)

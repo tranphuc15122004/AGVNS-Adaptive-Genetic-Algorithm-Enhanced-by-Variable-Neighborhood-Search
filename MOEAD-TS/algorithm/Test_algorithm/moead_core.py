@@ -114,16 +114,6 @@ def _deadline_reached(deadline: float) -> bool:
     return _now() >= deadline or config.is_timeout()
 
 
-def _initialization_deadline(deadline: float) -> float:
-    """Reserve part of an interval for MOEA/D evolution and mandatory output."""
-    remaining = max(0.0, deadline - _now())
-    budget = min(
-        float(config.MOEAD_INITIALIZATION_MAX_SECONDS),
-        remaining * float(config.MOEAD_INITIALIZATION_TIME_FRACTION),
-    )
-    return min(deadline, _now() + budget)
-
-
 def _copy_candidate(candidate: Chromosome) -> Chromosome:
     result = Chromosome(
         copy.deepcopy(candidate.solution), candidate.route_map, candidate.id_to_vehicle
@@ -354,7 +344,10 @@ def _insert_unit_best_impl(plan: Dict[str, List[Node]], unit: DispatchUnit,
         for _pickup_pos, delivery_pos, route_with_pickup in _ci_pair_positions(
                 route, vehicle, pickup):
             if _deadline_reached(deadline):
-                return copy.deepcopy(best_plan) if best_plan is not None else None
+                # A partial CI scan is not a completed initialization
+                # sequence.  Algorithm 2 discards that individual instead of
+                # accepting the best route found before the deadline.
+                return None
 
             candidate_route = _ci_candidate_route(
                 route_with_pickup, delivery, delivery_pos
@@ -406,14 +399,13 @@ def _insert_unit_best(plan: Dict[str, List[Node]], unit: DispatchUnit,
 
 def initialize_population(base_plan: Dict[str, List[Node]], units: Sequence[DispatchUnit],
                           context: EvaluationContext, deadline: float) -> List[Chromosome]:
-    """Build exactly ``N`` initial solutions from independently shuffled orders.
+    """Build the valid CI members produced by ``N`` shuffled order sequences.
 
-    Algorithm 2 specifies ``N = 6`` randomized construction sequences.  A
-    failed exhaustive CI attempt must therefore not shrink the MOEA/D
-    population to one solution: for that *same* sequence we finish with the
-    safe pair-by-pair constructor.  It is less greedy than CI, but remains a
-    complete, feasible DPDP solution and lets every weight vector retain its
-    population member.
+    Algorithm 2 specifies ``N = 6`` randomized construction sequences.  Each
+    sequence is built exclusively by cheapest insertion from the restored
+    scene.  If CI cannot finish, or the completed candidate fails the full
+    capacity/LIFO/dock-aware validation, that individual is discarded.  No
+    alternate constructor is allowed to replace it.
     """
     population: List[Chromosome] = []
     target_size = int(config.MOEAD_POPULATION_SIZE)
@@ -436,7 +428,7 @@ def initialize_population(base_plan: Dict[str, List[Node]], units: Sequence[Disp
             for unit in order:
                 next_plan = _insert_unit_best(plan, unit, context, None, None,
                                               deadline, use_tc=True)
-                if next_plan is None:
+                if next_plan is None or _deadline_reached(deadline):
                     complete = False
                     break
                 plan = next_plan
@@ -444,59 +436,8 @@ def initialize_population(base_plan: Dict[str, List[Node]], units: Sequence[Disp
             candidate = _candidate(plan, context)
             if math.isfinite(candidate._moead_tc):
                 population.append(candidate)
-                continue
-
-        # CI can run out of its reserved budget, or fail to find a feasible
-        # insertion although append-after-empty-stack is feasible.  Complete
-        # this sequence instead of returning a partial population.
-        fallback = construct_safe_fallback(
-            base_plan, units, context, unit_order=order
-        )
-        if fallback is None:
-            raise RuntimeError(
-                "MOEA/D-TS could not construct a feasible solution for "
-                "an initial population sequence"
-            )
-        population.append(fallback)
 
     return population
-
-
-def construct_safe_fallback(base_plan: Dict[str, List[Node]],
-                            units: Sequence[DispatchUnit],
-                            context: EvaluationContext,
-                            unit_order: Optional[Sequence[DispatchUnit]] = None,
-                            ) -> Optional[Chromosome]:
-    """Build a complete feasible incumbent in linear time for deadline fallback.
-
-    Each unit is appended as pickup then delivery after a route that already
-    ends with an empty stack.  This is less greedy than exhaustive CI, but it
-    preserves all DPDP constraints and prevents an interval from failing only
-    because the full initial population could not be enumerated in time.
-    """
-    plan = copy.deepcopy(base_plan)
-    # The randomized sequence remains meaningful even in the defensive path:
-    # each fallback individual processes the units in the same order that its
-    # corresponding CI attempt would have used.
-    ordered_units = unit_order if unit_order is not None else units
-    for unit in ordered_units:
-        nodes = _unit_nodes(unit, context.id_to_factory)
-        if nodes is None:
-            return None
-        pickup, delivery = nodes
-        load = sum(item.demand for item in unit.items)
-        eligible = [
-            vehicle_id for vehicle_id, vehicle in context.id_to_vehicle.items()
-            if vehicle.board_capacity + 1e-9 >= load
-        ]
-        if not eligible:
-            return None
-        vehicle_id = min(eligible, key=lambda value: (len(plan.get(value, [])), value))
-        plan.setdefault(vehicle_id, []).extend([
-            copy.deepcopy(pickup), copy.deepcopy(delivery),
-        ])
-    candidate = _candidate(plan, context)
-    return candidate if math.isfinite(candidate._moead_tc) else None
 
 
 def _paper_vehicle_order(id_to_vehicle: Mapping[str, Vehicle]) -> List[str]:
@@ -925,15 +866,17 @@ def _run_moead_ts_impl(base_plan: Dict[str, List[Node]], route_map,
     )
     print(f"Number of unlocated units: {len(units)}")
     with _timed("initialize_population"):
-        population = initialize_population(
-            plan, units, context, _initialization_deadline(deadline)
-        )
-    expected_population_size = int(config.MOEAD_POPULATION_SIZE)
-    if len(population) != expected_population_size:
+        # The paper imposes no separate initialization time limit: Algorithm 2
+        # builds the N CI sequences from the restored scene within the single
+        # 600 s runtime budget, and the only stopping criteria are the
+        # 50-iteration cap and the 600 s deadline.  Passing the full search
+        # deadline lets CI finish on large instances instead of truncating
+        # the population when a self-imposed initialization slice expires.
+        population = initialize_population(plan, units, context, deadline)
+    if not population:
         raise RuntimeError(
-            "MOEA/D-TS initial population has {} members; expected {}".format(
-                len(population), expected_population_size
-            )
+            "MOEA/D-TS initialization discarded every CI sequence; "
+            "no feasible initial solution remains"
         )
 
     carrying_ids = {

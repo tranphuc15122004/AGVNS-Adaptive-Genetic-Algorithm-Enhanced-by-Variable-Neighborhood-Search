@@ -28,10 +28,9 @@ improvement, so `x_current` is retained when none of the
 `NeighborThreshold` samples improves it. `x_best` is likewise updated only by
 a strict `TC` improvement. This is the literal paper behavior; diversity comes
 from route crossover and random selection among the four operators, not from
-accepting a worse TS transition. Initialisation always produces the nominal
-six population members; an unfinished CI sequence is completed by a feasible
-sequence-preserving fallback rather than dropping that member or cloning a
-previous result.
+accepting a worse TS transition. Initialisation tries the nominal six
+independently shuffled CI sequences and drops any incomplete or infeasible
+sequence; it never replaces one with a different constructor.
 
 Early stopping (implementation choices, not in the paper): the Algorithm-4
 outer loop stops after `MOEAD_TS_STAGNATION_LIMIT` consecutive iterations that
@@ -73,14 +72,18 @@ The small-route permutation tables are intentionally not used here: they
 reorder existing work and can alter an immutable dynamic destination prefix.
 
 The paper and simulator impose a 600-second total process limit. The search
-reserves 15 seconds for atomic archive and JSON output. Initial population
-construction is bounded to a configurable fraction of that budget. It always
-materialises all `N = 6` members: each member starts from its own shuffled
-order sequence; if exhaustive CI cannot complete that sequence within the
-reserved time, a feasible pair-by-pair fallback completes that same sequence.
-This is deliberately not a one-member fallback. When no new order arrives,
-the six independent chromosomes are necessarily equivalent copies of the
-restored scene. `MOEAD_TS_OPERATOR_TIME_LIMIT` is retained only for backward
+reserves 15 seconds for atomic archive and JSON output. Initialization has no
+separate time budget: Algorithm 2's CI construction shares the same 600-second
+limit, and the only stopping criteria are the 50-iteration cap and the 600 s
+deadline. It tries `N = 6` independently shuffled order sequences; each one is
+built solely by CI from the restored scene. If CI is incomplete or the
+resulting candidate is not fully valid, that individual is discarded
+immediately—there is no
+append-pair or other fallback constructor. Consequently, the population may
+contain fewer than `N` valid members; MOEA/D creates its weights and
+neighborhoods from the retained members. When no new order arrives, the six
+independent chromosomes are necessarily equivalent copies of the restored
+scene. `MOEAD_TS_OPERATOR_TIME_LIMIT` is retained only for backward
 compatibility; per-operator time slicing no longer applies. Run a focused test
 with:
 
