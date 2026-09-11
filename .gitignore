@@ -76,3 +76,8 @@ AGVNS/visualization_output/
 findings.md
 task_plan.md
 progress.md
+
+
+AGVNS/experiments/agvns_parameter_sensitivity/runs
+
+.agents/

@@ -1,0 +1,540 @@
+{
+  "epoch_time": 1787792400.0,
+  "epoch_datetime": "2026-08-27 01:00:00",
+  "epoch_index": 5,
+  "vehicles": [
+    {
+      "id": "V_1",
+      "capacity": 15,
+      "operation_time": 24,
+      "cur_factory_id": "e2d5093fbe36431f8986ddb0e1c586be",
+      "position": {
+        "lng": 116.7844,
+        "lat": 39.9186,
+        "factory_id": "e2d5093fbe36431f8986ddb0e1c586be",
+        "status": "at_factory"
+      },
+      "destination": null,
+      "planned_route_nodes": [],
+      "trajectory": [
+        {
+          "factory_id": "e2d5093fbe36431f8986ddb0e1c586be",
+          "lng": 116.7844,
+          "lat": 39.9186,
+          "arrive_time": 1787788800,
+          "leave_time": 1787791800.0,
+          "status": "past"
+        }
+      ],
+      "events": [],
+      "carrying_item_count": 0,
+      "carrying_item_ids": [],
+      "status": "parked"
+    },
+    {
+      "id": "V_2",
+      "capacity": 15,
+      "operation_time": 24,
+      "cur_factory_id": "7fe14b93f0f04ee7a994ef5b2c1fdb72",
+      "position": {
+        "lng": 116.6087,
+        "lat": 40.2137,
+        "factory_id": "7fe14b93f0f04ee7a994ef5b2c1fdb72",
+        "status": "at_factory"
+      },
+      "destination": null,
+      "planned_route_nodes": [],
+      "trajectory": [
+        {
+          "factory_id": "7fe14b93f0f04ee7a994ef5b2c1fdb72",
+          "lng": 116.6087,
+          "lat": 40.2137,
+          "arrive_time": 1787788800,
+          "leave_time": 1787791800.0,
+          "status": "past"
+        }
+      ],
+      "events": [],
+      "carrying_item_count": 0,
+      "carrying_item_ids": [],
+      "status": "parked"
+    },
+    {
+      "id": "V_3",
+      "capacity": 15,
+      "operation_time": 24,
+      "cur_factory_id": "f6faef4b36e743328800b961aced4a2c",
+      "position": {
+        "lng": 116.6346,
+        "lat": 40.2301,
+        "factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "status": "at_factory"
+      },
+      "destination": {
+        "factory_id": "32ab2049f3fb437881ff3912470d7840",
+        "lng": 116.7112,
+        "lat": 40.3527,
+        "arrive_time": 1787795244.0,
+        "leave_time": 1787797224.0
+      },
+      "planned_route_nodes": [
+        {
+          "factory_id": "32ab2049f3fb437881ff3912470d7840",
+          "lng": 116.7112,
+          "lat": 40.3527,
+          "arrive_time": 1787795244.0,
+          "leave_time": 1787797224.0,
+          "is_destination": true
+        }
+      ],
+      "trajectory": [
+        {
+          "factory_id": "f6faef4b36e743328800b961aced4a2c",
+          "lng": 116.6346,
+          "lat": 40.2301,
+          "arrive_time": 1787791452.0,
+          "leave_time": 1787793432.0,
+          "status": "current"
+        },
+        {
+          "factory_id": "32ab2049f3fb437881ff3912470d7840",
+          "lng": 116.7112,
+          "lat": 40.3527,
+          "arrive_time": 1787795244.0,
+          "leave_time": 1787797224.0,
+          "status": "future"
+        }
+      ],
+      "events": [
+        {
+          "type": "delivery",
+          "item_id": "0038220005-3",
+          "item_type": "BOX",
+          "factory_id": "32ab2049f3fb437881ff3912470d7840",
+          "lng": 116.7112,
+          "lat": 40.3527,
+          "time": 1787795244.0,
+          "vehicle_id": "V_3"
+        },
+        {
+          "type": "delivery",
+          "item_id": "0038220005-2",
+          "item_type": "BOX",
+          "factory_id": "32ab2049f3fb437881ff3912470d7840",
+          "lng": 116.7112,
+          "lat": 40.3527,
+          "time": 1787795244.0,
+          "vehicle_id": "V_3"
+        },
+        {
+          "type": "delivery",
+          "item_id": "0038220005-1",
+          "item_type": "BOX",
+          "factory_id": "32ab2049f3fb437881ff3912470d7840",
+          "lng": 116.7112,
+          "lat": 40.3527,
+          "time": 1787795244.0,
+          "vehicle_id": "V_3"
+        }
+      ],
+      "carrying_item_count": 3,
+      "carrying_item_ids": [
+        "0038220005-3",
+        "0038220005-2",
+        "0038220005-1"
+      ],
+      "status": "loading_unloading"
+    },
+    {
+      "id": "V_4",
+      "capacity": 15,
+      "operation_time": 24,
+      "cur_factory_id": "e47399648fa842b2b8f80094343d8091",
+      "position": {
+        "lng": 116.489,
+        "lat": 40.2172,
+        "factory_id": "e47399648fa842b2b8f80094343d8091",
+        "status": "at_factory"
+      },
+      "destination": null,
+      "planned_route_nodes": [],
+      "trajectory": [
+        {
+          "factory_id": "e47399648fa842b2b8f80094343d8091",
+          "lng": 116.489,
+          "lat": 40.2172,
+          "arrive_time": 1787788800,
+          "leave_time": 1787791800.0,
+          "status": "past"
+        }
+      ],
+      "events": [],
+      "carrying_item_count": 0,
+      "carrying_item_ids": [],
+      "status": "parked"
+    },
+    {
+      "id": "V_5",
+      "capacity": 15,
+      "operation_time": 24,
+      "cur_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+      "position": {
+        "lng": 116.5841,
+        "lat": 40.2869,
+        "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "status": "at_factory"
+      },
+      "destination": {
+        "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "lng": 116.5841,
+        "lat": 40.2869,
+        "arrive_time": 1787792244.0,
+        "leave_time": 1787794284.0
+      },
+      "planned_route_nodes": [
+        {
+          "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+          "lng": 116.5841,
+          "lat": 40.2869,
+          "arrive_time": 1787792244.0,
+          "leave_time": 1787794284.0,
+          "is_destination": true
+        },
+        {
+          "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+          "lng": 116.5841,
+          "lat": 40.2869,
+          "arrive_time": 1787794284.0,
+          "leave_time": 1787796384.0,
+          "is_destination": false
+        },
+        {
+          "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+          "lng": 116.6264,
+          "lat": 40.2253,
+          "arrive_time": 1787797308.0,
+          "leave_time": 1787799408.0,
+          "is_destination": false
+        },
+        {
+          "factory_id": "ffd0ed8719f54294a452ed3e3b6a986c",
+          "lng": 116.6296,
+          "lat": 40.2253,
+          "arrive_time": 1787799444.0,
+          "leave_time": 1787801304.0,
+          "is_destination": false
+        },
+        {
+          "factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+          "lng": 116.6309,
+          "lat": 40.2304,
+          "arrive_time": 1787801376.0,
+          "leave_time": 1787803236.0,
+          "is_destination": false
+        },
+        {
+          "factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+          "lng": 116.6309,
+          "lat": 40.2304,
+          "arrive_time": 1787803236.0,
+          "leave_time": 1787805276.0,
+          "is_destination": false
+        },
+        {
+          "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+          "lng": 116.6264,
+          "lat": 40.2253,
+          "arrive_time": 1787805360.0,
+          "leave_time": 1787807280.0,
+          "is_destination": false
+        }
+      ],
+      "trajectory": [
+        {
+          "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+          "lng": 116.5841,
+          "lat": 40.2869,
+          "arrive_time": 1787790324.0,
+          "leave_time": 1787792244.0,
+          "status": "past"
+        },
+        {
+          "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+          "lng": 116.5841,
+          "lat": 40.2869,
+          "arrive_time": 1787792244.0,
+          "leave_time": 1787794284.0,
+          "status": "current"
+        },
+        {
+          "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+          "lng": 116.5841,
+          "lat": 40.2869,
+          "arrive_time": 1787794284.0,
+          "leave_time": 1787796384.0,
+          "status": "future"
+        },
+        {
+          "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+          "lng": 116.6264,
+          "lat": 40.2253,
+          "arrive_time": 1787797308.0,
+          "leave_time": 1787799408.0,
+          "status": "future"
+        },
+        {
+          "factory_id": "ffd0ed8719f54294a452ed3e3b6a986c",
+          "lng": 116.6296,
+          "lat": 40.2253,
+          "arrive_time": 1787799444.0,
+          "leave_time": 1787801304.0,
+          "status": "future"
+        },
+        {
+          "factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+          "lng": 116.6309,
+          "lat": 40.2304,
+          "arrive_time": 1787801376.0,
+          "leave_time": 1787803236.0,
+          "status": "future"
+        },
+        {
+          "factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+          "lng": 116.6309,
+          "lat": 40.2304,
+          "arrive_time": 1787803236.0,
+          "leave_time": 1787805276.0,
+          "status": "future"
+        },
+        {
+          "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+          "lng": 116.6264,
+          "lat": 40.2253,
+          "arrive_time": 1787805360.0,
+          "leave_time": 1787807280.0,
+          "status": "future"
+        }
+      ],
+      "events": [
+        {
+          "type": "pickup",
+          "item_id": "0012230002-1",
+          "item_type": "PALLET",
+          "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+          "lng": 116.5841,
+          "lat": 40.2869,
+          "time": 1787792245.0,
+          "vehicle_id": "V_5"
+        },
+        {
+          "type": "pickup",
+          "item_id": "0033520004-1",
+          "item_type": "HALF_PALLET",
+          "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+          "lng": 116.5841,
+          "lat": 40.2869,
+          "time": 1787794285.0,
+          "vehicle_id": "V_5"
+        },
+        {
+          "type": "pickup",
+          "item_id": "0033520004-2",
+          "item_type": "HALF_PALLET",
+          "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+          "lng": 116.5841,
+          "lat": 40.2869,
+          "time": 1787794285.0,
+          "vehicle_id": "V_5"
+        },
+        {
+          "type": "pickup",
+          "item_id": "0033520004-3",
+          "item_type": "BOX",
+          "factory_id": "2445d4bd004c457d95957d6ecf77f759",
+          "lng": 116.5841,
+          "lat": 40.2869,
+          "time": 1787794285.0,
+          "vehicle_id": "V_5"
+        },
+        {
+          "type": "delivery",
+          "item_id": "0033520004-3",
+          "item_type": "BOX",
+          "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+          "lng": 116.6264,
+          "lat": 40.2253,
+          "time": 1787797308.0,
+          "vehicle_id": "V_5"
+        },
+        {
+          "type": "delivery",
+          "item_id": "0033520004-2",
+          "item_type": "HALF_PALLET",
+          "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+          "lng": 116.6264,
+          "lat": 40.2253,
+          "time": 1787797308.0,
+          "vehicle_id": "V_5"
+        },
+        {
+          "type": "delivery",
+          "item_id": "0033520004-1",
+          "item_type": "HALF_PALLET",
+          "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+          "lng": 116.6264,
+          "lat": 40.2253,
+          "time": 1787797308.0,
+          "vehicle_id": "V_5"
+        },
+        {
+          "type": "pickup",
+          "item_id": "0013570003-1",
+          "item_type": "BOX",
+          "factory_id": "ffd0ed8719f54294a452ed3e3b6a986c",
+          "lng": 116.6296,
+          "lat": 40.2253,
+          "time": 1787799445.0,
+          "vehicle_id": "V_5"
+        },
+        {
+          "type": "delivery",
+          "item_id": "0013570003-1",
+          "item_type": "BOX",
+          "factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+          "lng": 116.6309,
+          "lat": 40.2304,
+          "time": 1787801376.0,
+          "vehicle_id": "V_5"
+        },
+        {
+          "type": "delivery",
+          "item_id": "0012230002-1",
+          "item_type": "PALLET",
+          "factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+          "lng": 116.6309,
+          "lat": 40.2304,
+          "time": 1787803236.0,
+          "vehicle_id": "V_5"
+        },
+        {
+          "type": "delivery",
+          "item_id": "0003480001-1",
+          "item_type": "HALF_PALLET",
+          "factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+          "lng": 116.6264,
+          "lat": 40.2253,
+          "time": 1787805360.0,
+          "vehicle_id": "V_5"
+        }
+      ],
+      "carrying_item_count": 2,
+      "carrying_item_ids": [
+        "0012230002-1",
+        "0003480001-1"
+      ],
+      "status": "idle_at_factory"
+    }
+  ],
+  "orders": {
+    "unallocated": 4,
+    "ongoing": 5,
+    "completed": 0
+  },
+  "order_items": {
+    "unallocated": [
+      {
+        "id": "0013570003-1",
+        "type": "BOX",
+        "demand": 0.25,
+        "pickup_factory_id": "ffd0ed8719f54294a452ed3e3b6a986c",
+        "delivery_factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+        "creation_time": 1787789637,
+        "committed_completion_time": 1787804037,
+        "delivery_state": 1
+      },
+      {
+        "id": "0033520004-1",
+        "type": "HALF_PALLET",
+        "demand": 0.5,
+        "pickup_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1787790832,
+        "committed_completion_time": 1787805232,
+        "delivery_state": 1
+      },
+      {
+        "id": "0033520004-2",
+        "type": "HALF_PALLET",
+        "demand": 0.5,
+        "pickup_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1787790832,
+        "committed_completion_time": 1787805232,
+        "delivery_state": 1
+      },
+      {
+        "id": "0033520004-3",
+        "type": "BOX",
+        "demand": 0.25,
+        "pickup_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1787790832,
+        "committed_completion_time": 1787805232,
+        "delivery_state": 1
+      }
+    ],
+    "ongoing": [
+      {
+        "id": "0003480001-1",
+        "type": "HALF_PALLET",
+        "demand": 0.5,
+        "pickup_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1787789028,
+        "committed_completion_time": 1787803428,
+        "delivery_state": 2
+      },
+      {
+        "id": "0038220005-1",
+        "type": "BOX",
+        "demand": 0.25,
+        "pickup_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "delivery_factory_id": "32ab2049f3fb437881ff3912470d7840",
+        "creation_time": 1787791102,
+        "committed_completion_time": 1787805502,
+        "delivery_state": 2
+      },
+      {
+        "id": "0038220005-2",
+        "type": "BOX",
+        "demand": 0.25,
+        "pickup_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "delivery_factory_id": "32ab2049f3fb437881ff3912470d7840",
+        "creation_time": 1787791102,
+        "committed_completion_time": 1787805502,
+        "delivery_state": 2
+      },
+      {
+        "id": "0038220005-3",
+        "type": "BOX",
+        "demand": 0.25,
+        "pickup_factory_id": "f6faef4b36e743328800b961aced4a2c",
+        "delivery_factory_id": "32ab2049f3fb437881ff3912470d7840",
+        "creation_time": 1787791102,
+        "committed_completion_time": 1787805502,
+        "delivery_state": 2
+      },
+      {
+        "id": "0012230002-1",
+        "type": "PALLET",
+        "demand": 1,
+        "pickup_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "delivery_factory_id": "9f1a09c368584eba9e7f10a53d55caae",
+        "creation_time": 1787789543,
+        "committed_completion_time": 1787803943,
+        "delivery_state": 2
+      }
+    ],
+    "completed": []
+  }
+}

@@ -28,7 +28,7 @@ def test_screening_design_has_taguchi_rows_baseline_and_expected_jobs():
     assert len(DESIGN) == 10
     assert len({row.configuration_id for row in DESIGN}) == 10
     assert BASELINE_CONFIGURATION_ID == 10
-    assert INSTANCE_IDS == (57, 58, 49, 50, 41, 42, 33, 34, 25, 26, 17, 18, 9, 10, 1, 2)
+    assert INSTANCE_IDS == (1, 2, 9, 10, 17, 18, 25, 26, 33, 34, 41, 42, 49, 50, 57, 58)
     assert REPETITIONS == 3
     assert expected_job_count() == 480
 
@@ -89,6 +89,6 @@ def test_job_seed_is_stable_and_configuration_is_joined():
     assert first == second
     assert first[0]["seed"] == 7000 + first[0]["instance_id"] * 1000 + first[0]["repetition"]
     assert first[0]["configuration_id"] == 1
-    assert first[0]["instance_id"] == 57
+    assert first[0]["instance_id"] == 1
     assert first[-1]["configuration_id"] == 10
-    assert first[-1]["instance_id"] == 2
+    assert first[-1]["instance_id"] == 58

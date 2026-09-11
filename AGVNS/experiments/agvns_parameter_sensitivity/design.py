@@ -29,8 +29,9 @@ BASELINE_CONFIGURATION_ID = 10
 BASELINE_CONFIGURATION = Configuration(10, 80, 40, 0.50, 0.25)
 DESIGN = TAGUCHI_DESIGN + (BASELINE_CONFIGURATION,)
 
-# Set 8 -> Set 1. Each set contributes its first two benchmark instances.
-INSTANCE_IDS = (57, 58, 49, 50, 41, 42, 33, 34, 25, 26, 17, 18, 9, 10, 1, 2)
+# Set 1 -> Set 8. Each set contributes its first two benchmark instances,
+# starting with the smallest instances for early feedback.
+INSTANCE_IDS = (1, 2, 9, 10, 17, 18, 25, 26, 33, 34, 41, 42, 49, 50, 57, 58)
 REPETITIONS = 3
 
 _T_LEVELS = (40, 80, 120)

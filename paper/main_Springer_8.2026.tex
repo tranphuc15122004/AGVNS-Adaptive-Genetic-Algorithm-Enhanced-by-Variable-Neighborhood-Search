@@ -51,9 +51,9 @@ Adaptive Hybrid Evolutionary Search for Dynamic Pickup and Delivery Problems wit
 	
 	\affil[2]{\orgname{VNU University of Science}, \orgaddress{\city{Hanoi}, \postcode{100000}, \country{Vietnam}}}
 \abstract{
-The dynamic pickup and delivery problem (DPDP) is a fundamental challenge in modern logistics systems, where customer requests arrive continuously over time and require real-time routing decisions. In this study, we investigate a practical DPDP motivated by real-world delivery operations at Huawei, characterized by stochastic order arrivals and strict time window constraints. To effectively address the dynamic and large-scale nature of the problem, we propose an adaptive hybrid optimization framework, namely Adaptive Genetic Variable Neighborhood Search (AGVNS), which combines global exploration capabilities of genetic algorithms with adaptive local refinement through variable neighborhood search.
-Unlike conventional approaches that rely on static or periodically updated solutions, the proposed method dynamically re-optimizes routing decisions in response to newly arriving requests, enabling a better balance between exploration and exploitation during the search process. In addition, an adaptive mechanism is introduced to adjust search behaviors based on the evolving state of the system, enhancing both solution quality and robustness.
-Extensive computational experiments on 64 real-world instances demonstrate that the proposed AGVNS consistently outperforms several competitive state-of-the-art algorithms in terms of total operational cost and solution stability. The results highlight the effectiveness of the proposed approach in handling large-scale dynamic pickup and delivery problems with time windows, and its potential for real-world logistics applications.
+The dynamic pickup and delivery problem (DPDP) is a challenging problem in modern logistics systems, where customer requests arrive dynamically and routing decisions must be continuously updated under practical operational constraints. This study addresses the original DPDP introduced in the ICAPS 2021 competition and motivated by Huawei's real-world logistics operations. To solve this problem, we propose an adaptive genetic and variable neighborhood search algorithm (AGVNS), a two-stage optimization framework that combines population-based evolutionary exploration with VNS-based local intensification. AGVNS incorporates a hybrid initialization mechanism that exploits information from previous routing plans while efficiently integrating newly arrived orders, an adaptive evolutionary mechanism that adjusts search behavior according to the current problem state, and a subsequent VNS stage that intensively refines promising solutions using multiple neighborhood structures.
+
+Computational experiments on all 64 ICAPS 2021 benchmark instances demonstrate that AGVNS achieves competitive solution quality across a wide range of problem scales, with particularly favorable performance on instances containing up to 2,000 requests. The proposed method also remains competitive as the problem size increases, although its relative performance decreases on the largest instances. Overall, the results demonstrate the effectiveness of the proposed adaptive search mechanisms for solving the original ICAPS 2021 DPDP under a strict computational budget, while highlighting scalability to very large instances as an important direction for further improvement.
 }
 
 \keywords{
@@ -67,19 +67,39 @@ The \gls{vrp} is one of the most fundamental and widely studied combinatorial op
 
 However, in many real-world applications, such as courier delivery and ride-sharing, transportation requests are not only about visiting customers but also involve picking up and delivering items. This gives rise to \gls{pdp}, a more complex variant of the \gls{vrp} that incorporates priority constraints between pickup and delivery locations, as well as vehicle capacity and time window constraints \cite{savelsbergh1995general}. The \gls{pdp} better reflects the operational characteristics of modern logistics systems.
 
-While static \gls{pdp} assumes that all requests are known in advance, this assumption rarely holds in practical, real-time environments \cite{, jeong2024dynamic, wang2025multi, xiang2024centralized, zhou2024pickup}. In many  logistics operations, transportation requests usually arrive dynamically over time. Such situations lead to the \gls{dpdp}, where the routing plan must be continuously updated in response to new requests. The \gls{dpdp} investigated in this study is formulated based on the  International Conference on Automated Planning and Scheduling in 2021 (ICAPS 2021)  challenge problem \cite{hao2022introduction}. The competition focuses on optimizing dynamic logistics operations where requests continuously appear during execution, vehicles have limited capacities, and service time windows must be respected. The ICAP benchmark provides a realistic and large-scale testbed that captures the stochastic and dynamic nature of real-world delivery systems, making it an ideal platform to evaluate algorithms. 
+In practical logistics systems, transportation requests are often not known in advance but arrive dynamically during operation. This gives rise to the \gls{dpdp}, in which routing decisions must be continuously adjusted as new requests become available. Consequently, recent studies have investigated various dynamic and real-time pickup-and-delivery settings to better address the uncertainty and changing operational conditions encountered in practical logistics systems \cite{jeong2024dynamic,wang2025multi,xiang2024centralized, zhou2024pickup}.
+
+The \gls{dpdp} investigated in this study is based specifically on the challenge problem introduced at the International Conference on Automated Planning and Scheduling 2021 (ICAPS 2021) \cite{hao2022introduction}. The competition considers large-scale dynamic logistics operations in which new requests arrive during execution and routing decisions must satisfy multiple operational constraints, including vehicle capacity and service time windows. The ICAPS 2021 benchmark therefore provides a practical testbed for evaluating optimization algorithms under large-scale and dynamically changing logistics conditions.
 
 The static routing algorithms struggle in dynamic environments due to their limited adaptability and computational efficiency. Due to the dynamic nature of the problem, where new requests frequently arise, the algorithm must provide rapid responses. Designing an algorithm that balances solution quality and computational speed in such a setting remains an open and challenging research question.
 
-Despite the extensive research on pickup and delivery problems and their dynamic variants, most existing solution approaches rely primarily on a single metaheuristic framework, such as \gls{vns} or evolutionary algorithms \cite{horvath2025recent, voigt2025review}. While these methods have achieved notable success in various problem settings, they exhibit inherent limitations when applied to large-scale, highly dynamic logistics environments. \gls{vns}-based methods are effective in performing local search and exploring multiple neighborhood structures to improve solution quality. However, they often lack global exploration capability, which can lead to local optima. Conversely,the evolutionary algorithm such as \gls{gas} offer strong global search capabilities through population-based evolution, but they may converge slowly and struggle to adjust solutions without additional local search mechanisms \cite{cai2024decomposition, wang2024hybrid}.
+Despite the extensive research on pickup and delivery problems and their dynamic variants, most existing solution approaches rely primarily on a single metaheuristic framework, such as \gls{vns} or evolutionary algorithms \cite{horvath2025recent, voigt2025review}. While these methods have achieved notable success in various problem settings, they exhibit inherent limitations when applied to large-scale, highly dynamic logistics environments. \gls{vns}-based methods are effective in performing local search and exploring multiple neighborhood structures to improve solution quality. However, they often lack global exploration capability, which can lead to local optima. Conversely, evolutionary algorithms such as \gls{gas} offer strong global search capabilities through population-based evolution, but they may converge slowly and struggle to adjust solutions without additional local search mechanisms \cite{cai2024decomposition, wang2024hybrid}.
 
-To address these challenges, we propose an adaptive genetic and variable neighborhood search algorithm that combines the global exploration ability of genetic algorithms with the intensive exploitation capability of local search. The proposed algorithm dynamically adjusts evolutionary parameters, such as the crossover probability based on real-time performance feedback of the search process. Additionally, a local search module is integrated to adjust promising solutions and enhance convergence toward high-quality routing plans. This hybrid adaptive mechanism enables the algorithm to effectively respond to dynamic changes while maintaining computational efficiency. We conduct extensive experiments on the ICAP 2021 benchmark datasets, demonstrating that our proposed method consistently outperforms baseline approaches in terms of solution quality, adaptability, and computational efficiency.
+To address these challenges, we propose an \gls{aglisa} framework specifically designed for the dynamic 
+characteristics of the DPDP. Rather than simply applying or combining conventional \gls{ga} and \gls{vns} operators, \gls{aglisa} introduces several mechanisms to exploit temporal information and dynamically adapt the search process. 
+The main contributions of this study are summarized as follows:
+
+\begin{itemize}
+
+\item Propose hybrid initialization exploiting historical routing information. A hybrid initialization mechanism is developed to construct a high-quality base solution by preserving still-valid routing decisions from the previous 
+planning period and efficiently incorporating newly arrived orders. Based on this base solution, a seed-and-perturbation strategy generates a diverse initial population by retaining the base solution as an elite seed while producing multiple feasible variants through perturbation of newly assigned 
+pickup--delivery pairs. This mechanism preserves useful historical information while maintaining sufficient population diversity for the subsequent search.
+
+\item Propose a problem-specific adaptive evolutionary search mechanism. The evolutionary stage incorporates several mechanisms specifically designed for the considered DPDP. A block-oriented crossover preserves meaningful pickup--delivery structures and maintains feasibility with respect to the associated operational constraints. In addition, an ERFC-based adaptive crossover mechanism adjusts the crossover probability according to the 
+number of currently unallocated requests, while the mutation strategy exploits historical operator-success information to guide the search. Together, these mechanisms allow the evolutionary process to adapt its search behavior to the changing problem state rather than relying on a fixed search strategy.
+
+\item Propose a two-stage evolutionary--VNS optimization framework. \gls{aglisa} organizes evolutionary search and variable neighborhood search as two complementary stages rather than simply embedding conventional local search within a genetic algorithm. The evolution stage performs population-level 
+global exploration, after which the VNS stage intensively refines the evolved solutions using multiple neighborhood structures. This separation enables the two search components to play distinct and complementary roles in balancing exploration and local exploitation.
+
+\item Conduct comprehensive evaluation on the original ICAPS 2021 DPDP.The proposed framework is extensively evaluated on the 64 benchmark instances from the original ICAPS 2021 DPDP competition. The experiments compare \gls{aglisa} with the competition-winning solvers and other relevant DPDP approaches, and further investigate the contribution of its major algorithmic components through ablation experiments.
+
+\end{itemize}
 
 
 The remainder of this paper is organized as follows. Section \ref{sec:problem} presents the formal problem definition and mathematical formulation. Section \ref{sec:related} reviews the existing literature on the ICAPS-DPDP.
-Section \ref{sec:proposed} introduces the proposed adaptive genetic and local search algorithm in detail. Section \ref{sec:exp} reports the experimental setup, benchmark results, and comparative analysis. Finally, Section \ref{sec:con} concludes the paper and outlines potential directions for future research.
+Section \ref{sec:proposed} introduces the proposed adaptive genetic and variable neighborhood search algorithm in detail. Section \ref{sec:exp} reports the experimental setup, benchmark results, and comparative analysis. Finally, Section \ref{sec:con} concludes the paper and outlines potential directions for future research.
 
-\section{Problem formulation}\label{sec:problem} 
+\section{Problem Definition}\label{sec:problem} 
 
 Our study considers a special variant of the ICAPS-DPDP, a central challenge in modern logistics. The problem involves dynamically assigning and routing a fleet of vehicles to serve customer requests that appear over time, while accounting for several real-world operational constraints. Specifically, vehicle capacities, time windows, loading rules, and limited docking facilities introduce complex interdependencies that directly affect service performance. Unlike traditional models, our formulation captures these operational realities with the goal of optimizing fleet routes to balance delivery delays and travel distance. To formally describe this problem, we outline its main components: input, output, constraints, and objectives.
 
@@ -160,8 +180,8 @@ The proposed model operates under a series of real-world constraints that govern
 \begin{equation}
     t_e ^i \leq a_d^i \leq t_l^i, \quad \forall i \in [1 , \dots,  N]
 \end{equation}
-
-    \item Order splitting is exclusively allowed for orders whose total volume surpasses a single vehicle's loading capacity. A critical constraint of this process is that the smallest units of cargo - a standard pallet, a small pallet, or a box—are not divisible. Therefore, these items cannot be split into their smaller constituent units (e.g., a standard pallet cannot be divided into two small pallets). In the dispatching phase, we operate on the assumption that any necessary order splitting has been preprocessed, and we deal directly with the resulting suborders, denoted as $o^i_h$. Each original order $o^i$ is thus assumed to have been partitioned into a set of $\mathcal{H} ^i$ suborders. The total demand for any given order $o^i$ is calculated using the following function:
+    
+    \item Order splitting is exclusively allowed for orders whose total volume surpasses a single vehicle's loading capacity. A critical constraint of this process is that the smallest units of cargo - a standard pallet, a small pallet, or a box-are not divisible. Therefore, these items cannot be split into their smaller constituent units (e.g., a standard pallet cannot be divided into two small pallets). In the dispatching phase, we operate on the assumption that any necessary order splitting has been preprocessed, and we deal directly with the resulting suborders, denoted as $o^i_h$. Each original order $o^i$ is thus assumed to have been partitioned into a set of $\mathcal{H} ^i$ suborders. The total demand for any given order $o^i$ is calculated using the following function:
 
 \begin{equation}
     \text{demand}(o^i) = q^i_{\text{standard}} + \frac{1}{2} q^i_{\text{small}} + \frac{1}{4} q^i_{\text{boxes}}
@@ -208,7 +228,7 @@ The gold-prize-winning algorithm of the ICAPS 2021 DPDP competition, referred to
 
 During each optimization phase, \gls{vnsme} employs four local search operators such as couple exchange, block-exchange, block relocate, and multi relocate to intensively explore the solution neighborhood. These operators cooperatively enhance solution efficiency by adjusting multiple routes and maintaining pickup–delivery precedence. To further prevent early convergence, the algorithm introduces an efficient disturbance mechanism based on a modified 2-opt-L operator, which introduces controlled perturbations for escaping local optima while preserving promising solution structures. The combined design allows VNSME to effectively balance exploration and exploitation, achieving high-quality solutions in a dynamic and computationally constrained environment. Experimental evaluations on the official Huawei DPDP benchmarks confirm its superior performance, where VNSME ranked first among 153 teams in the ICAPS 2021 DPDP competition.
 
-Despite its remarkable performance, the algorithm exhibits certain limitations. Specifically, its stochastic nature makes the results non-deterministic across runs, and the selection of local search operators remains manually tuned. Moreover, the algorithm lacks an adaptive component to dynamically adjust search parameters according to problem evolution. These limitations highlight potential directions for improvement, particularly through the integration of evolutionary adaptation or reinforcement learning mechanisms—a motivation that inspires the approach proposed in this paper.
+Despite its remarkable performance, the algorithm exhibits certain limitations. Specifically, its stochastic nature makes the results non-deterministic across runs, and the selection of local search operators remains manually tuned. Moreover, the algorithm lacks an adaptive component to dynamically adjust search parameters according to problem evolution. These limitations highlight potential directions for improvement, particularly through the integration of evolutionary adaptation or reinforcement learning mechanisms - a motivation that inspires the approach proposed in this paper.
 \subsubsection{Insertion method}
 The \gls{im}, which won the silver prize in the ICAPS 2021 DPDP competition, employs a heuristic strategy to generate feasible routing plans at each decision period. When new customer requests are arrived, the algorithm integrates them into existing vehicle routes using an insertion cost function that jointly considers travel distance, service time feasibility, and vehicle capacity. By prioritizing minimal disruption to current routes, IM ensures that new orders are accommodated efficiently while maintaining feasibility with respect to all operational constraints, including time windows and vehicle load limits. Despite its algorithmic simplicity, IM demonstrates strong adaptability and computational efficiency, making it particularly well-suited for real-time dynamic routing environments where rapid response is critical
 \subsubsection{Local search}
@@ -290,13 +310,13 @@ The derived plan is then implemented, yielding the subsequent update, while the 
 \begin{figure}[h!]
     \centering
     \makebox[\textwidth][c]{%
-        \includegraphics[width=1\linewidth]{figure/frame.png}%
+        \includegraphics[width=1\linewidth]{figure/fw.pdf}%
     }
     \caption{General framework}
     \label{fig:main_fig}
 \end{figure}
 
-Our proposed approach is divided into two main phases: the Evolution Stage and the \gls{vns} Stage, as illustrated in Figure~\ref{fig:main_fig}. At each re-optimization epoch, the algorithm receives (i) the set of unallocated orders $O_t$ (new and previously unserved requests), (ii) the previous routing solution $R_{t-1}$, and (iii) the current vehicle states $V_t$ (location, committed next node, and on-board load). The previous solution is first cleaned by removing all fully served, yielding a valid partial solution. Next, every new order whose demand exceeds vehicle capacity $Q$ is split into feasible sub-orders that retain the original pickup and delivery locations. The resulting set of requests, together with the partial routes and current vehicle states, is then passed to the hybrid initialization procedure to construct a feasible high-quality seed solution for the new static \gls{pdp} subproblem.
+Our proposed approach is divided into two main phases: the Evolution Stage and the \gls{vns} Stage, as illustrated in Figure~\ref{fig:main_fig}. At each re-optimization epoch, the algorithm receives (i) the set of unallocated orders $O_t$ (new and previously unserved requests), (ii) the previous routing solution $R_{t-1}$, and (iii) the current vehicle states $V_t$ (location, committed next node, and on-board load). The previous solution is first cleaned by removing all fully served, orders yielding a valid partial solution. Next, every new order whose demand exceeds vehicle capacity $Q$ is split into feasible sub-orders that retain the original pickup and delivery locations. The resulting set of requests, together with the partial routes and current vehicle states, is then passed to the hybrid initialization procedure to construct a feasible high-quality seed solution for the new static \gls{pdp} subproblem.
 
 The evolution stage begins by constructing a high quality seed solution \(x^0\) from the warm started partial routes using an advanced hybrid construction heuristic, then generates a diverse initial population of size \(p_{size}\) by repeatedly destroying a random fraction of requests in \(x^0\) and random reconstructing them. A steady state memetic loop is then executed: tournament selection forms the mating pool; for each of the \(p_{size}\) offspring, the adaptive crossover ratio decides whether to apply the block-oriented crossover or a destroy-and-reconstruct perturbation. After all offspring are generated, only the top-ranked subset undergoes adaptive mutation, where one of the four local search operators is selected using roulette-wheel selection based on their historical success rates. Each offspring replaces the worst population member if it is better, preserving elitism. The loop terminates when reaching the generation limit, time budget, or convergence, and the population is passed to the \gls{vns} Stage for final intensification.
 
@@ -320,7 +340,47 @@ Figure~\ref{fig:sol_repre} illustrates an example solution with three vehicles s
     \label{fig:sol_repre}
 \end{figure}
 
-\subsubsection{Population initialization}
+
+% \begin{algorithm}[ht!]
+% \caption{Hybrid Greedy Initialization Procedure}
+% \label{alg:initialization}
+% \SetAlgoLined
+% \LinesNumbered
+% \DontPrintSemicolon
+% \SetKwInOut{Input}{Input}
+% \SetKwInOut{Output}{Output}
+
+% \Input{
+%     $O_t^{new}$: set of new customer orders emerged in period $t$ \\
+%     $\{v^k\}_{k \in K}$: current state and remaining route of each vehicle \\
+%     $f(\cdot)$: objective function defined in \autoref{eq:f}\\
+% }
+% \Output{$x^0$: high-quality feasible initial solution}
+
+% $minCost$ $\leftarrow +\infty$\;
+% $x^0 \leftarrow$ repaired previous partial solution\;
+
+% \ForEach{new order $o^i \in O_t$}{
+%     \ForEach{vehicle $v^k \in K$}{
+%         $U_k \leftarrow$ set of unfinished nodes currently in the route of $v_k$\;
+        
+%         \eIf{$|U_k| + 2 \leq 8$}{
+%             Enumerate all feasible combination if $o^i$ is inserted into $v_k$\;
+            
+%             Let $x_{\min}^k$ be the insertion that yields the smallest value\;
+%             \If{$f(x_{\min}^k) < minCost$}{
+%                 $minCost$ $\leftarrow f(x_{\min}^k)$\;
+%                 Record the updated route of $v_k$ as the best temporary insertion\;
+%             }
+%         }{
+%             Perform cheapest feasible insertion of $o^i$ into $v_k$  \;
+%         }
+%     }
+%     Insert $o^i$ into best-found position \;
+%     Update solution $x^0$ \;
+% }
+% \Return $x^0$\;
+% \end{algorithm}
 
 
 \begin{algorithm}[ht!]
@@ -331,42 +391,75 @@ Figure~\ref{fig:sol_repre} illustrates an example solution with three vehicles s
 \DontPrintSemicolon
 \SetKwInOut{Input}{Input}
 \SetKwInOut{Output}{Output}
-
 \Input{
-    $O_t^{new}$: set of new customer orders emerged in period $t$ \\
+    $O_t^{new}$: set of new customer orders arriving at period $t$ \\
+    $x_{t-1}$: solution inherited from the previous period \\
     $\{v^k\}_{k \in K}$: current state and remaining route of each vehicle \\
-    $f(\cdot)$: objective function defined in \autoref{eq:f}\\
+    $f(\cdot)$: objective function defined in \autoref{eq:f}
 }
-\Output{$x^0$: high-quality feasible initial solution}
+\Output{$x^0$: a feasible initial solution}
 
-$minCost$ $\leftarrow +\infty$\;
-$x^0 \leftarrow$ repaired previous partial solution\;
+$x^0 \leftarrow$ repair $x_{t-1}$ according to the current system state\;
 
-\ForEach{new order $o^i \in O_t$}{
+\ForEach{new order $o^i \in O_t^{new}$}{
+    $bestCost \leftarrow +\infty$\;
+    $bestRoute \leftarrow \varnothing$\;
+    $bestVehicle \leftarrow \varnothing$\;
+
     \ForEach{vehicle $v^k \in K$}{
-        $U_k \leftarrow$ set of unfinished nodes currently in the route of $v_k$\;
-        
+        $U_k \leftarrow$ set of unfinished nodes in the current route of $v^k$\;
+
         \eIf{$|U_k| + 2 \leq 8$}{
-            Enumerate all feasible combination if $o^i$ is inserted into $v_k$\;
-            
-            Let $x_{\min}^k$ be the insertion that yields the smallest value\;
-            \If{$f(x_{\min}^k) < minCost$}{
-                $minCost$ $\leftarrow f(x_{\min}^k)$\;
-                Record the updated route of $v_k$ as the best temporary insertion\;
+            $\mathcal{C}_k \leftarrow$ all feasible insertions of the pickup 
+            and delivery nodes of $o^i$ into the route of $v^k$\;
+
+            \If{$\mathcal{C}_k \neq \varnothing$}{
+                $x_{\min}^k \leftarrow 
+                \arg\min_{x \in \mathcal{C}_k} f(x)$\;
+
+                \If{$f(x_{\min}^k) < bestCost$}{
+                    $bestCost \leftarrow f(x_{\min}^k)$\;
+                    $bestRoute \leftarrow$ route of $v^k$ in $x_{\min}^k$\;
+                    $bestVehicle \leftarrow k$\;
+                }
             }
         }{
-            Perform cheapest feasible insertion of $o^i$ into $v_k$  \;
+            $x_{\mathrm{cheap}}^k \leftarrow$ cheapest feasible insertion of 
+            $o^i$ into the route of $v^k$\;
+
+            \If{$x_{\mathrm{cheap}}^k \neq \varnothing$}{
+                \If{$f(x_{\mathrm{cheap}}^k) < bestCost$}{
+                    $bestCost \leftarrow f(x_{\mathrm{cheap}}^k)$\;
+                    $bestRoute \leftarrow$ route of $v^k$ in 
+                    $x_{\mathrm{cheap}}^k$\;
+                    $bestVehicle \leftarrow k$\;
+                }
+            }
         }
     }
-    Insert $o^i$ into best-found position \;
-    Update solution $x^0$ \;
+
+    \If{$bestVehicle \neq \varnothing$}{
+        Replace the route of $v^{bestVehicle}$ in $x^0$ by $bestRoute$\;
+    }
 }
+
 \Return $x^0$\;
 \end{algorithm}
+\subsubsection{Population initialization}
 
-Following the solution representation introduced in the previous subsection, the initial population for the evolution stage is carefully constructed to balance solution quality, feasibility, and diversity. This step is designed to generate a high-quality initial population by incorporating effective seeding strategies, thereby accelerating convergence toward superior solutions.
+Following the solution representation introduced in the previous subsection, the initialization procedure consists of two consecutive steps: constructing a high-quality base solution and generating a diverse initial population from 
+this solution. The objective is to preserve useful information from the current routing plan while introducing sufficient diversity for the subsequent evolutionary search.
 
-The procedure commences with the generation of a single high-quality base solution $x^0$ using a hybrid  construction heuristic, as outlined in algorithm~\ref{alg:initialization}. This heuristic sequentially assigns each new order $o^i \in O_t^{new}$ to the most suitable vehicle and position within its current partial route. To achieve this, for every vehicle $v^k$, the algorithm first assesses the complexity of the insertion: if the number of unfinished nodes in $v^k$'s route ($|U_k|$) plus the two nodes from $o^i$ is small (e.g., $\leq 8$), all possible feasible permutations for the pickup-delivery pairs are exhaustively enumerated. Feasibility is checked against precedence (pickup before delivery), capacity (no overload at any point), and time windows (if applicable), with the insertion yielding the minimal increase in the objective function $f(\cdot)$ - typically a weighted sum of travel distance, time, and delay penalties as defined in \autoref{eq:f}- being selected. For vehicles with longer routes where enumeration would be computationally prohibitive, a faster cheapest insertion heuristic is employed: the pickup and delivery nodes are inserted at positions that minimize the detour cost, computed via efficient distance lookups or approximations. Across all vehicles, the global best insertion (lowest $minCost$) is chosen for $o^i$, and the solution $x^0$ is updated accordingly. This hybrid approach ensures that $x^0$ is not only feasible but also competitive in quality, serving as an effective seed that inherits the strengths of the repaired previous solution.
+First, a base solution $x^0$ is constructed using the hybrid initialization procedure described in Algorithm~\ref{alg:initialization}. The procedure starts 
+from the repaired solution inherited from the previous period and sequentially incorporates the newly arrived orders. For each new order, candidate insertions are evaluated over the available vehicles. When the number of unfinished nodes in a vehicle route remains small, all feasible insertions of the corresponding pickup and delivery nodes are enumerated, and the candidate with the smallest 
+objective value is retained. For longer routes, where exhaustive enumeration becomes computationally expensive, a cheapest feasible insertion strategy is used instead. After evaluating all vehicles, the best candidate is selected and 
+the corresponding route is updated. Repeating this process for all newly arrived orders yields the feasible base solution $x^0$.
+
+Based on $x^0$, the initial population is then generated using a seed-and-perturbation strategy. Specifically, $N$ perturbed individuals are created from the base solution. For each individual, approximately $50\%$ of the newly assigned pickup--delivery pairs are randomly selected and removed from their current routes. Each removed pair is subsequently reinserted into a randomly selected vehicle and feasible pickup--delivery positions, while maintaining the pickup-before-delivery precedence and vehicle-capacity 
+constraints. The currently committed parts of the vehicle routes are preserved during this perturbation process. If a feasible random reinsertion cannot be identified within a predefined number of attempts, a systematic fallback search 
+is performed to identify a feasible insertion. This design ensures that the quality of the base solution is preserved while the perturbed individuals provide different vehicle assignments and insertion positions for newly arrived orders. Finally, all individuals are evaluated according to the objective 
+function $f(\cdot)$ and sorted by fitness, and the best individual is retained as the incumbent best solution before entering the evolution stage. Therefore, the proposed initialization mechanism achieves a balance between intensification, by preserving the high-quality base solution, and diversification, by generating 
+multiple feasible perturbations around it.
 
 % \begin{algorithm}[ht!]
 % \caption{Population Initialization}
@@ -547,61 +640,58 @@ The resulting function is \(C^\infty\)-smooth and requires only three intuitive 
     \label{fig:block_LS}
 \end{figure}
 
-The mutation phase employs four hierarchical, request-centric neighborhood operators specifically tailored for the pickup-and-delivery structure. Each operator treats a complete request (i.e., its full pickup-delivery sequence) as an indivisible unit, thereby preserving precedence and LIFO constraints by construction. The operators are illustrated in Figures~\ref{fig:couple_LS} and~\ref{fig:block_LS}.
+The mutation phase employs four request-centric neighborhood operators specifically tailored to the pickup-and-delivery structure: Couple-Exchange, Multi-Couple Relocate, Block-Exchange, and Block-Relocate. These operators manipulate complete pickup-delivery requests or feasible request blocks, thereby maintaining the structural relationships between pickup and delivery nodes during mutation. The four operators are illustrated in Figures~\ref{fig:couple_LS} and~\ref{fig:block_LS}.
 
 \begin{itemize}
-    \item \textbf{Couple-Exchange}  
-    Exhaustively evaluates all pairs of distinct requests in the current solution (regardless of vehicle assignment) and identifies the single best swap of their entire pickup-delivery sequences — simultaneously exchanging the pickup node(s) of one request with those of the other and the corresponding delivery node(s) (Figure~\ref{fig:couple_LS}, left). This deterministic best-swap strategy delivers highly effective load rebalancing and request reassignment in $O(n^2)$ time, where $m$ is the number of active requests.
+    \item \textbf{Couple-Exchange:} This operator considers pairs of distinct requests in the current solution, including requests assigned to different vehicles, and exchanges their complete pickup-delivery sequences. Candidate exchanges are evaluated subject to the problem constraints, and the best feasible improving exchange is retained (Figure~\ref{fig:couple_LS}, left).
 
-    \item \textbf{Multi-Couple Relocate }  
-    Performs a complete scan of the solution to detect every request whose relocation to any feasible position (same or different vehicle) would reduce the objective. All improving relocations are inserted into a priority queue ordered by expected gain. The best candidate is executed, the solution is updated, and the process repeats until no further improving move remains in the queue (Figure~\ref{fig:couple_LS}, right).
+    \item \textbf{Multi-Couple Relocate:} This operator examines the relocation of requests to alternative feasible positions within the same route or across different vehicle routes. Improving relocation candidates are evaluated according to their objective improvement, and promising relocations are successively applied while maintaining solution feasibility (Figure~\ref{fig:couple_LS}, right).
 
-    \item \textbf{Block-Exchange }  
-    Considers contiguous route segments (blocks) of arbitrary length, each starting with a pickup node and ending with the matching delivery node of the last request in the sequence. The operator enumerates all pairs of blocks and swaps them entirely (Figure~\ref{fig:block_LS}, left). This large-scale restructuring preserves high-quality internal sub-sequences while enabling dramatic reconfiguration of the solution.
+    \item \textbf{Block-Exchange:} This operator considers contiguous blocks of requests and exchanges two feasible blocks, either within the same route or between different vehicle routes. By manipulating groups of requests rather than individual nodes, the operator enables larger changes to the routing structure while retaining useful internal request sequences (Figure~\ref{fig:block_LS}, left).
 
-    \item \textbf{Block-Relocate}  
-    For each contiguous block, evaluates all feasible insertion positions (including within its original route) and relocates the block to the position offering the greatest cost reduction (Figure~\ref{fig:block_LS}, right). As the most disruptive neighborhood, it serves as an effective shaking mechanism when finer-grained operators stagnate.
+    \item \textbf{Block-Relocate:} This operator removes a contiguous request block from its current position and evaluates its relocation to alternative feasible positions. The feasible relocation providing the greatest improvement is selected, allowing larger portions of the routing plan to be reorganized when request-level modifications are insufficient (Figure~\ref{fig:block_LS}, right).
 \end{itemize}
 
-All four operators rely on incremental feasibility checks (capacity stack + LIFO simulation) and exhibit $O(m^2)$ (or $O(m^3)$ for LS2) worst-case complexity, where $m$ is the number of active requests. In high-dynamism epochs with $m \ge 400–500$, exhaustive exploration can exceed the strict per-epoch time budget.
+In the evolutionary stage, the four mutation operators are initialized with equal priority because no historical performance information is available. For each selected chromosome, the mutation operator is subsequently chosen using roulette-wheel selection based on its success history. Thus, all four operators initially have the same probability of being selected. During the evolutionary search, when a selected operator successfully improves a solution, its success counter is incremented, thereby increasing its probability of being selected in subsequent mutation operations. Each selected chromosome maintains its own success-history vector for the four operators, allowing the mutation mechanism to progressively favor operators that have been more effective for that solution lineage. Each selected mutation operator is executed within a strict per-operator time budget. The evolutionary stage is first completed, during which the success histories of the mutation operators are accumulated. Only after the termination of the evolutionary stage does the algorithm proceed to the VNS stage. The operator-performance information learned during evolution is then transferred to the VNS stage and used to initialize the neighborhood-search order, with historically better-performing operators receiving higher priority. Therefore, the information flow between the two stages is strictly sequential: the evolutionary stage learns operator-performance information, and the subsequent VNS stage exploits this information for further solution refinement.
 
-To preserve scalability, the same threshold $T$ defined for the adaptive crossover ratio (Section~\ref{sec:adap_cross}) is reused as a trigger for a fast request aggregation  procedure. Whenever $m \ge T$, requests that share identical pickup and delivery locations and appear consecutively (or nearly consecutively) in at least one current route are temporarily merged into a single super-request. The merged entity is treated as an indivisible unit during the subsequent local-search phase, significantly reducing the effective number of search entities while preserving the precedence and LIFO constraints exactly. Aggregation is completely reversed before the final solution is returned. This mechanism ensures that local-search operators remain computationally viable across the full spectrum of dynamic workloads encountered in large-scale real-world scenarios.
 
-% Mã giả
-% \begin{algorithm}[ht!]
-% \caption{Mutation Operator}
-% \label{alg:mutation}
-% \SetAlgoLined
-% \LinesNumbered
-% \DontPrintSemicolon
-% \SetKwInOut{Input}{Input}
-% \SetKwInOut{Output}{Output}
-
-% \Input{$x$: chromosome \\
-%        \texttt{x.score}: operator success counters \\
-%        $f(\cdot)$: objective function}
-
-% $\mathit{op} \leftarrow$ RouletteWheelSelect(\texttt{x.score}) \;
-% $x' \leftarrow \mathit{op}(x)$  \tcp[r]{Budget: \textbf{LS\_MAX\_TIME\_PER\_OP}}
-% \If{$f(x') < f(x)$}{
-%     $x \leftarrow x'$ \;
-%     \texttt{x.score[op]} $\leftarrow$ \texttt{x.score[op]} $+ 1$ \;
-% }
-% \end{algorithm}
-
-After each generation, the $p_{size}$ newly created offspring are merged with the current population, and the best $N$ individuals are retained (elitist steady-state replacement). Mutation is then applied selectively to only the top-$k$ ranked solutions in this updated population (typically $k \approx N/2$).
-
-Mutation operator is applied selectively to only the top-$k$ individuals of the updated population after elitist steady-state replacement. Each selected chromosome maintains a private success-history vector for the four operators; the next operator is chosen via roulette-wheel selection biased toward those that have historically yielded improvements for that lineage, and is executed exhaustively within a strict per-operator time budget, with its counter incremented upon success. This focused, self-adaptive mechanism concentrates intensive local improvement on the current elite set while automatically learning the most effective neighborhoods for each high-quality solution lineage — knowledge that is directly reused in the subsequent VNS stage to initialise the search order with the historically best-performing operators, thereby significantly accelerating final convergence without introducing any additional parameters.
 
 \subsection{Variable neighborhood search stage}
 The second component of our algorithm is the \gls{vns} stage, which is incorporated to further enhance the solution quality obtained from the evolutionary stage. Acting as an intensification mechanism, VNS systematically explores multiple neighborhood structures to escape local optima and refine routing plans. At the start of this stage, a set of unique, high-quality solutions is selected from the final evolved population to serve as distinct starting points for VNS; duplicates  are filtered out so that the search is applied to diverse promising regions of the solution space.
 
 The VNS framework iteratively applies a set of neighborhood operators, as illustrated in \autoref{fig:block_LS} and \autoref{fig:couple_LS}. For each neighborhood, a corresponding local search procedure is executed to perform fine-grained exploitation within that structure. When an improved solution is found, it replaces the current one and the search restarts from the first neighborhood; if no improvement is achieved, the procedure advances to the next neighborhood in the predefined sequence.
 
-The ordering of local search operators is dynamically adapted based on their self-improvement history during the evolutionary stage—operators that have produced more successful improvements are given higher priority. The VNS search for each selected individual terminates once none of the four operators can produce further improvements consecutively.
+The ordering of local search operators is dynamically adapted based on their self-improvement history during the evolutionary stage-operators that have produced more successful improvements are given higher priority. The VNS search for each selected individual terminates once none of the four operators can produce further improvements consecutively.
 
 By selecting distinct top-performing solutions and applying this intensive VNS refinement to each, the hybrid strategy balances focused exploitation with population-level diversity. This combination increases the likelihood of discovering high-quality solutions across different promising regions of the search space, which is particularly important for large-scale and time-constrained dynamic scenarios.
+\subsection{Computational Complexity Analysis}
 
+The computational complexity of \gls{aglisa} is analyzed with respect to the notation introduced in the problem formulation. Let $N$ denote the number of orders, $K$ the number of vehicles, and $l_k$ the number of unfinished 
+route nodes of vehicle $v^k$. For convenience, we define
+\[
+L=\max_{k=1,\ldots,K} l_k
+\]
+as the maximum route length at a re-optimization epoch. Furthermore, let $P$ denote the population size, $G$ the number of generations performed during the evolutionary stage, and $I$ the number of neighborhood-search 
+iterations performed during the VNS stage.
+
+The initialization phase consists of constructing the base solution and generating the initial population. For each newly arrived order, at most $K$ vehicle routes are examined. For a route containing at most $L$ unfinished nodes, evaluating all possible pickup--delivery insertion 
+positions requires at most $O(L^2)$ operations. The exhaustive enumeration used for short routes is bounded by the fixed threshold of eight nodes and therefore has constant asymptotic cost. Consequently, constructing the base solution requires at most $O(NKL^2)$ operations. Since $P$ perturbed individuals are subsequently generated from the base solution, the overall initialization complexity is bounded by
+\[
+O(PNKL^2).
+\]
+
+During the evolutionary stage, the computational cost is mainly determined by the population size, the number of generations, and the neighborhood-based evolutionary operators. Let $O(L^q)$ denote the worst-case complexity of the most expensive operator, where $q$ is determined by the corresponding neighborhood structure. The evolutionary stage therefore requires
+$O(GPL^q)$.
+The VNS stage employs a fixed number of neighborhood structures. Hence, its asymptotic complexity is dominated by the most expensive neighborhood operator. If $I$ neighborhood-search iterations are performed, the VNS stage 
+requires $O(IL^q)$.
+
+Combining these components, the overall worst-case computational complexity of \gls{aglisa} can be expressed as
+\[
+O\left(PNKL^2 + (GP+I)L^q\right).
+\]
+
+It should be noted that $G$ and $I$ are not unbounded in the considered dynamic setting. At each re-optimization epoch, both evolutionary search and VNS refinement are restricted by the fixed computational budget imposed by the ICAPS 2021 benchmark. Therefore, the above expression represents the 
+worst-case computational growth of the main search components, whereas the actual computation performed at each decision epoch is bounded by the available wall-clock time.
 
 \section{Experiments}\label{sec:exp}
 \subsection{Experimental settings}
@@ -698,13 +788,13 @@ To quantify the relative performance of our proposed algorithm with respect to a
 A positive \%imp indicates that the proposed algorithm achieves a lower objective value than the comparison method, with a larger positive value corresponding to a greater relative improvement. Conversely, a negative \%imp indicates that the comparison method achieves a lower objective value than the proposed algorithm. A value close to zero indicates comparable performance between the two methods. This metric provides a consistent measure for evaluating the relative performance of the proposed algorithm against both competing algorithms and its ablated variants.
 
 \subsubsection{Ablation study}
-To assess the contribution of each major component of the proposed algorithm, we conducted an ablation study by evaluating three variants: (i) Without Evolutionary Stage, which disables the evolutionary search component; (ii) Without the Adaptive Mechanism, which retains the evolutionary operators but removes the adaptive parameter control; and (iii) Full Algorithm (\gls{aglisa}), which includes all proposed components. The comparison was performed on all eight benchmark sets of the competition datasets.
+The ablation results in \autoref{tab:ablation} show that the contribution of the evolutionary stage and the adaptive mechanism varies across different problem scales. The full \gls{aglisa} achieves the best average objective values on Sets~2, 4, 6, 7, and 8, whereas the ablated variants show slightly better performance on some of the smaller or less challenging sets.
 
-Across all datasets, the full algorithm achieves the best average performance, demonstrating the necessity of integrating both evolutionary stage and adaptive mechanism. Removing the evolutionary stage generally leads to substantial performance degradation, especially on larger and more complex instances (Sets 2, 4, 6, 7, and 8), where the average cost increases by 23\%–93\%. Interestingly, for smaller datasets such as Sets 1 and 3, the lack of the evolutionary search leads to only minor degradation, and even slight improvement in Set 1. This reflects that small and stable instances do not require aggressive exploration, and local refinement alone can sometimes suffice. However, for real-world large-scale dynamic scenarios, the evolutionary operators are clearly essential.
+Removing the evolutionary stage has a limited effect on the smaller instances. In particular, the variant without the evolutionary stage performs 1.21\% better than the full algorithm on Set~1, while \gls{aglisa} performs only 1.03\% better on Set~3. In contrast, the benefit of the evolutionary stage becomes substantially more pronounced on Sets~2, 4, 6, 7, and 8, where \gls{aglisa} improves upon the corresponding ablated variant by 36.44\%, 30.78\%, 92.94\%, 67.25\%, and 23.30\%, respectively. These results suggest that the evolutionary stage is particularly beneficial as the problem scale and search complexity increase, where broader exploration of the solution space becomes more important.
 
-Removing the adaptive mechanism also results in considerable performance drops on most datasets, particularly on Sets 2, 4, 6, 7, and 8, where the gaps range from 15\% to over 90\%. This confirms that adaptive parameter tuning helps the algorithm adjust its search intensity according to the characteristics of each re-optimization period, which is crucial for handling large-scale dynamic scenarios. We also observe mild effects on Sets 1, 3, and 5. These smaller or less dynamic instances do not benefit as strongly from adaptive adjustments, likely because their solution structure is relatively stable across time intervals.
+A similar pattern can be observed for the adaptive mechanism. The variant without adaptation performs slightly better than the full algorithm on Sets~3 and~5, by 0.24\% and 0.45\%, respectively, while the difference on Set~1 is also small, with \gls{aglisa} achieving an improvement of only 0.38\%. However, the adaptive mechanism provides considerably greater benefits on Sets~2, 4, 6, 7, and 8, where \gls{aglisa} achieves improvements of 26.96\%, 28.94\%, 97.35\%, 93.62\%, and 46.35\%, respectively. This indicates that adaptive control becomes increasingly useful as the search conditions become more demanding.
 
-Overall, the results in \autoref{tab:ablation} clearly demonstrate that both components are essential, but their contributions differ depending on problem scale. The evolutionary stage provides the primary improvement for large and difficult instances, while the adaptive mechanism enhances robustness and consistency across dynamic settings. These findings validate the design choices of our algorithm and highlight the complementary roles of the two components.
+Overall, the ablation study indicates that the benefits of the evolutionary stage and the adaptive mechanism are problem-dependent rather than uniform across all benchmark sets. Their effects are relatively small, and occasionally slightly unfavorable, on some smaller sets, whereas both components provide substantial improvements on the larger and more challenging Sets~2, 4, 6, 7, and 8. These results support the complementary roles of evolutionary exploration and adaptive search control in improving the performance of \gls{aglisa}, particularly for more demanding DPDP instances.
 
 % \begin{table}[t]
 % \caption{Performance comparison of the full algorithm and its ablated variants on eight DPDP instance sets, where the \textit{imp} (\%) measures how much better the full algorithm performs compared to each ablated version.}
@@ -737,7 +827,8 @@ Overall, the results in \autoref{tab:ablation} clearly demonstrate that both com
 
 \begin{table}[h!]
 \centering
-\caption{Performance comparison of the full algorithm and its ablated variants on eight DPDP instance sets, where the \textit{imp} (\%) measures how much better the full algorithm performs compared to each ablated version.}
+%\caption{Performance comparison of the full algorithm and its ablated variants on eight DPDP instance sets, where the \textit{imp} (\%) measures how much better the full algorithm performs compared to each ablated version.}
+\caption{Performance comparison of the full algorithm and its ablated variants on eight DPDP instance sets. The \textit{imp} (\%) is calculated as $(f_{\mathrm{ablated}}-f_{\mathrm{AGVNS}})/f_{\mathrm{ablated}}\times100$, where a positive value indicates that AGVNS performs better, whereas a negative value indicates that the corresponding ablated variant performs better.}
 \label{tab:ablation}
 %\resizebox{\textwidth}{!}{
 \begin{tabular}{|l|rr|rr|r|}
@@ -835,15 +926,14 @@ The advantage becomes more pronounced in Set~2, where our method attains the low
 Set~3 shows a similar trend: \gls{aglisa} obtains the best result on six of the eight instances, namely HW17--HW19, HW21, HW23, and HW24. Although \gls{ma} provides the best results on HW20 and HW22, our method consistently outperforms both \gls{ga} and Evo-RL across all eight instances. In Set~4, \gls{aglisa} achieves the best objective value on seven of the eight instances, with \gls{ma} being the only method to obtain a better result on HW28. The differences are particularly noticeable on HW25--HW27 and HW29--HW32, where \gls{aglisa} obtains substantially lower objective values than \gls{ma}, \gls{ga}, Evo-RL, and the three ICAPS competition solvers.
 
 
-
-
-
-\begin{table}[h!]
+\begin{sidewaystable}[p]
 \centering
-\caption{Comparison of objective values obtained by different algorithms on Sets~1--4. 
-The best result for each instance is highlighted in bold.}
+\caption{Comparison of objective values obtained by different algorithms on Sets~1--4.
+Results with available variability information are reported as mean $\pm$ standard deviation.
+The best mean objective value for each instance is highlighted in bold.}
 \label{tab:results_set1_4}
-\setlength{\tabcolsep}{1.5pt}
+
+\setlength{\tabcolsep}{2.5pt}
 \scriptsize
 
 \begin{tabular}{l|r|r|r|r|r|r|r|r}
@@ -860,51 +950,119 @@ The best result for each instance is highlighted in bold.}
 \hline
 
 \multirow{8}{*}{\textbf{Set 1}}
-& HW1 & 134 & 2,300 & \textbf{130} & 133 & 5,689 & 184 & \textbf{130} \\
-& HW2 & 96 & 30,500 & 91 & 99 & 1,863 & 14,061 & \textbf{90} \\
-& HW3 & \textbf{97} & 35,800 & \textbf{97} & 100 & 15,079 & 7,534 & 102 \\
-& HW4 & 103 & 5,490 & 104 & 98 & 5,336 & 18,079 & \textbf{93} \\
-& HW5 & \textbf{4,070} & 16,900 & 8,000 & 5,346 & 14,307 & 29,422 & 5,446 \\
-& HW6 & \textbf{105} & 4,760 & 118 & 125 & 6,624 & 155 & 115 \\
-& HW7 & 10,338 & 12,800 & 7,360 & 10,419 & 17,173 & 6,019 & \textbf{3,941} \\
-& HW8 & 69 & 797 & 769 & 81 & 91 & 121 & \textbf{66} \\
+& HW1 & $134 \pm 2$ & $2,300$ & $\mathbf{130}$ & $133 \pm 4$ & $5,689 \pm 8,996$ & $184$ & $\mathbf{130 \pm 7}$ \\
+& HW2 & $96$ & $30,500$ & $91$ & $99 \pm 4$ & $1,863 \pm 3,929$ & $14,061$ & $\mathbf{90 \pm 3}$ \\
+& HW3 & $\mathbf{97}$ & $35,800$ & $\mathbf{97}$ & $100 \pm 3$ & $15,079 \pm 13,855$ & $7,534$ & $102$ \\
+& HW4 & $103 \pm 3$ & $5,490$ & $104$ & $98 \pm 5$ & $5,336 \pm 10,290$ & $18,079$ & $\mathbf{93 \pm 2}$ \\
+& HW5 & $\mathbf{4,070 \pm 2,750}$ & $16,900$ & $8,000$ & $5,346 \pm 2,432$ & $14,307 \pm 22,517$ & $29,422$ & $5,446 \pm 1$ \\
+& HW6 & $\mathbf{105}$ & $4,760$ & $118$ & $125 \pm 11$ & $6,624 \pm 9,269$ & $155$ & $115 \pm 4$ \\
+& HW7 & $10,338 \pm 7,285$ & $12,800$ & $7,360$ & $10,419 \pm 3,133$ & $17,173 \pm 15,908$ & $6,019$ & $\mathbf{3,941 \pm 188}$ \\
+& HW8 & $69 \pm 4$ & $797$ & $769$ & $81 \pm 1$ & $91 \pm 5$ & $121$ & $\mathbf{66 \pm 1}$ \\
 \hline
 
 \multirow{8}{*}{\textbf{Set 2}}
-& HW9  & 3,307 & 181,000 & 8,480 & 10,455 & 3,369 & 1,893,450 & \textbf{161} \\
-& HW10 & 194,000 & 1,770,000 & 187,000 & 282,591 & 185,812 & 5,441,250 & \textbf{115,319} \\
-& HW11 & 911 & 181,000 & 3,040 & 183 & 334 & 1,792,804 & \textbf{179} \\
-& HW12 & \textbf{14,975} & 567,000 & 84,200 & 66,153 & 60,821 & 2,883,993 & 17,826 \\
-& HW13 & 3,360 & 220,000 & 277 & 8,000 & 5,576 & 2,427,043 & \textbf{179} \\
-& HW14 & 18,163 & 237,000 & 7,820 & 4,863 & 2,152 & 2,063,379 & \textbf{167} \\
-& HW15 & 32,301 & 793,000 & 149,000 & 26,753 & 49,845 & 3,120,278 & \textbf{20,243} \\
-& HW16 & 51,313 & 854,000 & 57,800 & 123,255 & 37,105 & 1,835,311 & \textbf{14,528} \\
+& HW9  & $3,307 \pm 3,467$ & $181,000$ & $8,480$ & $10,455 \pm 5,816$ & $3,369 \pm 3,917$ & $1,893,450$ & $\mathbf{161 \pm 3}$ \\
+& HW10 & $194,000 \pm 20,320$ & $1,770,000$ & $187,000$ & $282,591 \pm 78,151$ & $185,812 \pm 69,029$ & $5,441,250$ & $\mathbf{115,319 \pm 11,894}$ \\
+& HW11 & $911 \pm 1,808$ & $181,000$ & $3,040$ & $183 \pm 12$ & $334 \pm 330$ & $1,792,804$ & $\mathbf{179 \pm 8}$ \\
+& HW12 & $\mathbf{14,975}$ & $567,000$ & $84,200$ & $66,153 \pm 18,852$ & $60,821 \pm 35,510$ & $2,883,993$ & $17,826 \pm 7,682$ \\
+& HW13 & $3,360 \pm 1,248$ & $220,000$ & $277$ & $8,000 \pm 7,165$ & $5,576 \pm 4,260$ & $2,427,043$ & $\mathbf{179 \pm 8}$ \\
+& HW14 & $18,163 \pm 9,199$ & $237,000$ & $7,820$ & $4,863 \pm 5,120$ & $2,152 \pm 2,862$ & $2,063,379$ & $\mathbf{167 \pm 4}$ \\
+& HW15 & $32,301 \pm 13,001$ & $793,000$ & $149,000$ & $26,753 \pm 17,237$ & $49,845 \pm 33,942$ & $3,120,278$ & $\mathbf{20,243 \pm 10,743}$ \\
+& HW16 & $51,313 \pm 11,994$ & $854,000$ & $57,800$ & $123,255 \pm 29,683$ & $37,105 \pm 13,516$ & $1,835,311$ & $\mathbf{14,528 \pm 2,772}$ \\
 \hline
 
 \multirow{8}{*}{\textbf{Set 3}}
-& HW17 & 85 & 96 & 411 & 97 & 103 & 32,426 & \textbf{84} \\
-& HW18 & 1,628 & 112 & 8,560 & 105 & 110 & 21,234 & \textbf{87} \\
-& HW19 & 1,260 & 478 & 4,150 & 128 & 140 & 155,324 & \textbf{112} \\
-& HW20 & 7,056 & 3,980 & 16,200 & \textbf{110} & 3,319 & 315,562 & 3,407 \\
-& HW21 & 2,396 & 2,340 & 18,500 & 124 & 130 & 341,059 & \textbf{104} \\
-& HW22 & 3,323 & 3,320 & 21,100 & \textbf{118} & 3,330 & 626,873 & 1,642 \\
-& HW23 & 106 & 6,870 & 809 & 118 & 128 & 531,793 & \textbf{104} \\
-& HW24 & 92 & 1,290 & 2,000 & 116 & 2,808 & 175,885 & \textbf{90} \\
+& HW17 & $85 \pm 1$ & $96$ & $411$ & $97 \pm 4$ & $103 \pm 3$ & $32,426$ & $\mathbf{84 \pm 2}$ \\
+& HW18 & $1,628 \pm 1,051$ & $112$ & $8,560$ & $105 \pm 4$ & $110 \pm 3$ & $21,234$ & $\mathbf{87 \pm 2}$ \\
+& HW19 & $1,260 \pm 469$ & $478$ & $4,150$ & $128 \pm 4$ & $140 \pm 14$ & $155,324$ & $\mathbf{112 \pm 5}$ \\
+& HW20 & $7,056 \pm 12,010$ & $3,980$ & $16,200$ & $\mathbf{110 \pm 6}$ & $3,319 \pm 3$ & $315,562$ & $3,407 \pm 116$ \\
+& HW21 & $2,396 \pm 2,920$ & $2,340$ & $18,500$ & $124 \pm 4$ & $130 \pm 3$ & $341,059$ & $\mathbf{104 \pm 2}$ \\
+& HW22 & $3,323 \pm 16$ & $3,320$ & $21,100$ & $\mathbf{118 \pm 6}$ & $3,330 \pm 2$ & $626,873$ & $1,642 \pm 2$ \\
+& HW23 & $106$ & $6,870$ & $809$ & $118 \pm 2$ & $128 \pm 8$ & $531,793$ & $\mathbf{104 \pm 2}$ \\
+& HW24 & $92$ & $1,290$ & $2,000$ & $116 \pm 5$ & $2,808 \pm 6,027$ & $175,885$ & $\mathbf{90 \pm 1}$ \\
 \hline
 
 \multirow{8}{*}{\textbf{Set 4}}
-& HW25 & 10,300 & 92,400 & 21,500 & 111,528 & 804,012 & 28,575,921 & \textbf{7,870} \\
-& HW26 & 10,659 & 275,000 & 54,000 & 787,265 & 1,291,075 & 27,865,777 & \textbf{8,535} \\
-& HW27 & 134 & 18,400 & 18,800 & 157 & 276,032 & 24,583,723 & \textbf{128} \\
-& HW28 & 7,138 & 9,440 & 14,900 & \textbf{6,593} & 119,598 & 21,538,275 & 7,153 \\
-& HW29 & 9,045 & 163,000 & 42,400 & 337,410 & 812,872 & 28,149,073 & \textbf{3,845} \\
-& HW30 & 119 & 74,000 & 21,100 & 132,071 & 1,090,247 & 24,306,417 & \textbf{114} \\
-& HW31 & 22,600 & 147,000 & 23,300 & 793,526 & 1,397,942 & 30,126,671 & \textbf{15,397} \\
-& HW32 & 7,670 & 60,400 & 19,600 & 117,743 & 821,471 & 29,692,418 & \textbf{5,793} \\
+& HW25 & $10,300 \pm 1,821$ & $92,400$ & $21,500$ & $111,528 \pm 35,413$ & $804,012 \pm 250,247$ & $28,575,921 \pm 193,846$ & $\mathbf{7,870 \pm 2,031}$ \\
+& HW26 & $10,659 \pm 3,386$ & $275,000$ & $54,000$ & $787,265 \pm 305,022$ & $1,291,075 \pm 377,243$ & $27,865,777 \pm 300,945$ & $\mathbf{8,535 \pm 2,154}$ \\
+& HW27 & $134 \pm 3$ & $18,400$ & $18,800$ & $157 \pm 7$ & $276,032 \pm 229,089$ & $24,583,723 \pm 91,792$ & $\mathbf{128 \pm 2}$ \\
+& HW28 & $7,138 \pm 1$ & $9,440$ & $14,900$ & $\mathbf{6,593 \pm 3,050}$ & $119,598 \pm 39,300$ & $21,538,275 \pm 178,327$ & $7,153 \pm 63$ \\
+& HW29 & $9,045 \pm 1,120$ & $163,000$ & $42,400$ & $337,410 \pm 238,039$ & $812,872 \pm 229,057$ & $28,149,073$ & $\mathbf{3,845 \pm 2,177}$ \\
+& HW30 & $119 \pm 1$ & $74,000$ & $21,100$ & $132,071 \pm 40,279$ & $1,090,247 \pm 461,312$ & $24,306,417 \pm 180,436$ & $\mathbf{114 \pm 4}$ \\
+& HW31 & $22,600 \pm 2,137$ & $147,000$ & $23,300$ & $793,526 \pm 244,423$ & $1,397,942 \pm 363,765$ & $30,126,671 \pm 326,438$ & $\mathbf{15,397 \pm 2,424}$ \\
+& HW32 & $7,670 \pm 1,825$ & $60,400$ & $19,600$ & $117,743 \pm 60,908$ & $821,471 \pm 276,521$ & $29,692,418 \pm 330,206$ & $\mathbf{5,793 \pm 111}$ \\
 \hline
 
 \end{tabular}
-\end{table}
+\end{sidewaystable}
+
+% \begin{table}[h!]
+% \centering
+% \caption{Comparison of objective values obtained by different algorithms on Sets~1--4. 
+% The best result for each instance is highlighted in bold.}
+% \label{tab:results_set1_4}
+% \setlength{\tabcolsep}{1.5pt}
+% \scriptsize
+
+% \begin{tabular}{l|r|r|r|r|r|r|r|r}
+% \hline
+% \textbf{Set}
+% & \textbf{Instance}
+% & \textbf{Gold}
+% & \textbf{Silver}
+% & \textbf{Bronze}
+% & \textbf{\gls{ma}}
+% & \textbf{\gls{ga}}
+% & \textbf{Evo-RL}
+% & \textbf{\gls{aglisa}} \\
+% \hline
+
+% \multirow{8}{*}{\textbf{Set 1}}
+% & HW1 & 134 & 2,300 & \textbf{130} & 133 & 5,689 & 184 & \textbf{130} \\
+% & HW2 & 96 & 30,500 & 91 & 99 & 1,863 & 14,061 & \textbf{90} \\
+% & HW3 & \textbf{97} & 35,800 & \textbf{97} & 100 & 15,079 & 7,534 & 102 \\
+% & HW4 & 103 & 5,490 & 104 & 98 & 5,336 & 18,079 & \textbf{93} \\
+% & HW5 & \textbf{4,070} & 16,900 & 8,000 & 5,346 & 14,307 & 29,422 & 5,446 \\
+% & HW6 & \textbf{105} & 4,760 & 118 & 125 & 6,624 & 155 & 115 \\
+% & HW7 & 10,338 & 12,800 & 7,360 & 10,419 & 17,173 & 6,019 & \textbf{3,941} \\
+% & HW8 & 69 & 797 & 769 & 81 & 91 & 121 & \textbf{66} \\
+% \hline
+
+% \multirow{8}{*}{\textbf{Set 2}}
+% & HW9  & 3,307 & 181,000 & 8,480 & 10,455 & 3,369 & 1,893,450 & \textbf{161} \\
+% & HW10 & 194,000 & 1,770,000 & 187,000 & 282,591 & 185,812 & 5,441,250 & \textbf{115,319} \\
+% & HW11 & 911 & 181,000 & 3,040 & 183 & 334 & 1,792,804 & \textbf{179} \\
+% & HW12 & \textbf{14,975} & 567,000 & 84,200 & 66,153 & 60,821 & 2,883,993 & 17,826 \\
+% & HW13 & 3,360 & 220,000 & 277 & 8,000 & 5,576 & 2,427,043 & \textbf{179} \\
+% & HW14 & 18,163 & 237,000 & 7,820 & 4,863 & 2,152 & 2,063,379 & \textbf{167} \\
+% & HW15 & 32,301 & 793,000 & 149,000 & 26,753 & 49,845 & 3,120,278 & \textbf{20,243} \\
+% & HW16 & 51,313 & 854,000 & 57,800 & 123,255 & 37,105 & 1,835,311 & \textbf{14,528} \\
+% \hline
+
+% \multirow{8}{*}{\textbf{Set 3}}
+% & HW17 & 85 & 96 & 411 & 97 & 103 & 32,426 & \textbf{84} \\
+% & HW18 & 1,628 & 112 & 8,560 & 105 & 110 & 21,234 & \textbf{87} \\
+% & HW19 & 1,260 & 478 & 4,150 & 128 & 140 & 155,324 & \textbf{112} \\
+% & HW20 & 7,056 & 3,980 & 16,200 & \textbf{110} & 3,319 & 315,562 & 3,407 \\
+% & HW21 & 2,396 & 2,340 & 18,500 & 124 & 130 & 341,059 & \textbf{104} \\
+% & HW22 & 3,323 & 3,320 & 21,100 & \textbf{118} & 3,330 & 626,873 & 1,642 \\
+% & HW23 & 106 & 6,870 & 809 & 118 & 128 & 531,793 & \textbf{104} \\
+% & HW24 & 92 & 1,290 & 2,000 & 116 & 2,808 & 175,885 & \textbf{90} \\
+% \hline
+
+% \multirow{8}{*}{\textbf{Set 4}}
+% & HW25 & 10,300 & 92,400 & 21,500 & 111,528 & 804,012 & 28,575,921 & \textbf{7,870} \\
+% & HW26 & 10,659 & 275,000 & 54,000 & 787,265 & 1,291,075 & 27,865,777 & \textbf{8,535} \\
+% & HW27 & 134 & 18,400 & 18,800 & 157 & 276,032 & 24,583,723 & \textbf{128} \\
+% & HW28 & 7,138 & 9,440 & 14,900 & \textbf{6,593} & 119,598 & 21,538,275 & 7,153 \\
+% & HW29 & 9,045 & 163,000 & 42,400 & 337,410 & 812,872 & 28,149,073 & \textbf{3,845} \\
+% & HW30 & 119 & 74,000 & 21,100 & 132,071 & 1,090,247 & 24,306,417 & \textbf{114} \\
+% & HW31 & 22,600 & 147,000 & 23,300 & 793,526 & 1,397,942 & 30,126,671 & \textbf{15,397} \\
+% & HW32 & 7,670 & 60,400 & 19,600 & 117,743 & 821,471 & 29,692,418 & \textbf{5,793} \\
+% \hline
+
+% \end{tabular}
+% \end{table}
 
 
 The results obtained on the large-scale benchmark Sets~5--8 highlight clear performance differences between our algorithm and the existing methods. Across Set~5, which contains medium-to-large instances with increasing complexity, \gls{aglisa} achieves the best objective values on six of the eight instances. In several cases (e.g., HW33, HW35, HW38, and HW40), \gls{aglisa} provides substantially lower objective values than the other considered approaches, particularly \gls{ma}, \gls{ga}, and Evo-RL. On HW37 and HW39, Silver and Gold, respectively, obtain better results than \gls{aglisa}. Overall, these results indicate that \gls{aglisa} remains effective as the instance size increases.
@@ -916,14 +1074,84 @@ In Sets~7--8, which contain the largest and most challenging instances, \gls{agl
 This decline in relative performance against the ICAPS competition solvers on the largest instances may be related to the design of \gls{aglisa}, which combines GA-based global exploration with VNS-based local improvement. As the problem size increases, the search space and neighborhood size grow substantially, potentially requiring more generations for global exploration and more computational effort for local improvement. Under the fixed computational budget, this may limit the ability of \gls{aglisa} to fully exploit its adaptive search mechanisms on the largest instances. These results therefore suggest that, while \gls{aglisa} performs effectively against the considered baseline methods, including Evo-RL, across all instance sizes, further improvements in search efficiency may be beneficial for the largest-scale scenarios.
 
 
-\begin{table}[htp]
+% \begin{table}[htp]
+% \centering
+% \caption{Objective values obtained by different algorithms on Sets~5--8.
+% The best result for each instance is highlighted in bold.
+% All objective values are reported in scientific notation.}
+% \label{tab:results_set5_8}
+
+% \setlength{\tabcolsep}{2pt}
+% \scriptsize
+
+% \begin{tabular}{l|r|r|r|r|r|r|r|r}
+% \hline
+% \textbf{Set}
+% & \textbf{Instance}
+% & \textbf{Gold}
+% & \textbf{Silver}
+% & \textbf{Bronze}
+% & \textbf{MA}
+% & \textbf{GA}
+% & \textbf{Evo-RL}
+% & \textbf{AGVNS} \\
+% \hline
+
+% \multirow{8}{*}{\textbf{Set 5}}
+% & HW33 & 3.67e3 & 7.03e3 & 9.50e4 & 9.99e4 & 3.15e6 & 3.00e7 & \textbf{7.40e1} \\
+% & HW34 & 1.11e4 & 1.05e4 & 5.44e4 & 3.51e4 & 2.80e6 & 3.24e7 & \textbf{5.91e3} \\
+% & HW35 & 3.48e3 & 1.58e4 & 1.04e5 & 7.25e4 & 3.30e6 & 3.64e7 & \textbf{2.66e3} \\
+% & HW36 & 1.75e4 & 2.32e4 & 1.13e5 & 1.41e5 & 3.13e6 & 3.75e7 & \textbf{1.68e4} \\
+% & HW37 & 1.12e4 & \textbf{5.14e3} & 9.57e4 & 2.40e5 & 4.29e6 & 3.58e7 & 1.16e4 \\
+% & HW38 & 1.65e4 & 3.01e4 & 9.42e4 & 5.38e4 & 3.20e6 & 3.57e7 & \textbf{1.49e4} \\
+% & HW39 & \textbf{2.03e4} & 2.23e4 & 8.52e4 & 1.69e5 & 2.69e6 & 3.55e7 & 2.04e4 \\
+% & HW40 & 1.34e4 & 2.43e4 & 1.17e5 & 6.44e5 & 3.25e6 & 3.14e7 & \textbf{1.13e4} \\
+% \hline
+
+% \multirow{8}{*}{\textbf{Set 6}}
+% & HW41 & 3.61e4 & 1.24e5 & 5.49e5 & 3.16e8 & 2.16e8 & 4.22e8 & \textbf{2.77e4} \\
+% & HW42 & \textbf{5.29e4} & 1.64e5 & 6.01e5 & 3.55e8 & 2.13e8 & 4.17e8 & 6.18e4 \\
+% & HW43 & 6.98e4 & 1.67e5 & 5.51e5 & 3.69e8 & 2.26e8 & 4.14e8 & \textbf{5.41e4} \\
+% & HW44 & 7.78e4 & 1.91e5 & 7.15e5 & 3.29e8 & 2.18e8 & 4.08e8 & \textbf{7.26e4} \\
+% & HW45 & \textbf{4.74e4} & 1.81e5 & 6.16e5 & 3.46e8 & 2.09e8 & 4.14e8 & 5.11e4 \\
+% & HW46 & 3.09e4 & 1.76e5 & 7.98e5 & 3.67e8 & 2.29e8 & 4.24e8 & \textbf{2.92e4} \\
+% & HW47 & 2.68e4 & 1.04e5 & 6.03e5 & 2.92e8 & 2.10e8 & 4.17e8 & \textbf{2.38e4} \\
+% & HW48 & 1.82e4 & 1.24e5 & 5.49e5 & 2.95e8 & 2.35e8 & 4.16e8 & \textbf{1.47e4} \\
+% \hline
+
+% \multirow{8}{*}{\textbf{Set 7}}
+% & HW49 & 1.58e6 & \textbf{1.18e6} & 1.59e6 & 7.02e8 & 5.84e8 & 9.15e8 & 1.65e6 \\
+% & HW50 & 9.31e5 & \textbf{5.72e5} & 2.51e6 & 7.17e8 & 5.82e8 & 8.86e8 & 1.37e6 \\
+% & HW51 & 2.84e5 & 5.15e5 & 1.34e6 & 6.58e8 & 5.55e8 & 8.92e8 & \textbf{2.64e5} \\
+% & HW52 & 7.61e5 & \textbf{4.48e5} & 2.03e6 & 6.95e8 & 5.84e8 & 9.19e8 & 1.45e6 \\
+% & HW53 & \textbf{1.34e5} & 3.17e5 & 1.93e6 & 6.92e8 & 6.00e8 & 9.55e8 & 2.79e5 \\
+% & HW54 & 2.07e6 & \textbf{1.63e6} & 2.00e6 & 7.02e8 & 5.58e8 & 8.97e8 & \textbf{1.80e6 }\\
+% & HW55 & 5.19e5 & 7.30e5 & 1.98e6 & 6.10e8 & 5.53e8 & 8.74e8 & \textbf{5.01e5} \\
+% & HW56 & 2.08e6 & \textbf{1.84e6} & 2.16e6 & 6.22e8 & 5.82e8 & 9.47e8 & \textbf{1.85e6 }\\
+% \hline
+
+% \multirow{8}{*}{\textbf{Set 8}}
+% & HW57 & \textbf{1.07e7} & 2.24e7 & 1.65e7 & 1.55e9 & 1.37e9 & 1.80e9 & 1.67e7 \\
+% & HW58 & \textbf{1.03e7} & 1.32e7 & 1.12e7 & 1.42e9 & 1.37e9 & 1.80e9 & 1.42e7 \\
+% & HW59 & \textbf{9.32e6} & 1.24e7 & 9.54e6 & 1.50e9 & 1.39e9 & 1.84e9 & 1.26e7 \\
+% & HW60 & \textbf{1.07e7} & 2.15e7 & 1.32e7 & 1.47e9 & 1.40e9 & 1.83e9 & 1.74e7 \\
+% & HW61 & \textbf{6.33e6} & 9.10e6 & 7.21e6 & 1.43e9 & 1.33e9 & 1.79e9 & 9.80e6 \\
+% & HW62 & 1.13e7 & 1.45e7 & \textbf{1.09e7} & 1.52e9 & 1.37e9 & 1.82e9 & 1.88e7 \\
+% & HW63 & \textbf{1.78e7} & 3.09e7 & 2.50e7 & 1.49e9 & 1.42e9 & 1.88e9 & 2.17e7 \\
+% & HW64 & 1.68e7 & 2.54e7 & 2.74e7 & 1.45e9 & 1.43e9 & 1.91e9 & \textbf{1.52e7} \\
+% \hline
+
+% \end{tabular}
+% \end{table}
+\begin{sidewaystable}[p]
 \centering
 \caption{Objective values obtained by different algorithms on Sets~5--8.
-The best result for each instance is highlighted in bold.
+Results with available variability information are reported as mean $\pm$ standard deviation.
+The best mean objective value for each instance is highlighted in bold.
 All objective values are reported in scientific notation.}
 \label{tab:results_set5_8}
 
-\setlength{\tabcolsep}{2pt}
+\setlength{\tabcolsep}{2.5pt}
 \scriptsize
 
 \begin{tabular}{l|r|r|r|r|r|r|r|r}
@@ -940,68 +1168,302 @@ All objective values are reported in scientific notation.}
 \hline
 
 \multirow{8}{*}{\textbf{Set 5}}
-& HW33 & 3.67e3 & 7.03e3 & 9.50e4 & 9.99e4 & 3.15e6 & 3.00e7 & \textbf{7.40e1} \\
-& HW34 & 1.11e4 & 1.05e4 & 5.44e4 & 3.51e4 & 2.80e6 & 3.24e7 & \textbf{5.91e3} \\
-& HW35 & 3.48e3 & 1.58e4 & 1.04e5 & 7.25e4 & 3.30e6 & 3.64e7 & \textbf{2.66e3} \\
-& HW36 & 1.75e4 & 2.32e4 & 1.13e5 & 1.41e5 & 3.13e6 & 3.75e7 & \textbf{1.68e4} \\
-& HW37 & 1.12e4 & \textbf{5.14e3} & 9.57e4 & 2.40e5 & 4.29e6 & 3.58e7 & 1.16e4 \\
-& HW38 & 1.65e4 & 3.01e4 & 9.42e4 & 5.38e4 & 3.20e6 & 3.57e7 & \textbf{1.49e4} \\
-& HW39 & \textbf{2.03e4} & 2.23e4 & 8.52e4 & 1.69e5 & 2.69e6 & 3.55e7 & 2.04e4 \\
-& HW40 & 1.34e4 & 2.43e4 & 1.17e5 & 6.44e5 & 3.25e6 & 3.14e7 & \textbf{1.13e4} \\
+& HW33 & $3.67e3 \pm 1.22e3$ & $7.03e3$ & $9.50e4$
+& $9.99e4 \pm 8.29e4$
+& $3.15e6 \pm 5.17e5$
+& $3.00e7 \pm 9.06e5$
+& $\mathbf{7.40e1 \pm 1.42e0}$ \\
+
+& HW34 & $1.11e4 \pm 2.07e3$ & $1.05e4$ & $5.44e4$
+& $3.51e4 \pm 2.70e4$
+& $2.80e6 \pm 5.47e5$
+& $3.24e7 \pm 6.18e5$
+& $\mathbf{5.91e3 \pm 3.78e3}$ \\
+
+& HW35 & $3.48e3 \pm 1.39e3$ & $1.58e4$ & $1.04e5$
+& $7.25e4 \pm 5.53e4$
+& $3.30e6 \pm 2.56e5$
+& $3.64e7 \pm 8.83e5$
+& $\mathbf{2.66e3 \pm 1.72e3}$ \\
+
+& HW36 & $1.75e4 \pm 4.64e2$ & $2.32e4$ & $1.13e5$
+& $1.41e5 \pm 1.48e4$
+& $3.13e6 \pm 3.02e5$
+& $3.75e7 \pm 5.12e5$
+& $\mathbf{1.68e4 \pm 1.49e3}$ \\
+
+& HW37 & $1.12e4 \pm 1.31e3$ & $\mathbf{5.14e3}$ & $9.57e4$
+& $2.40e5 \pm 1.04e5$
+& $4.29e6 \pm 2.02e6$
+& $3.58e7 \pm 8.01e5$
+& $1.16e4 \pm 1.13e3$ \\
+
+& HW38 & $1.65e4 \pm 4.60e3$ & $3.01e4$ & $9.42e4$
+& $5.38e4 \pm 3.09e4$
+& $3.20e6 \pm 5.05e5$
+& $3.57e7 \pm 9.13e5$
+& $\mathbf{1.49e4 \pm 3.14e3}$ \\
+
+& HW39 & $\mathbf{2.03e4 \pm 5.24e2}$ & $2.23e4$ & $8.52e4$
+& $1.69e5 \pm 1.06e5$
+& $2.69e6 \pm 4.30e5$
+& $3.55e7 \pm 1.04e6$
+& $2.04e4 \pm 5.95e2$ \\
+
+& HW40 & $1.34e4 \pm 2.99e2$ & $2.43e4$ & $1.17e5$
+& $6.44e5 \pm 4.24e5$
+& $3.25e6 \pm 5.95e5$
+& $3.14e7 \pm 6.36e5$
+& $\mathbf{1.13e4 \pm 1.27e3}$ \\
 \hline
 
 \multirow{8}{*}{\textbf{Set 6}}
-& HW41 & 3.61e4 & 1.24e5 & 5.49e5 & 3.16e8 & 2.16e8 & 4.22e8 & \textbf{2.77e4} \\
-& HW42 & \textbf{5.29e4} & 1.64e5 & 6.01e5 & 3.55e8 & 2.13e8 & 4.17e8 & 6.18e4 \\
-& HW43 & 6.98e4 & 1.67e5 & 5.51e5 & 3.69e8 & 2.26e8 & 4.14e8 & \textbf{5.41e4} \\
-& HW44 & 7.78e4 & 1.91e5 & 7.15e5 & 3.29e8 & 2.18e8 & 4.08e8 & \textbf{7.26e4} \\
-& HW45 & \textbf{4.74e4} & 1.81e5 & 6.16e5 & 3.46e8 & 2.09e8 & 4.14e8 & 5.11e4 \\
-& HW46 & 3.09e4 & 1.76e5 & 7.98e5 & 3.67e8 & 2.29e8 & 4.24e8 & \textbf{2.92e4} \\
-& HW47 & 2.68e4 & 1.04e5 & 6.03e5 & 2.92e8 & 2.10e8 & 4.17e8 & \textbf{2.38e4} \\
-& HW48 & 1.82e4 & 1.24e5 & 5.49e5 & 2.95e8 & 2.35e8 & 4.16e8 & \textbf{1.47e4} \\
+& HW41 & $3.61e4 \pm 3.39e3$ & $1.24e5$ & $5.49e5$
+& $3.16e8 \pm 2.47e7$
+& $2.16e8 \pm 4.99e6$
+& $4.22e8 \pm 5.54e6$
+& $\mathbf{2.77e4 \pm 5.96e3}$ \\
+
+& HW42 & $\mathbf{5.29e4 \pm 1.26e4}$ & $1.64e5$ & $6.01e5$
+& $3.55e8 \pm 3.74e7$
+& $2.13e8 \pm 4.95e6$
+& $4.17e8 \pm 2.80e6$
+& $6.18e4 \pm 2.82e4$ \\
+
+& HW43 & $6.98e4 \pm 2.95e4$ & $1.67e5$ & $5.51e5$
+& $3.69e8 \pm 2.12e7$
+& $2.26e8 \pm 1.79e7$
+& $4.14e8 \pm 7.69e6$
+& $\mathbf{5.41e4 \pm 1.53e4}$ \\
+
+& HW44 & $7.78e4 \pm 1.60e4$ & $1.91e5$ & $7.15e5$
+& $3.29e8 \pm 2.05e7$
+& $2.18e8 \pm 1.37e7$
+& $4.08e8 \pm 2.16e6$
+& $\mathbf{7.26e4 \pm 2.08e4}$ \\
+
+& HW45 & $\mathbf{4.74e4 \pm 3.15e4}$ & $1.81e5$ & $6.16e5$
+& $3.46e8 \pm 3.03e7$
+& $2.09e8 \pm 6.26e6$
+& $4.14e8 \pm 5.60e6$
+& $5.11e4 \pm 2.26e4$ \\
+
+& HW46 & $3.09e4 \pm 7.10e3$ & $1.76e5$ & $7.98e5$
+& $3.67e8 \pm 2.69e7$
+& $2.29e8 \pm 1.91e7$
+& $4.24e8 \pm 4.50e6$
+& $\mathbf{2.92e4 \pm 1.20e4}$ \\
+
+& HW47 & $2.68e4 \pm 3.57e3$ & $1.04e5$ & $6.03e5$
+& $2.92e8 \pm 1.74e7$
+& $2.10e8 \pm 1.14e7$
+& $4.17e8 \pm 3.52e6$
+& $\mathbf{2.38e4 \pm 2.02e3}$ \\
+
+& HW48 & $1.82e4 \pm 5.06e3$ & $1.24e5$ & $5.49e5$
+& $2.95e8 \pm 2.41e7$
+& $2.35e8 \pm 1.51e7$
+& $4.16e8 \pm 4.08e6$
+& $\mathbf{1.47e4 \pm 1.44e3}$ \\
 \hline
 
 \multirow{8}{*}{\textbf{Set 7}}
-& HW49 & 1.58e6 & \textbf{1.18e6} & 1.59e6 & 7.02e8 & 5.84e8 & 9.15e8 & 1.65e6 \\
-& HW50 & 9.31e5 & \textbf{5.72e5} & 2.51e6 & 7.17e8 & 5.82e8 & 8.86e8 & 1.37e6 \\
-& HW51 & 2.84e5 & 5.15e5 & 1.34e6 & 6.58e8 & 5.55e8 & 8.92e8 & \textbf{2.64e5} \\
-& HW52 & 7.61e5 & \textbf{4.48e5} & 2.03e6 & 6.95e8 & 5.84e8 & 9.19e8 & 1.45e6 \\
-& HW53 & \textbf{1.34e5} & 3.17e5 & 1.93e6 & 6.92e8 & 6.00e8 & 9.55e8 & 2.79e5 \\
-& HW54 & 2.07e6 & \textbf{1.63e6} & 2.00e6 & 7.02e8 & 5.58e8 & 8.97e8 & 1.80e6 \\
-& HW55 & 5.19e5 & 7.30e5 & 1.98e6 & 6.10e8 & 5.53e8 & 8.74e8 & \textbf{5.01e5} \\
-& HW56 & 2.08e6 & \textbf{1.84e6} & 2.16e6 & 6.22e8 & 5.82e8 & 9.47e8 & 1.85e6 \\
+& HW49 & $1.58e6 \pm 3.40e5$ & $\mathbf{1.18e6}$ & $1.59e6$
+& $7.02e8 \pm 6.48e7$
+& $5.84e8 \pm 1.14e7$
+& $9.15e8 \pm 5.10e6$
+& $1.65e6 \pm 4.22e4$ \\
+
+& HW50 & $9.31e5 \pm 3.10e5$ & $\mathbf{5.72e5}$ & $2.51e6$
+& $7.17e8 \pm 6.56e7$
+& $5.82e8 \pm 1.01e7$
+& $8.86e8 \pm 1.16e7$
+& $1.37e6 \pm 1.65e5$ \\
+
+& HW51 & $2.84e5 \pm 1.26e5$ & $5.15e5$ & $1.34e6$
+& $6.58e8 \pm 6.08e7$
+& $5.55e8 \pm 1.17e7$
+& $8.92e8 \pm 5.38e6$
+& $\mathbf{2.64e5 \pm 8.16e4}$ \\
+
+& HW52 & $7.61e5 \pm 2.22e5$ & $\mathbf{4.48e5}$ & $2.03e6$
+& $6.95e8 \pm 6.05e7$
+& $5.84e8 \pm 9.10e6$
+& $9.19e8 \pm 1.52e6$
+& $1.45e6 \pm 1.29e5$ \\
+
+& HW53 & $\mathbf{1.34e5 \pm 2.10e5}$ & $3.17e5$ & $1.93e6$
+& $6.92e8 \pm 6.08e7$
+& $6.00e8 \pm 8.34e6$
+& $9.55e8 \pm 6.26e6$
+& $2.79e5 \pm 1.07e5$ \\
+
+& HW54 & $2.07e6 \pm 1.40e5$ & $\mathbf{1.63e6}$ & $2.00e6$
+& $7.02e8 \pm 4.09e7$
+& $5.58e8 \pm 1.68e7$
+& $8.97e8 \pm 7.42e6$
+& $1.80e6 \pm 2.52e5$ \\
+
+& HW55 & $5.19e5 \pm 1.31e5$ & $7.30e5$ & $1.98e6$
+& $6.10e8 \pm 3.25e7$
+& $5.53e8 \pm 6.38e6$
+& $8.74e8 \pm 2.13e6$
+& $\mathbf{5.01e5 \pm 6.45e4}$ \\
+
+& HW56 & $2.08e6 \pm 2.07e5$ & $\mathbf{1.84e6}$ & $2.16e6$
+& $6.22e8 \pm 3.02e7$
+& $5.82e8 \pm 1.37e7$
+& $9.47e8 \pm 1.14e6$
+& $1.85e6 \pm 1.32e5$ \\
 \hline
 
 \multirow{8}{*}{\textbf{Set 8}}
-& HW57 & \textbf{1.07e7} & 2.24e7 & 1.65e7 & 1.55e9 & 1.37e9 & 1.80e9 & 1.67e7 \\
-& HW58 & \textbf{1.03e7} & 1.32e7 & 1.12e7 & 1.42e9 & 1.37e9 & 1.80e9 & 1.42e7 \\
-& HW59 & \textbf{9.32e6} & 1.24e7 & 9.54e6 & 1.50e9 & 1.39e9 & 1.84e9 & 1.26e7 \\
-& HW60 & \textbf{1.07e7} & 2.15e7 & 1.32e7 & 1.47e9 & 1.40e9 & 1.83e9 & 1.74e7 \\
-& HW61 & \textbf{6.33e6} & 9.10e6 & 7.21e6 & 1.43e9 & 1.33e9 & 1.79e9 & 9.80e6 \\
-& HW62 & 1.13e7 & 1.45e7 & \textbf{1.09e7} & 1.52e9 & 1.37e9 & 1.82e9 & 1.88e7 \\
-& HW63 & \textbf{1.78e7} & 3.09e7 & 2.50e7 & 1.49e9 & 1.42e9 & 1.88e9 & 2.17e7 \\
-& HW64 & 1.68e7 & 2.54e7 & 2.74e7 & 1.45e9 & 1.43e9 & 1.91e9 & \textbf{1.52e7} \\
+& HW57 & $\mathbf{1.07e7 \pm 5.09e5}$ & $2.24e7$ & $1.65e7$
+& $1.55e9 \pm 8.32e7$
+& $1.37e9 \pm 2.33e7$
+& $1.80e9 \pm 1.41e7$
+& $1.67e7 \pm 8.64e5$ \\
+
+& HW58 & $\mathbf{1.03e7 \pm 2.06e6}$ & $1.32e7$ & $1.12e7$
+& $1.42e9 \pm 9.95e7$
+& $1.37e9 \pm 1.00e7$
+& $1.80e9 \pm 8.52e6$
+& $1.42e7 \pm 3.30e5$ \\
+
+& HW59 & $\mathbf{9.32e6 \pm 6.39e5}$ & $1.24e7$ & $9.54e6$
+& $1.50e9 \pm 2.86e7$
+& $1.39e9 \pm 1.23e7$
+& $1.84e9 \pm 9.95e6$
+& $1.26e7 \pm 7.45e5$ \\
+
+& HW60 & $\mathbf{1.07e7 \pm 5.03e5}$ & $2.15e7$ & $1.32e7$
+& $1.47e9 \pm 4.89e7$
+& $1.40e9 \pm 1.66e7$
+& $1.83e9 \pm 1.64e7$
+& $1.74e7 \pm 5.63e5$ \\
+
+& HW61 & $\mathbf{6.33e6 \pm 1.44e6}$ & $9.10e6$ & $7.21e6$
+& $1.43e9 \pm 1.26e8$
+& $1.33e9 \pm 5.66e6$
+& $1.79e9 \pm 6.63e6$
+& $9.80e6 \pm 1.00e6$ \\
+
+& HW62 & $1.13e7 \pm 6.16e5$ & $1.45e7$ & $\mathbf{1.09e7}$
+& $1.52e9 \pm 1.35e8$
+& $1.37e9 \pm 2.03e7$
+& $1.82e9 \pm 5.67e6$
+& $1.88e7 \pm 1.98e6$ \\
+
+& HW63 & $\mathbf{1.78e7 \pm 2.96e6}$ & $3.09e7$ & $2.50e7$
+& $1.49e9 \pm 1.56e8$
+& $1.42e9 \pm 2.84e7$
+& $1.88e9 \pm 1.12e7$
+& $2.17e7 \pm 9.25e5$ \\
+
+& HW64 & $1.68e7 \pm 1.55e6$ & $2.54e7$ & $2.74e7$
+& $1.45e9 \pm 8.52e7$
+& $1.43e9 \pm 1.33e7$
+& $1.91e9 \pm 1.47e7$
+& $\mathbf{1.52e7 \pm 7.52e5}$ \\
 \hline
 
 \end{tabular}
-\end{table}
-
+\end{sidewaystable}
 
 \subsubsection{Statistical Validation}
 
+% To rigorously evaluate the significance of the performance differences observed across the 64 benchmark instances, a series of non-parametric statistical tests was conducted following the established methodology of Derrac et al.~\cite{DERRAC20113} and Garc\'{i}a et al.~\cite{GARCIA20102044}.
+
+% \begin{table}[htp]
+% \centering
+% \caption{Friedman test and mean ranks (64 instances, 6 algorithms)}
+% \label{tab:friedman}
+%  %\resizebox{0.7\textwidth}{!}{  
+% \begin{tabular}{lcc}
+% \toprule
+% Test & Statistic & p-value \\
+% \midrule
+% Friedman Test               & 7.000 & 4.91 $\times$ 10$^{-12}$ \\
+% Friedman Aligned Ranks Test & 9259.89 & $<$ 10$^{-100}$ \\
+% \midrule
+% Algorithm   & Mean Rank & Ranking \\
+% \midrule
+% \gls{aglisa}      & \textbf{1.703} & 1 \\
+% Gold        & 2.313          & 2 \\
+% Silver      & 3.797          & 3.5 \\
+% Bronze      & 3.797          & 3.5 \\
+% MA          & 4.516          & 5 \\
+% GA          & 4.875          & 6 \\
+% \bottomrule
+% \end{tabular}%}
+% \end{table}
+
+% The Friedman test revealed highly significant differences among the six compared algorithms ($\chi^2 = 7.000$, $p = 4.91 \times 10^{-12}$). The more sensitive Friedman Aligned Ranks test reinforced this conclusion with a statistic of 9259.89 and $p < 10^{-100}$ (\autoref{tab:friedman}). According to the mean ranks, \gls{aglisa} achieved the best overall ranking (1.703), clearly outperforming the ICAPS 2021 Gold medalist (2.313) and leaving the remaining competitors far behind.
+
+% \begin{table}[htp]
+% \centering
+% \caption{Holm post-hoc analysis (\gls{aglisa} as control, $\alpha$=0.05)}
+% \label{tab:holm}
+%  %\resizebox{0.7\textwidth}{!}{  
+% \begin{tabular}{lcccc}
+% \toprule
+% Competitor & W-statistic & unadjusted p & Holm $\alpha_i$ & H$_0$ rejected? \\
+% \midrule
+% GA         & 7   & 4.91$\times$10$^{-12}$ & 0.0100 & Yes \\
+% MA         & 67  & 7.67$\times$10$^{-11}$ & 0.0125 & Yes \\
+% Bronze     & 381 & 1.05$\times$10$^{-5}$  & 0.0167 & Yes \\
+% Silver     & 458 & 9.94$\times$10$^{-5}$  & 0.0250 & Yes \\
+% Gold       & 823 & 0.1467                 & 0.0500 & No  \\
+% \bottomrule
+% \end{tabular}%}
+% \end{table}
+
+% A post-hoc analysis using the Holm procedure with \gls{aglisa} as the control method ($\alpha = 0.05$) was then applied (\autoref{tab:holm}). The null hypothesis of equivalent performance was rejected for GA, MA, Bronze, and Silver (all Holm-adjusted $p \leq 0.025$), confirming that \gls{aglisa} is statistically superior to these four baselines. Importantly, although the comparison with the Gold solver did not reach significance after the conservative Holm correction ($p = 0.147$), the results strongly support the effectiveness of the adaptive mechanism embedded in \gls{aglisa}. Specifically, \gls{aglisa} produced better solutions than Gold on 44 out of 64 instances (68.8\%), illustrating that the adaptive interplay between evolutionary search and VNS allows the algorithm to inherit the large-instance intensification ability of VNS while maintaining strong exploratory behavior on smaller instances.
+
+% \begin{table}[htbp]
+% \centering
+% \caption{Wilcoxon signed-rank test (one-sided: \gls{aglisa} better than competitor)}
+% \label{tab:wilcoxon}
+%  %\resizebox{0.8\textwidth}{!}{  
+% \begin{tabular}{lcccc}
+% \toprule
+% vs. Competitor & \gls{aglisa} wins & Ties & W-statistic & p-value \\
+% \midrule
+% GA             & 63 & 1  & 7   & 2.45$\times$10$^{-12}$ \\
+% MA             & 59 & 5  & 67  & 3.83$\times$10$^{-11}$ \\
+% Bronze         & 55 & 9  & 381 & 5.24$\times$10$^{-6}$ \\
+% Silver         & 54 & 10 & 458 & 4.97$\times$10$^{-5}$ \\
+% Gold           & 44 & 20 & 823 & 0.0734 (n.s.) \\
+% \bottomrule
+% \end{tabular}%}
+% \end{table}
+
+% The one-sided pairwise Wilcoxon signed-rank tests (\autoref{tab:wilcoxon}) further reinforced this conclusion. \gls{aglisa} significantly outperformed Silver ($p = 4.97 \times 10^{-5}$), Bronze ($p = 5.24 \times 10^{-6}$), MA ($p = 3.83 \times 10^{-11}$), and GA ($p = 2.45 \times 10^{-12}$).
+% The comparison against Gold yielded $p = 0.0734$, again reflecting that while the difference is not statistically significant under strict correction, the adaptive search scheme consistently leads \gls{aglisa} to surpass Gold on the majority of test cases. This pattern empirically demonstrates that the adaptive balance between global exploration and local intensification enables \gls{aglisa} to perform competitively even relative to the top-ranked ICAPS 2021 winner across both small and large instances.
+
+% Taken together, these statistical tests provide compelling evidence that \gls{aglisa} delivers significantly superior solution quality compared to four out of five state-of-the-art baselines while remaining on par with the best existing dynamic PDP solver across a diverse and challenging benchmark suite.
+
 To evaluate whether the observed performance differences are statistically
 supported, a series of non-parametric tests was applied to the objective
-value obtained by each algorithm on each of the 64 benchmark
-instances, following the established methodology of Derrac
+value obtained by each algorithm on each of the 64 benchmark instances,
+following the established methodology of Derrac
 et al.~\cite{DERRAC20113} and Garc\'{i}a et al.~\cite{GARCIA20102044}.
 The analysis includes all seven methods reported in the main result tables:
-\gls{aglisa}, Gold, Silver, Bronze, \gls{ma}, \gls{ga}, and Evo-RL. In the
-tables below, $\chi^2$ denotes the Friedman test statistic, $W$ denotes the
-one-sided Wilcoxon signed-rank statistic for the alternative that AGVNS has
-lower objective values, and Holm-adjusted $p$-values control the family-wise
-error rate across the six pairwise comparisons at $\alpha = 0.05$. Tied
-objective values are retained in the win/tie/loss counts and are omitted from
-the Wilcoxon rank calculation.
+\gls{aglisa}, Gold, Silver, Bronze, \gls{ma}, \gls{ga}, and Evo-RL. Each
+instance is treated as one matched block, with lower objective values ranked
+better. The Friedman test is applied to the within-instance ranks, and its
+$p$-value uses the tie-corrected asymptotic $\chi^2$ approximation.
+
+For each pairwise comparison, the difference is defined as
+$d_i = f_{\mathrm{AGVNS},i} - f_{\mathrm{competitor},i}$, and the one-sided
+alternative is $d_i < 0$. The Wilcoxon signed-rank statistic $W$ uses the
+Wilcoxon zero-difference rule: exact objective ties are retained in the
+win/tie/loss counts but omitted from the rank calculation, while tied absolute
+differences receive average ranks. The reported Wilcoxon $p$-values use the
+asymptotic normal approximation without continuity correction. Holm-adjusted
+$p$-values control the family-wise error rate across the six pairwise
+comparisons at $\alpha = 0.05$. These tests summarize the 64 displayed
+per-instance objective values and do not estimate run-to-run variability.
 
 \begin{table}[htp]
 \centering
@@ -1036,7 +1498,7 @@ benchmark instances.
 
 \begin{table}[htp]
 \centering
-\caption[Holm-adjusted pairwise analysis]{Holm-adjusted pairwise analysis (AGVNS as control, $\alpha$=0.05)}
+\caption[Holm-adjusted pairwise analysis]{Holm-adjusted pairwise analysis of asymptotic one-sided Wilcoxon tests (AGVNS as control, $\alpha$=0.05)}
 \label{tab:holm}
 \begin{tabular*}{0.7\textwidth}{@{\extracolsep{\fill}}lcccc}
 \toprule
@@ -1066,7 +1528,7 @@ on all 64 instances.
 
 \begin{table}[htbp]
 \centering
-\caption[Wilcoxon signed-rank test]{Wilcoxon signed-rank test (one-sided: AGVNS better than competitor)}
+\caption[Wilcoxon signed-rank test]{Asymptotic one-sided Wilcoxon signed-rank test (AGVNS better than competitor)}
 \label{tab:wilcoxon}
 \begin{tabular*}{0.7\textwidth}{@{\extracolsep{\fill}}lccccc}
 \toprule
@@ -1100,14 +1562,15 @@ baseline across a diverse and challenging benchmark suite.
 
 
 \section{Conclusions and future work} \label{sec:con}
+This study addressed the large-scale dynamic pickup-and-delivery problem defined in the ICAPS 2021 competition, where newly arriving requests must be continuously integrated into vehicle routes under multiple operational 
+constraints and a strict 10-minute runtime budget. To solve this problem, we proposed \gls{aglisa}, a two-stage adaptive framework that combines population-based evolutionary exploration with \gls{vns}-based local intensification. The framework incorporates problem-specific initialization, 
+adaptive evolutionary operators, and neighborhood-based refinement to balance exploration and exploitation in response to dynamic changes. Experiments on all 64 ICAPS 2021 benchmark instances showed that \gls{aglisa} achieves competitive solution quality across a wide range of 
+problem scales. It generally outperformed the considered memetic and genetic algorithm baselines, as well as the Silver- and Bronze-winning competition solvers, while remaining competitive with the Gold-winning \gls{vnsme} on 
+many instances. The results indicate that the proposed adaptive mechanisms contribute to improving routing solutions within the fixed computational budget. However, the relative advantage of \gls{aglisa} decreases on the 
+largest instances, suggesting that further improvements in search efficiency are needed.
 
-This study examined the large-scale dynamic pickup-and-delivery problem defined in the ICAPS 2021 competition. In this problem, requests are released in real time, and the system performs a complete re-optimization every 10 minutes under precedence, capacity, and time-window constraints. These characteristics impose stringent requirements on solution robustness and computational efficiency, which conventional static routing approaches and single-heuristic frameworks rarely satisfy.
-
-We developed \gls{aglisa}, a two-phase hybrid algorithm specifically tailored to the operational requirements of \gls{dpdp}. In the evolution stage, the framework incorporates a steady-state genetic algorithm to maintain broad search coverage. A customized crossover operator is used to preserve the integrity of pickup–delivery blocks, and its invocation frequency is dynamically controlled through an erfc-based decay rule that depends on the number of active orders. The mutation operator is adaptively selected to effectively exploit the search space, guided by individualized success information recorded for each solution. In the subsequent \gls{vns} stage, each solution is refined using a structured hierarchy of local search operators determined by its unique improvement history. Through these mechanisms, local search components are systematically organized and optimized to extract high-quality candidate solutions.
-
-A comprehensive evaluation was conducted on the 64 public ICAPS 2021 instances. The results show that \gls{aglisa} achieves competitive performance across most instances. It generally outperforms a recent memetic baseline \cite{zhou2024memetic}, a standard genetic algorithm, and Silver and Bronze competition solvers, while performing comparable to \gls{vnsme} \cite{cai2022variable} in many cases. These findings suggest that the proposed adaptive components provide a good balance between global diversification of \gls{ga} and local intensification of \gls{vns}, allowing efficient solution improvement within the strict 10-minute re-optimization window.
-
-There are several promising directions for the further advance of the proposed hybrid framework. One potential avenue is to incorporate machine learning or reinforcement learning techniques to enhance the adaptive mechanisms of both the crossover and \gls{vns} stages, enabling the algorithm to make more informed operator choices based on the evolving solution landscape. Alongside this, improvements in solution encoding and the design of more sophisticated local search operators could further boost the efficiency and effectiveness of the search, particularly for larger or more complex instances. Building on these enhancements, the framework could be extended to tackle more realistic and challenging PDP variants, including stochastic travel times, time-dependent demands, and multi-depot scenarios, thereby increasing its practical relevance.
+While this study focused specifically on the original ICAPS 2021 DPDP, its generalizability to other DPDP variants has not yet been established. Future work will focus on improving the scalability of \gls{aglisa} for very 
+large-scale instances by investigating learning-assisted operator selection and more efficient neighborhood search mechanisms. Extending the framework to other dynamic routing variants will also be considered.
 \subsection*{Acknowledgements}
 This research is funded by the Vietnam National Foundation for Science and Technology Development (NAFOSTED) under grant number 102.01-2025.106.
 \bibliographystyle{plain}

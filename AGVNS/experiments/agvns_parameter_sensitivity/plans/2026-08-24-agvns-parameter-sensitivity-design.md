@@ -47,7 +47,7 @@ Control configuration:
 
 The first two instances in each set are used, processed from the largest set to the smallest:
 
-`57, 58, 49, 50, 41, 42, 33, 34, 25, 26, 17, 18, 9, 10, 1, 2`
+`1, 2, 9, 10, 17, 18, 25, 26, 33, 34, 41, 42, 49, 50, 57, 58` (smallest first)
 
 Each scenario is run three times. The seed is:
 

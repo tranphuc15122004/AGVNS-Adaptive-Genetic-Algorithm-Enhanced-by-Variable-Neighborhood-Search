@@ -1,0 +1,168 @@
+{
+  "epoch_time": 1787789400,
+  "epoch_datetime": "2026-08-27 00:10:00",
+  "epoch_index": 0,
+  "vehicles": [
+    {
+      "id": "V_1",
+      "capacity": 15,
+      "operation_time": 24,
+      "cur_factory_id": "e2d5093fbe36431f8986ddb0e1c586be",
+      "position": {
+        "lng": 116.7844,
+        "lat": 39.9186,
+        "factory_id": "e2d5093fbe36431f8986ddb0e1c586be",
+        "status": "at_factory"
+      },
+      "destination": null,
+      "planned_route_nodes": [],
+      "trajectory": [
+        {
+          "factory_id": "e2d5093fbe36431f8986ddb0e1c586be",
+          "lng": 116.7844,
+          "lat": 39.9186,
+          "arrive_time": 1787788800,
+          "leave_time": 1787788800,
+          "status": "past"
+        }
+      ],
+      "events": [],
+      "carrying_item_count": 0,
+      "carrying_item_ids": [],
+      "status": "parked"
+    },
+    {
+      "id": "V_2",
+      "capacity": 15,
+      "operation_time": 24,
+      "cur_factory_id": "7fe14b93f0f04ee7a994ef5b2c1fdb72",
+      "position": {
+        "lng": 116.6087,
+        "lat": 40.2137,
+        "factory_id": "7fe14b93f0f04ee7a994ef5b2c1fdb72",
+        "status": "at_factory"
+      },
+      "destination": null,
+      "planned_route_nodes": [],
+      "trajectory": [
+        {
+          "factory_id": "7fe14b93f0f04ee7a994ef5b2c1fdb72",
+          "lng": 116.6087,
+          "lat": 40.2137,
+          "arrive_time": 1787788800,
+          "leave_time": 1787788800,
+          "status": "past"
+        }
+      ],
+      "events": [],
+      "carrying_item_count": 0,
+      "carrying_item_ids": [],
+      "status": "parked"
+    },
+    {
+      "id": "V_3",
+      "capacity": 15,
+      "operation_time": 24,
+      "cur_factory_id": "fa366fc87a124d32926daa5bb093129f",
+      "position": {
+        "lng": 116.622,
+        "lat": 40.2141,
+        "factory_id": "fa366fc87a124d32926daa5bb093129f",
+        "status": "at_factory"
+      },
+      "destination": null,
+      "planned_route_nodes": [],
+      "trajectory": [
+        {
+          "factory_id": "fa366fc87a124d32926daa5bb093129f",
+          "lng": 116.622,
+          "lat": 40.2141,
+          "arrive_time": 1787788800,
+          "leave_time": 1787788800,
+          "status": "past"
+        }
+      ],
+      "events": [],
+      "carrying_item_count": 0,
+      "carrying_item_ids": [],
+      "status": "parked"
+    },
+    {
+      "id": "V_4",
+      "capacity": 15,
+      "operation_time": 24,
+      "cur_factory_id": "e47399648fa842b2b8f80094343d8091",
+      "position": {
+        "lng": 116.489,
+        "lat": 40.2172,
+        "factory_id": "e47399648fa842b2b8f80094343d8091",
+        "status": "at_factory"
+      },
+      "destination": null,
+      "planned_route_nodes": [],
+      "trajectory": [
+        {
+          "factory_id": "e47399648fa842b2b8f80094343d8091",
+          "lng": 116.489,
+          "lat": 40.2172,
+          "arrive_time": 1787788800,
+          "leave_time": 1787788800,
+          "status": "past"
+        }
+      ],
+      "events": [],
+      "carrying_item_count": 0,
+      "carrying_item_ids": [],
+      "status": "parked"
+    },
+    {
+      "id": "V_5",
+      "capacity": 15,
+      "operation_time": 24,
+      "cur_factory_id": "becb4f85393540b287e7329758b8d832",
+      "position": {
+        "lng": 116.6344,
+        "lat": 40.2297,
+        "factory_id": "becb4f85393540b287e7329758b8d832",
+        "status": "at_factory"
+      },
+      "destination": null,
+      "planned_route_nodes": [],
+      "trajectory": [
+        {
+          "factory_id": "becb4f85393540b287e7329758b8d832",
+          "lng": 116.6344,
+          "lat": 40.2297,
+          "arrive_time": 1787788800,
+          "leave_time": 1787788800,
+          "status": "past"
+        }
+      ],
+      "events": [],
+      "carrying_item_count": 0,
+      "carrying_item_ids": [],
+      "status": "parked"
+    }
+  ],
+  "orders": {
+    "unallocated": 1,
+    "ongoing": 0,
+    "completed": 0
+  },
+  "order_items": {
+    "unallocated": [
+      {
+        "id": "0003480001-1",
+        "type": "HALF_PALLET",
+        "demand": 0.5,
+        "pickup_factory_id": "2445d4bd004c457d95957d6ecf77f759",
+        "delivery_factory_id": "b6dd694ae05541dba369a2a759d2c2b9",
+        "creation_time": 1787789028,
+        "committed_completion_time": 1787803428,
+        "delivery_state": 1
+      }
+    ],
+    "ongoing": [],
+    "completed": []
+  }
+}
