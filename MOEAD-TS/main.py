@@ -22,12 +22,21 @@ def _parse_instances(raw_value: str):
     raw_value = raw_value.strip()
     if not raw_value:
         return []
-
     instances = []
+    seen = set()
     for part in raw_value.split(","):
         part = part.strip()
-        if part:
-            instances.append(int(part))
+        if not part:
+            continue
+        if "-" in part:
+            start, end = (int(p.strip()) for p in part.split("-"))
+            values = range(start, end + 1)
+        else:
+            values = (int(part),)
+        for inst in values:
+            if inst not in seen:
+                instances.append(inst)
+                seen.add(inst)
     return instances
 
 

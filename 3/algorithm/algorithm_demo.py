@@ -45,11 +45,17 @@ def scheduling():
     """
     algorithm_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     
-    # Try Windows executable first, then Linux binary
-    binary_candidates = [
-        os.path.join(algorithm_dir, "main_algorithm.exe"),
-        os.path.join(algorithm_dir, "main_algorithm.out"),
-    ]
+    # Select binary based on OS platform
+    if sys.platform.startswith("win"):
+        binary_candidates = [
+            os.path.join(algorithm_dir, "main_algorithm.exe"),
+            os.path.join(algorithm_dir, "main_algorithm.out"),
+        ]
+    else:
+        binary_candidates = [
+            os.path.join(algorithm_dir, "main_algorithm.out"),
+            os.path.join(algorithm_dir, "main_algorithm.exe"),
+        ]
     
     binary_path = None
     for candidate in binary_candidates:
