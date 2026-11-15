@@ -88,7 +88,7 @@ if __name__ == "__main__":
         try:
             try:
                 score = simulate(Configs.factory_info_file, Configs.route_info_file, instance)
-            except Exception as exc:
+            except (Exception, SystemExit) as exc:
                 elapsed = time.monotonic() - started
                 error = traceback.format_exc()
                 runtime_stats.record(
