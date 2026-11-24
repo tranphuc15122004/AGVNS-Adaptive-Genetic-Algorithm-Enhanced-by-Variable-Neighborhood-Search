@@ -1,0 +1,585 @@
+# Timeout checking utilities
+import os
+import random
+import time
+from collections import deque   
+
+try:
+    from src.conf.configs import Configs as _SimulatorConfigs
+except Exception:  # pragma: no cover - standalone algorithm use
+    _SimulatorConfigs = None
+
+try:
+    import numpy as np
+except ImportError:  # pragma: no cover - numpy is part of the AGVNS requirements
+    np = None
+
+"""Problem constant"""
+APPROACHING_DOCK_TIME = 1800
+Delta = 10000.0 / 3600.0
+Delta1 = 10000.0 
+SLACK_TIME_THRESHOLD = 10000
+debugPeriod = "0010-0020"
+addDelta = 400000.0
+LS_METHODS = ['PDPairExchange', 'BlockExchange', 'BlockRelocate', 'mPDG', 'MA']
+BEGIN_TIME = 0
+BEGIN_MONOTONIC = 0.0
+# Search retains the original algorithm budget; simulator allowance only covers
+# validation, scoring, and writing the incumbent after search stops.
+ALGO_TIME_LIMIT = 9*60+30
+SIMULATOR_HARD_TIMEOUT_SECONDS = float(
+    getattr(_SimulatorConfigs, "MAX_RUNTIME_OF_ALGORITHM", ALGO_TIME_LIMIT)
+)
+FINALIZATION_MODE = False
+DELAY_DISPATCH = False
+CROSSOVER_TYPE_RATIO = 1.0  
+USE_ADAPTIVE_ORDER_DISCRIMINATE = True
+WAITING_WEIGHT = 0
+
+def set_begin_time():
+    """Start the algorithm clock and reset search/finalization state."""
+    global BEGIN_TIME, BEGIN_MONOTONIC, FINALIZATION_MODE
+    BEGIN_TIME = time.time()
+    BEGIN_MONOTONIC = time.monotonic()
+    FINALIZATION_MODE = False
+
+
+def begin_finalization():
+    """Allow incumbent validation/output after search reaches its 570s budget."""
+    global FINALIZATION_MODE
+    FINALIZATION_MODE = True
+
+
+def is_timeout() -> bool:
+    """Check the search budget, or the simulator safety cap while finalizing."""
+    limit = SIMULATOR_HARD_TIMEOUT_SECONDS if FINALIZATION_MODE else ALGO_TIME_LIMIT
+    return time.monotonic() - BEGIN_MONOTONIC >= limit
+
+
+def get_remaining_time() -> float:
+    """Return remaining search time or simulator safety time during finalization."""
+    limit = SIMULATOR_HARD_TIMEOUT_SECONDS if FINALIZATION_MODE else ALGO_TIME_LIMIT
+    return max(0.0, limit - (time.monotonic() - BEGIN_MONOTONIC))
+
+
+"""GA configuration"""
+POPULATION_SIZE = 40
+NUMBER_OF_GENERATION = 20
+MUTATION_RATE = 0.25
+ADAPT_THRESHOLD_ORDERS = 80
+PERTURBATION_RATE = 0.50
+EXPERIMENT_CONFIGURATION_ID = None
+RANDOM_SEED = int(os.environ.get("GA_RANDOM_SEED", os.environ.get("AGVNS_RANDOM_SEED", os.environ.get("DPDP_RANDOM_SEED", "0"))))
+LS_MAX = 1
+IMPROVED_IN_CROSS = 0
+IMPROVED_IN_MUTATION = 0
+IMPROVED_IN_DIVER = 0
+"""Per local search time limit (seconds). Each LS operator should stop when exceeding this budget."""
+LS_MAX_TIME_IN_SINGLE = 1
+
+# GA defensive guards
+# Max attempts factor for producing offspring per missing child in a generation (used to avoid infinite loops)
+OFFSPRING_ATTEMPTS_FACTOR = 10
+
+
+def _read_int(environ, key, default):
+    raw = environ.get(key)
+    return default if raw is None or raw == "" else int(raw)
+
+
+def _read_float(environ, key, default):
+    raw = environ.get(key)
+    return default if raw is None or raw == "" else float(raw)
+
+
+def parse_experiment_overrides(environ=None):
+    """Read one screening cell without silently accepting invalid values."""
+    environ = os.environ if environ is None else environ
+    values = {
+        "configuration_id": _read_int(environ, "AGVNS_EXPERIMENT_ID", None),
+        "threshold_orders": _read_int(environ, "AGVNS_EXPERIMENT_T", ADAPT_THRESHOLD_ORDERS),
+        "population_size": _read_int(environ, "AGVNS_EXPERIMENT_POPULATION", POPULATION_SIZE),
+        "perturbation_rate": _read_float(environ, "AGVNS_EXPERIMENT_PERTURBATION", PERTURBATION_RATE),
+        "mutation_rate": _read_float(environ, "AGVNS_EXPERIMENT_MUTATION_SUBSET", MUTATION_RATE),
+        "random_seed": _read_int(environ, "GA_RANDOM_SEED", RANDOM_SEED),
+    }
+    if values["threshold_orders"] <= 0:
+        raise ValueError("AGVNS experiment T must be positive")
+    if values["population_size"] <= 0:
+        raise ValueError("AGVNS experiment population must be positive")
+    for name in ("perturbation_rate", "mutation_rate"):
+        if not 0.0 < values[name] <= 1.0:
+            raise ValueError("AGVNS experiment %s must be in (0, 1]" % name)
+    return values
+
+
+def apply_experiment_overrides(environ=None):
+    """Apply screening overrides and seed the algorithm process."""
+    global ADAPT_THRESHOLD_ORDERS, POPULATION_SIZE, PERTURBATION_RATE
+    global MUTATION_RATE, EXPERIMENT_CONFIGURATION_ID, RANDOM_SEED
+    values = parse_experiment_overrides(environ)
+    EXPERIMENT_CONFIGURATION_ID = values["configuration_id"]
+    ADAPT_THRESHOLD_ORDERS = values["threshold_orders"]
+    POPULATION_SIZE = values["population_size"]
+    PERTURBATION_RATE = values["perturbation_rate"]
+    MUTATION_RATE = values["mutation_rate"]
+    RANDOM_SEED = values["random_seed"]
+    random.seed(RANDOM_SEED)
+    if np is not None:
+        np.random.seed(RANDOM_SEED % (2 ** 32))
+    return values
+
+
+def applied_experiment_config():
+    return {
+        "configuration_id": EXPERIMENT_CONFIGURATION_ID,
+        "threshold_orders": ADAPT_THRESHOLD_ORDERS,
+        "population_size": POPULATION_SIZE,
+        "perturbation_rate": PERTURBATION_RATE,
+        "mutation_rate": MUTATION_RATE,
+        "random_seed": RANDOM_SEED,
+    }
+
+
+apply_experiment_overrides()
+
+
+def adaptive_config(num_orders: int, num_vehicles: int | None = None, time_budget_sec: float | None = None) -> dict:
+    """Adapt GA configuration based on current workload.
+
+    Mapping rule (as requested):
+    - Map number of orders in [20, 70] linearly to population size in [40, 10].
+      Below 20 orders -> POPULATION_SIZE = 40
+      Above 80 orders -> POPULATION_SIZE = 10
+
+    Other parameters remain unchanged.
+
+    Returns a summary dict of the applied parameters for logging.
+    """
+    global POPULATION_SIZE
+
+    # Define ranges
+    min_orders, max_orders = 20, 80
+    max_pop, min_pop = 40, 10
+    min_mut, max_mut = 0.1, 0.4
+    min_ls, max_ls = 20, 100
+
+    # Clamp and interpolate linearly
+    if num_orders <= min_orders:
+        pop = max_pop
+        mut = min_mut
+        ls = min_ls
+    elif num_orders >= max_orders:
+        pop = min_pop
+        mut = max_mut
+        ls = max_ls
+    else:
+        ratio = (num_orders - min_orders) / (max_orders - min_orders)
+        pop = round(max_pop + ratio * (min_pop - max_pop))
+        mut = min_mut + ratio * (max_mut - min_mut)
+        ls = round(min_ls + ratio * (max_ls - min_ls))
+
+    global POPULATION_SIZE, MUTATION_RATE, LS_MAX
+    POPULATION_SIZE = int(pop)
+    MUTATION_RATE = float(mut)
+    LS_MAX = int(ls)
+
+    return {
+        "num_orders": int(num_orders),
+        "num_vehicles": int(num_vehicles) if num_vehicles is not None else None,
+        "time_budget_sec": float(time_budget_sec) if time_budget_sec is not None else None,
+        "POPULATION_SIZE": POPULATION_SIZE,
+        "NUMBER_OF_GENERATION": NUMBER_OF_GENERATION,
+        "MUTATION_RATE": MUTATION_RATE,
+        "LS_MAX": LS_MAX,
+        "LS_MAX_TIME_IN_SINGLE": LS_MAX_TIME_IN_SINGLE,
+    }
+
+""" ACO configuration """
+POPULATION_SIZE_ACO = 20
+NUMBER_OF_GENERATION_ACO = 100
+ALPHA = 1.0          # Mức độ ảnh hưởng của pheromone
+BETA = 0.5           # Mức độ ảnh hưởng của heuristic
+Q = 100              # Hằng số dùng trong cập nhật pheromone
+BASE_PHEROMONE = 0.1         # Giá trị pheromone cơ bản\
+EVAPORATION_RATE = 0.85   # Hệ số bay hơi (0.0 - 1.0)
+
+
+"""modle"""
+modle4 = [
+    [0,1,2,3],
+    [1,2,0,3],
+    [0,3,1,2],
+    [1,0,3,2]
+]
+
+modle6 = [
+    [0,1,2,3,4,5],
+    [0,2,3,1,4,5],
+    [2,3,0,1,4,5],
+    [0,2,1,4,3,5],
+    [1,4,0,2,3,5],
+    [0,1,4,2,3,5],
+    [2,3,1,4,0,5],
+    [1,2,3,4,0,5],
+    [2,1,4,3,0,5],
+    [1,4,2,3,0,5],
+    [0,2,3,5,1,4],
+    [2,3,0,5,1,4],
+    [0,5,2,3,1,4],
+    [2,0,5,3,1,4],
+    [1,2,0,5,3,4],
+    [1,0,5,2,3,4],
+    [0,5,1,2,3,4],
+    [2,3,1,0,5,4],
+    [1,2,3,0,5,4],
+    [1,0,2,3,5,4],
+    [2,0,1,4,5,3],
+    [2,1,4,0,5,3],
+    [1,4,2,0,5,3],
+    [0,5,2,1,4,3],
+    [2,0,5,1,4,3],
+    [2,1,0,5,4,3],
+    [1,0,5,4,2,3],
+    [0,5,1,4,2,3],
+    [1,4,0,5,2,3],
+    [0,1,4,5,2,3]
+]
+modle8 = [
+    [0,1,2,3,4,5,6,7],
+    [0,1,3,4,2,5,6,7],
+    [3,4,0,1,2,5,6,7],
+    [0,3,4,1,2,5,6,7],
+    [2,5,0,1,3,4,6,7],
+    [0,2,5,1,3,4,6,7],
+    [0,1,2,5,3,4,6,7],
+    [0,1,3,2,5,4,6,7],
+    [3,4,0,2,5,1,6,7],
+    [0,3,4,2,5,1,6,7],
+    [0,2,3,4,5,1,6,7],
+    [0,2,5,3,4,1,6,7],
+    [2,5,0,3,4,1,6,7],
+    [0,3,2,5,4,1,6,7],
+    [2,5,3,4,0,1,6,7],
+    [3,2,5,4,0,1,6,7],
+    [3,4,2,5,0,1,6,7],
+    [2,3,4,5,0,1,6,7],
+    [0,1,2,5,6,3,4,7],
+    [2,5,0,1,6,3,4,7],
+    [0,2,5,1,6,3,4,7],
+    [1,6,2,5,0,3,4,7],
+    [2,1,6,5,0,3,4,7],
+    [1,2,5,6,0,3,4,7],
+    [2,5,1,6,0,3,4,7],
+    [0,2,1,6,5,3,4,7],
+    [0,1,6,2,5,3,4,7],
+    [1,6,0,2,5,3,4,7],
+    [0,3,1,2,5,6,4,7],
+    [0,2,5,3,1,6,4,7],
+    [2,5,0,3,1,6,4,7],
+    [0,3,2,5,1,6,4,7],
+    [0,3,1,6,2,5,4,7],
+    [1,6,0,3,2,5,4,7],
+    [0,1,6,3,2,5,4,7],
+    [0,3,2,1,6,5,4,7],
+    [0,3,1,6,4,2,5,7],
+    [1,6,0,3,4,2,5,7],
+    [0,1,6,3,4,2,5,7],
+    [0,1,3,4,6,2,5,7],
+    [3,4,0,1,6,2,5,7],
+    [0,3,4,1,6,2,5,7],
+    [3,1,6,4,0,2,5,7],
+    [1,6,3,4,0,2,5,7],
+    [3,4,1,6,0,2,5,7],
+    [1,3,4,6,0,2,5,7],
+    [0,2,1,3,4,6,5,7],
+    [3,4,0,2,1,6,5,7],
+    [0,3,4,2,1,6,5,7],
+    [0,2,3,4,1,6,5,7],
+    [0,2,1,6,3,4,5,7],
+    [0,1,6,2,3,4,5,7],
+    [1,6,0,2,3,4,5,7],
+    [0,2,3,1,6,4,5,7],
+    [1,6,2,5,3,4,0,7],
+    [2,1,6,5,3,4,0,7],
+    [2,5,1,6,3,4,0,7],
+    [1,2,5,6,3,4,0,7],
+    [2,5,3,1,6,4,0,7],
+    [3,2,5,1,6,4,0,7],
+    [3,1,2,5,6,4,0,7],
+    [3,1,6,2,5,4,0,7],
+    [1,6,3,2,5,4,0,7],
+    [3,2,1,6,5,4,0,7],
+    [2,5,1,3,4,6,0,7],
+    [1,2,5,3,4,6,0,7],
+    [1,3,2,5,4,6,0,7],
+    [3,4,2,5,1,6,0,7],
+    [2,3,4,5,1,6,0,7],
+    [2,5,3,4,1,6,0,7],
+    [3,2,5,4,1,6,0,7],
+    [3,4,1,2,5,6,0,7],
+    [1,3,4,2,5,6,0,7],
+    [1,2,3,4,5,6,0,7],
+    [3,4,2,1,6,5,0,7],
+    [2,3,4,1,6,5,0,7],
+    [2,1,3,4,6,5,0,7],
+    [1,3,4,6,2,5,0,7],
+    [3,4,1,6,2,5,0,7],
+    [1,6,3,4,2,5,0,7],
+    [3,1,6,4,2,5,0,7],
+    [2,3,1,6,4,5,0,7],
+    [2,1,6,3,4,5,0,7],
+    [1,6,2,3,4,5,0,7],
+    [2,5,3,4,0,7,1,6],
+    [3,2,5,4,0,7,1,6],
+    [3,4,2,5,0,7,1,6],
+    [2,3,4,5,0,7,1,6],
+    [3,4,0,2,5,7,1,6],
+    [0,3,4,2,5,7,1,6],
+    [0,2,3,4,5,7,1,6],
+    [0,2,5,3,4,7,1,6],
+    [2,5,0,3,4,7,1,6],
+    [0,3,2,5,4,7,1,6],
+    [3,0,7,4,2,5,1,6],
+    [0,7,3,4,2,5,1,6],
+    [3,4,0,7,2,5,1,6],
+    [0,3,4,7,2,5,1,6],
+    [2,0,3,4,7,5,1,6],
+    [2,3,4,0,7,5,1,6],
+    [3,4,2,0,7,5,1,6],
+    [0,7,2,3,4,5,1,6],
+    [2,0,7,3,4,5,1,6],
+    [2,3,0,7,4,5,1,6],
+    [2,0,7,5,3,4,1,6],
+    [0,7,2,5,3,4,1,6],
+    [2,5,0,7,3,4,1,6],
+    [0,2,5,7,3,4,1,6],
+    [3,0,2,5,7,4,1,6],
+    [3,2,5,0,7,4,1,6],
+    [2,5,3,0,7,4,1,6],
+    [0,7,3,2,5,4,1,6],
+    [3,0,7,2,5,4,1,6],
+    [3,2,0,7,5,4,1,6],
+    [2,0,7,5,1,3,4,6],
+    [0,7,2,5,1,3,4,6],
+    [2,5,0,7,1,3,4,6],
+    [0,2,5,7,1,3,4,6],
+    [1,0,2,5,7,3,4,6],
+    [1,2,5,0,7,3,4,6],
+    [2,5,1,0,7,3,4,6],
+    [0,7,1,2,5,3,4,6],
+    [1,0,7,2,5,3,4,6],
+    [1,2,0,7,5,3,4,6],
+    [1,3,2,5,0,7,4,6],
+    [1,2,5,3,0,7,4,6],
+    [2,5,1,3,0,7,4,6],
+    [1,3,0,2,5,7,4,6],
+    [1,3,0,7,2,5,4,6],
+    [1,0,7,3,2,5,4,6],
+    [0,7,1,3,2,5,4,6],
+    [1,3,2,0,7,5,4,6],
+    [1,3,0,7,4,2,5,6],
+    [1,0,7,3,4,2,5,6],
+    [0,7,1,3,4,2,5,6],
+    [1,0,3,4,7,2,5,6],
+    [3,4,1,0,7,2,5,6],
+    [1,3,4,0,7,2,5,6],
+    [0,7,3,4,1,2,5,6],
+    [3,0,7,4,1,2,5,6],
+    [0,3,4,7,1,2,5,6],
+    [3,4,0,7,1,2,5,6],
+    [3,4,1,2,0,7,5,6],
+    [1,3,4,2,0,7,5,6],
+    [1,2,3,4,0,7,5,6],
+    [1,2,0,3,4,7,5,6],
+    [1,2,3,0,7,4,5,6],
+    [1,2,0,7,3,4,5,6],
+    [0,7,1,2,3,4,5,6],
+    [1,0,7,2,3,4,5,6],
+    [1,0,2,5,3,4,7,6],
+    [2,5,1,0,3,4,7,6],
+    [1,2,5,0,3,4,7,6],
+    [1,0,3,2,5,4,7,6],
+    [2,5,1,3,4,0,7,6],
+    [1,2,5,3,4,0,7,6],
+    [1,3,2,5,4,0,7,6],
+    [3,4,2,5,1,0,7,6],
+    [2,3,4,5,1,0,7,6],
+    [2,5,3,4,1,0,7,6],
+    [3,2,5,4,1,0,7,6],
+    [3,4,1,2,5,0,7,6],
+    [1,3,4,2,5,0,7,6],
+    [1,2,3,4,5,0,7,6],
+    [1,3,4,0,2,5,7,6],
+    [3,4,1,0,2,5,7,6],
+    [1,0,3,4,2,5,7,6],
+    [1,0,2,3,4,5,7,6],
+    [2,5,3,1,0,7,6,4],
+    [3,2,5,1,0,7,6,4],
+    [3,1,2,5,0,7,6,4],
+    [3,1,0,2,5,7,6,4],
+    [3,1,2,0,7,5,6,4],
+    [3,1,0,7,2,5,6,4],
+    [3,0,7,1,2,5,6,4],
+    [0,7,3,1,2,5,6,4],
+    [2,0,7,5,3,1,6,4],
+    [0,7,2,5,3,1,6,4],
+    [2,5,0,7,3,1,6,4],
+    [0,2,5,7,3,1,6,4],
+    [3,0,2,5,7,1,6,4],
+    [3,2,5,0,7,1,6,4],
+    [2,5,3,0,7,1,6,4],
+    [0,7,3,2,5,1,6,4],
+    [3,0,7,2,5,1,6,4],
+    [3,2,0,7,5,1,6,4],
+    [0,1,2,5,6,7,3,4],
+    [2,5,0,1,6,7,3,4],
+    [0,2,5,1,6,7,3,4],
+    [2,5,1,6,0,7,3,4],
+    [1,2,5,6,0,7,3,4],
+    [2,1,6,5,0,7,3,4],
+    [1,6,2,5,0,7,3,4],
+    [0,1,6,2,5,7,3,4],
+    [1,6,0,2,5,7,3,4],
+    [0,2,1,6,5,7,3,4],
+    [1,0,7,6,2,5,3,4],
+    [0,7,1,6,2,5,3,4],
+    [1,6,0,7,2,5,3,4],
+    [0,1,6,7,2,5,3,4],
+    [2,0,1,6,7,5,3,4],
+    [2,1,6,0,7,5,3,4],
+    [1,6,2,0,7,5,3,4],
+    [0,7,2,1,6,5,3,4],
+    [2,0,7,1,6,5,3,4],
+    [2,1,0,7,6,5,3,4],
+    [1,2,0,7,5,6,3,4],
+    [1,0,7,2,5,6,3,4],
+    [0,7,1,2,5,6,3,4],
+    [1,0,2,5,7,6,3,4],
+    [2,5,1,0,7,6,3,4],
+    [1,2,5,0,7,6,3,4],
+    [0,7,2,5,1,6,3,4],
+    [2,0,7,5,1,6,3,4],
+    [0,2,5,7,1,6,3,4],
+    [2,5,0,7,1,6,3,4],
+    [3,2,0,7,1,6,5,4],
+    [3,0,7,2,1,6,5,4],
+    [0,7,3,2,1,6,5,4],
+    [3,2,1,0,7,6,5,4],
+    [3,1,0,7,6,2,5,4],
+    [3,0,7,1,6,2,5,4],
+    [0,7,3,1,6,2,5,4],
+    [3,0,1,6,7,2,5,4],
+    [1,6,3,0,7,2,5,4],
+    [3,1,6,0,7,2,5,4],
+    [0,7,1,6,3,2,5,4],
+    [1,0,7,6,3,2,5,4],
+    [0,1,6,7,3,2,5,4],
+    [1,6,0,7,3,2,5,4],
+    [3,2,0,1,6,7,5,4],
+    [3,2,1,6,0,7,5,4],
+    [1,6,3,2,0,7,5,4],
+    [3,1,6,2,0,7,5,4],
+    [3,0,1,2,5,6,7,4],
+    [3,2,5,0,1,6,7,4],
+    [2,5,3,0,1,6,7,4],
+    [3,0,2,5,1,6,7,4],
+    [2,5,1,6,3,0,7,4],
+    [1,2,5,6,3,0,7,4],
+    [2,1,6,5,3,0,7,4],
+    [1,6,2,5,3,0,7,4],
+    [3,1,2,5,6,0,7,4],
+    [3,2,5,1,6,0,7,4],
+    [2,5,3,1,6,0,7,4],
+    [3,2,1,6,5,0,7,4],
+    [1,6,3,2,5,0,7,4],
+    [3,1,6,2,5,0,7,4],
+    [3,0,2,1,6,5,7,4],
+    [3,0,1,6,2,5,7,4],
+    [1,6,3,0,2,5,7,4],
+    [3,1,6,0,2,5,7,4],
+    [2,0,1,6,3,4,7,5],
+    [2,1,6,0,3,4,7,5],
+    [1,6,2,0,3,4,7,5],
+    [2,0,3,1,6,4,7,5],
+    [2,0,1,3,4,6,7,5],
+    [2,0,3,4,1,6,7,5],
+    [3,4,2,0,1,6,7,5],
+    [2,3,4,0,1,6,7,5],
+    [1,3,4,6,2,0,7,5],
+    [3,4,1,6,2,0,7,5],
+    [1,6,3,4,2,0,7,5],
+    [3,1,6,4,2,0,7,5],
+    [2,1,3,4,6,0,7,5],
+    [3,4,2,1,6,0,7,5],
+    [2,3,4,1,6,0,7,5],
+    [2,3,1,6,4,0,7,5],
+    [1,6,2,3,4,0,7,5],
+    [2,1,6,3,4,0,7,5],
+    [3,0,1,6,7,4,2,5],
+    [1,6,3,0,7,4,2,5],
+    [3,1,6,0,7,4,2,5],
+    [0,7,1,6,3,4,2,5],
+    [1,0,7,6,3,4,2,5],
+    [0,1,6,7,3,4,2,5],
+    [1,6,0,7,3,4,2,5],
+    [3,1,0,7,6,4,2,5],
+    [3,0,7,1,6,4,2,5],
+    [0,7,3,1,6,4,2,5],
+    [1,0,3,4,7,6,2,5],
+    [1,3,4,0,7,6,2,5],
+    [3,4,1,0,7,6,2,5],
+    [0,7,1,3,4,6,2,5],
+    [1,0,7,3,4,6,2,5],
+    [1,3,0,7,4,6,2,5],
+    [3,0,7,4,1,6,2,5],
+    [0,7,3,4,1,6,2,5],
+    [3,4,0,7,1,6,2,5],
+    [0,3,4,7,1,6,2,5],
+    [0,3,1,6,4,7,2,5],
+    [1,6,0,3,4,7,2,5],
+    [0,1,6,3,4,7,2,5],
+    [0,1,3,4,6,7,2,5],
+    [3,4,0,1,6,7,2,5],
+    [0,3,4,1,6,7,2,5],
+    [3,1,6,4,0,7,2,5],
+    [1,6,3,4,0,7,2,5],
+    [3,4,1,6,0,7,2,5],
+    [1,3,4,6,0,7,2,5],
+    [2,1,3,4,0,7,6,5],
+    [2,3,4,1,0,7,6,5],
+    [3,4,2,1,0,7,6,5],
+    [2,1,0,3,4,7,6,5],
+    [2,1,3,0,7,4,6,5],
+    [2,1,0,7,3,4,6,5],
+    [0,7,2,1,3,4,6,5],
+    [2,0,7,1,3,4,6,5],
+    [2,0,3,4,7,1,6,5],
+    [3,4,2,0,7,1,6,5],
+    [2,3,4,0,7,1,6,5],
+    [2,3,0,7,4,1,6,5],
+    [0,7,2,3,4,1,6,5],
+    [2,0,7,3,4,1,6,5],
+    [0,3,4,7,2,1,6,5],
+    [3,4,0,7,2,1,6,5],
+    [0,7,3,4,2,1,6,5],
+    [3,0,7,4,2,1,6,5],
+    [2,3,0,7,1,6,4,5],
+    [0,7,2,3,1,6,4,5],
+    [2,0,7,3,1,6,4,5],
+    [2,3,1,0,7,6,4,5],
+    [1,6,2,3,0,7,4,5],
+    [2,1,6,3,0,7,4,5],
+    [2,3,1,6,0,7,4,5],
+    [2,3,0,1,6,7,4,5],
+    [0,7,1,6,2,3,4,5],
+    [1,0,7,6,2,3,4,5],
+    [1,6,0,7,2,3,4,5],
+    [0,1,6,7,2,3,4,5],
+    [1,6,2,0,7,3,4,5],
+    [2,1,6,0,7,3,4,5],
+    [2,0,1,6,7,3,4,5],
+    [2,0,7,1,6,3,4,5],
+    [0,7,2,1,6,3,4,5],
+    [2,1,0,7,6,3,4,5]
+]
