@@ -5,6 +5,11 @@ import time
 from collections import deque   
 
 try:
+    from src.conf.configs import Configs as _SimulatorConfigs
+except Exception:  # pragma: no cover - standalone algorithm use
+    _SimulatorConfigs = None
+
+try:
     import numpy as np
 except ImportError:  # pragma: no cover - numpy is part of the AGVNS requirements
     np = None
@@ -18,24 +23,43 @@ debugPeriod = "0010-0020"
 addDelta = 400000.0
 LS_METHODS = ['PDPairExchange', 'BlockExchange', 'BlockRelocate', 'mPDG', 'MA']
 BEGIN_TIME = 0
+BEGIN_MONOTONIC = 0.0
+# Search retains the original algorithm budget; simulator allowance only covers
+# validation, scoring, and writing the incumbent after search stops.
 ALGO_TIME_LIMIT = 9*60+30
+SIMULATOR_HARD_TIMEOUT_SECONDS = float(
+    getattr(_SimulatorConfigs, "MAX_RUNTIME_OF_ALGORITHM", ALGO_TIME_LIMIT)
+)
+FINALIZATION_MODE = False
 DELAY_DISPATCH = False
 CROSSOVER_TYPE_RATIO = 1.0  
 USE_ADAPTIVE_ORDER_DISCRIMINATE = True
 WAITING_WEIGHT = 0
 
 def set_begin_time():
-    """Set the start time for algorithm execution"""
-    global BEGIN_TIME
+    """Start the algorithm clock and reset search/finalization state."""
+    global BEGIN_TIME, BEGIN_MONOTONIC, FINALIZATION_MODE
     BEGIN_TIME = time.time()
+    BEGIN_MONOTONIC = time.monotonic()
+    FINALIZATION_MODE = False
+
+
+def begin_finalization():
+    """Allow incumbent validation/output after search reaches its 570s budget."""
+    global FINALIZATION_MODE
+    FINALIZATION_MODE = True
+
 
 def is_timeout() -> bool:
-    """Check if algorithm has exceeded time limit"""
-    return time.time() - BEGIN_TIME > ALGO_TIME_LIMIT
+    """Check the search budget, or the simulator safety cap while finalizing."""
+    limit = SIMULATOR_HARD_TIMEOUT_SECONDS if FINALIZATION_MODE else ALGO_TIME_LIMIT
+    return time.monotonic() - BEGIN_MONOTONIC >= limit
+
 
 def get_remaining_time() -> float:
-    """Get remaining time in seconds"""
-    return max(0, ALGO_TIME_LIMIT - (time.time() - BEGIN_TIME))
+    """Return remaining search time or simulator safety time during finalization."""
+    limit = SIMULATOR_HARD_TIMEOUT_SECONDS if FINALIZATION_MODE else ALGO_TIME_LIMIT
+    return max(0.0, limit - (time.monotonic() - BEGIN_MONOTONIC))
 
 
 """GA configuration"""
@@ -51,7 +75,6 @@ IMPROVED_IN_CROSS = 0
 IMPROVED_IN_MUTATION = 0
 IMPROVED_IN_DIVER = 0
 """Per local search time limit (seconds). Each LS operator should stop when exceeding this budget."""
-LS_MAX_TIME_PER_OP = 8  # seconds (adjustable)
 LS_MAX_TIME_IN_SINGLE = 1
 
 # GA defensive guards
@@ -169,7 +192,6 @@ def adaptive_config(num_orders: int, num_vehicles: int | None = None, time_budge
         "NUMBER_OF_GENERATION": NUMBER_OF_GENERATION,
         "MUTATION_RATE": MUTATION_RATE,
         "LS_MAX": LS_MAX,
-        "LS_MAX_TIME_PER_OP": LS_MAX_TIME_PER_OP,
         "LS_MAX_TIME_IN_SINGLE": LS_MAX_TIME_IN_SINGLE,
     }
 

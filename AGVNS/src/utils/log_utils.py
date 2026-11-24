@@ -27,8 +27,7 @@ from src.utils.logging_engine import logger
 # Output logs through console and files
 def ini_logger(file_name, level='info'):
     log_folder = os.path.join(Configs.output_folder, 'log')
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
+    os.makedirs(log_folder, exist_ok=True)
     delete_files(log_folder, Configs.MAX_LOG_FILE_NUM)
     log_file = os.path.join(log_folder, file_name)
     logger.add_file_output(log_file, level)
@@ -57,15 +56,18 @@ def delete_files(file_folder, max_num):
             if not os.path.isdir(os.path.join(file_folder, item)):
                 total_files.append(item)
         total_files.sort()
-        for i in range(delete_num):
-            os.remove(os.path.join(file_folder, total_files[i]))
+        for i in range(min(delete_num, len(total_files))):
+            try:
+                os.remove(os.path.join(file_folder, total_files[i]))
+            except FileNotFoundError:
+                # Another worker may already have removed the same old log.
+                continue
 
 
 # 计算目标文件夹下的文件数量, 不递归文件夹
 def count_file(directory):
     file_num = 0
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    os.makedirs(directory, exist_ok=True)
     for item in os.listdir(directory):
         if os.path.isfile(os.path.join(directory, item)):
             file_num += 1

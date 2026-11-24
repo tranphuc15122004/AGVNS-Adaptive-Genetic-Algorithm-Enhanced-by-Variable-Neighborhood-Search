@@ -16,7 +16,6 @@ class Chromosome:
         self.improved_LS_map = {method: 0 for method in config.LS_METHODS}
         self.cant_improved = False
 
-
     @property
     def fitness(self) -> float:
         return total_cost(self.id_to_vehicle, self.route_map, self.solution)

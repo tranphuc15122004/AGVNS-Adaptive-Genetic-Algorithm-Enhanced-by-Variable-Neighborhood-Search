@@ -58,13 +58,15 @@ def GAVND_7(initial_vehicleid_to_plan: Dict[str, List[Node]], route_map: Dict[Tu
     
     population, PDG_map = new_generate_random_chromosome(initial_vehicleid_to_plan, route_map, id_to_vehicle, Unongoing_super_nodes, Base_vehicleid_to_plan, config.POPULATION_SIZE)
     
-    if population is None:
+    if not population:
         print('Cant initialize the population')
         return None
     best_solution: Chromosome = None
     stagnant_generations = 0
     population.sort(key=lambda x: x.fitness)
-    best_solution =  copy.deepcopy(population[0])
+    best_solution = copy.deepcopy(population[0])
+    best_solution_fitness = best_solution.fitness
+    best_solution._fitness_at_timeout = best_solution_fitness
         
     begin_GA_time = time.time()
     for gen in range(config.NUMBER_OF_GENERATION):
@@ -130,9 +132,11 @@ def GAVND_7(initial_vehicleid_to_plan: Dict[str, List[Node]], route_map: Dict[Tu
         
         
         # Cập nhật best solution
-        if best_solution is None or population[0].fitness < int(best_solution.fitness):
-            new_best_solution = _copy_solution(population[0].solution)
-            best_solution = Chromosome(new_best_solution , route_map , id_to_vehicle)
+        candidate_fitness = population[0].fitness
+        if math.isfinite(candidate_fitness) and candidate_fitness < best_solution_fitness:
+            best_solution = copy.deepcopy(population[0])
+            best_solution_fitness = candidate_fitness
+            best_solution._fitness_at_timeout = best_solution_fitness
             stagnant_generations = 0
         else:
             stagnant_generations += 1
@@ -165,11 +169,18 @@ def GAVND_7(initial_vehicleid_to_plan: Dict[str, List[Node]], route_map: Dict[Tu
     
     
     # Giai doan 2
-    unique_population = remove_similar_individuals(population, threshold=0.0)
+    # Keep the best-known feasible individual alive even if every current
+    # candidate falls outside the divergence window.
+    unique_population = remove_similar_individuals(
+        population + [copy.deepcopy(best_solution)], threshold=0.0
+    )
     unique_population.sort(key=lambda x: x.fitness)
     print(len(unique_population))
     
     unique_population = [ini for ini in unique_population if ini.fitness < best_solution.fitness  + config.addDelta]
+    if not unique_population:
+        print("Divergence filter removed all candidates; retaining incumbent")
+        unique_population = [copy.deepcopy(best_solution)]
     print(len(unique_population))
     
     mutate_count = 0
@@ -178,16 +189,22 @@ def GAVND_7(initial_vehicleid_to_plan: Dict[str, List[Node]], route_map: Dict[Tu
         if mutate_count > int(len(population) * config.MUTATION_RATE) or mutate_count >= len(unique_population):
             break
         
-        if unique_population[mutate_count % len(unique_population)].fitness > unique_population[0].fitness + config.addDelta: break
+        if not unique_population:
+            break
+        if unique_population[mutate_count].fitness > unique_population[0].fitness + config.addDelta: break
         
         adaptive_LS_stategy(unique_population[mutate_count] , PDG_map , False )
         
         mutate_count += 1
     
     unique_population.sort(key=lambda x: x.fitness)
-    if unique_population[0].fitness < best_solution.fitness: config.IMPROVED_IN_DIVER += 1
-    best_solution = unique_population[0]
-    
+    final_candidate_fitness = unique_population[0].fitness
+    if math.isfinite(final_candidate_fitness) and final_candidate_fitness < best_solution_fitness:
+        config.IMPROVED_IN_DIVER += 1
+    if math.isfinite(final_candidate_fitness) and final_candidate_fitness <= best_solution_fitness:
+        best_solution = unique_population[0]
+        best_solution_fitness = final_candidate_fitness
+    best_solution._fitness_at_timeout = best_solution_fitness
     return best_solution
 
 def select_parents(population: List[Chromosome]) -> Tuple[Chromosome, Chromosome]:
@@ -226,10 +243,10 @@ def adaptive_LS_stategy(indivisual: Chromosome, PDG_map : Dict[str , List[Node]]
     
     # Dictionary các phương pháp Local Search
     methods = {
-        'PDPairExchange': lambda: new_inter_couple_exchange(indivisual.solution, indivisual.id_to_vehicle, indivisual.route_map, math.inf,  is_limited),
-        'BlockExchange': lambda: new_block_exchange(indivisual.solution, indivisual.id_to_vehicle, indivisual.route_map, math.inf, is_limited),
-        'BlockRelocate': lambda: new_block_relocate(indivisual.solution, indivisual.id_to_vehicle, indivisual.route_map, math.inf, is_limited),
-        'mPDG': lambda: new_multi_pd_group_relocate(indivisual.solution, indivisual.id_to_vehicle, indivisual.route_map, math.inf, is_limited),
+        'PDPairExchange': lambda: new_inter_couple_exchange(indivisual.solution, indivisual.id_to_vehicle, indivisual.route_map, float("inf"), is_limited),
+        'BlockExchange': lambda: new_block_exchange(indivisual.solution, indivisual.id_to_vehicle, indivisual.route_map, float("inf"), is_limited),
+        'BlockRelocate': lambda: new_block_relocate(indivisual.solution, indivisual.id_to_vehicle, indivisual.route_map, float("inf"), is_limited),
+        'mPDG': lambda: new_multi_pd_group_relocate(indivisual.solution, indivisual.id_to_vehicle, indivisual.route_map, float("inf"), is_limited),
     }
     
     # Counter cho từng phương pháp
@@ -327,4 +344,4 @@ def adaptive_LS_stategy(indivisual: Chromosome, PDG_map : Dict[str , List[Node]]
     #  Enhanced logging with detailed timing information
     total_ls_time = sum(ls_timings.values())
     timing_details = " | ".join([f"{name}:{counters[name]}({ls_timings[name]:.3f}s)" for name in method_names])
-    print(f"LS: {timing_details} | TotalTime:{total_ls_time:.3f}s | Cost:{total_cost(indivisual.id_to_vehicle, indivisual.route_map, indivisual.solution):.2f}")
+    print(f"LS: {timing_details} | TotalTime:{total_ls_time:.3f}s | Cost:{best_cost:.2f}")

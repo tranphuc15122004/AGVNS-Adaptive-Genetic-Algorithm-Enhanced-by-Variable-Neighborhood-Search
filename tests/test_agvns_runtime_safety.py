@@ -43,9 +43,10 @@ def test_gavnd7_keeps_incumbent_when_divergence_filter_is_empty(monkeypatch):
     result = gavnd7.GAVND_7({}, {}, {}, {0: {}, 1: {}}, {})
 
     assert result.fitness == pytest.approx(10.0)
+    assert result._fitness_at_timeout == pytest.approx(10.0)
 
 
-def test_gavnd7_divergence_phase_respects_local_search_budget(monkeypatch):
+def test_gavnd7_divergence_phase_uses_global_algorithm_deadline(monkeypatch):
     incumbent = _FakeChromosome(10.0)
     improving_candidate = _FakeChromosome(9.0)
     adaptive_calls = []
@@ -61,7 +62,7 @@ def test_gavnd7_divergence_phase_respects_local_search_budget(monkeypatch):
         lambda population, threshold: [improving_candidate],
     )
     monkeypatch.setattr(config, "NUMBER_OF_GENERATION", 0)
-    monkeypatch.setattr(config, "FINAL_LS_TIME_LIMIT", 0.0, raising=False)
+    monkeypatch.setattr(config, "is_timeout", lambda: False)
     monkeypatch.setattr(config, "addDelta", 0.0)
     monkeypatch.setattr(
         gavnd7,
@@ -71,10 +72,10 @@ def test_gavnd7_divergence_phase_respects_local_search_budget(monkeypatch):
 
     gavnd7.GAVND_7({}, {}, {}, {0: {}, 1: {}}, {})
 
-    assert adaptive_calls == []
+    assert adaptive_calls == [True]
 
 
-def test_gavnd7_adaptive_ls_passes_finite_operator_budget(monkeypatch):
+def test_gavnd7_adaptive_ls_uses_unbounded_operator_budget(monkeypatch):
     captured_limits = []
     individual = SimpleNamespace(
         solution={},
@@ -88,7 +89,6 @@ def test_gavnd7_adaptive_ls_passes_finite_operator_budget(monkeypatch):
         },
     )
 
-    monkeypatch.setattr(config, "LS_MAX_TIME_PER_OP", 2.0)
     monkeypatch.setattr(config, "is_timeout", lambda: False)
     monkeypatch.setattr(gavnd7, "total_cost", lambda *args: 0.0)
     monkeypatch.setattr(
@@ -108,7 +108,7 @@ def test_gavnd7_adaptive_ls_passes_finite_operator_budget(monkeypatch):
 
     gavnd7.adaptive_LS_stategy(individual, {}, False)
 
-    assert captured_limits == [2.0, 2.0, 2.0, 2.0]
+    assert captured_limits == [float("inf")] * 4
 
 
 def test_initial_population_uses_configured_perturbation(monkeypatch):
@@ -175,7 +175,7 @@ def test_random_dispatch_uses_constant_time_fallback_after_deadline(monkeypatch)
     monkeypatch.setattr(
         engine,
         "isFeasible",
-        lambda *args, **kwargs: feasibility_calls.append(True) or False,
+        lambda *args, **kwargs: feasibility_calls.append(True) or True,
     )
 
     result = new_engine.random_dispatch_nodePair(
@@ -186,7 +186,7 @@ def test_random_dispatch_uses_constant_time_fallback_after_deadline(monkeypatch)
     )
 
     assert result is True
-    assert feasibility_calls == []
+    assert feasibility_calls == [True]
     assert plans["v1"] == [pickup, delivery]
 
 
@@ -209,10 +209,11 @@ def test_dispatch_ci_never_inserts_before_committed_destination(monkeypatch):
         demand=1.0,
     )
     destination = Node("F1", [], [committed])
+    committed_delivery = Node("F2", [committed], [])
     pickup = Node("F1", [], [new_item])
     delivery = Node("F3", [new_item], [])
-    vehicle = SimpleNamespace(des=destination, board_capacity=10.0)
-    plans = {"V_1": [destination]}
+    vehicle = SimpleNamespace(des=destination, carrying_items=[], board_capacity=10.0)
+    plans = {"V_1": [destination, committed_delivery]}
 
     monkeypatch.setattr(new_engine, "create_Pickup_Delivery_nodes", lambda *args: [pickup, delivery])
     monkeypatch.setattr(
@@ -232,8 +233,7 @@ def test_dispatch_ci_never_inserts_before_committed_destination(monkeypatch):
         deadline=None,
     )
 
-    assert plans["V_1"][0].pickup_item_list == [committed]
-    assert plans["V_1"][1:] == [pickup, delivery]
+    assert plans["V_1"] == [destination, committed_delivery, pickup, delivery]
 
 
 def test_dispatch_node_pair_returns_insert_position_after_destination(monkeypatch):
@@ -280,10 +280,11 @@ def test_dispatch_repairs_destination_after_exhaustive_ci_replacement(monkeypatc
         demand=1.0,
     )
     destination = Node("F1", [], [committed])
+    committed_delivery = Node("F2", [committed], [])
     pickup = Node("F1", [], [new_item])
     delivery = Node("F3", [new_item], [])
-    vehicle = SimpleNamespace(des=destination, board_capacity=10.0)
-    plans = {"V_1": []}
+    vehicle = SimpleNamespace(des=destination, carrying_items=[], board_capacity=10.0)
+    plans = {"V_1": [destination, committed_delivery]}
 
     monkeypatch.setattr(new_engine, "create_Pickup_Delivery_nodes", lambda *args: [pickup, delivery])
     monkeypatch.setattr(
@@ -303,11 +304,7 @@ def test_dispatch_repairs_destination_after_exhaustive_ci_replacement(monkeypatc
         deadline=None,
     )
 
-    assert [item.id for item in plans["V_1"][0].pickup_item_list] == [
-        "committed-2",
-        "new-2",
-    ]
-    assert plans["V_1"][1:] == [delivery]
+    assert plans["V_1"] == [destination, committed_delivery, pickup, delivery]
 
 
 def test_is_feasible_returns_true_for_valid_route():
@@ -518,7 +515,7 @@ def test_new_dispatch_rolls_back_partial_ci_failure_and_uses_emergency_fallback(
 
     result = new_engine.new_dispatch_new_orders(
         plans,
-        {},
+        {"pickup": object(), "delivery": object()},
         {},
         {"v1": vehicle},
         {"item-1": item},
@@ -554,7 +551,7 @@ def test_new_dispatch_reports_missing_item_after_all_fallbacks_without_raising(m
     assert plans == {"v1": []}
 
 
-def test_algorithm_main_caps_pre_ga_dispatch_deadline(monkeypatch):
+def test_algorithm_main_does_not_pass_local_dispatch_deadline(monkeypatch):
     main_path = pathlib.Path(__file__).parents[1] / "AGVNS" / "algorithm" / "main.py"
     main_spec = importlib.util.spec_from_file_location("agvns_algorithm_main_deadline", main_path)
     agvns_algorithm_main = importlib.util.module_from_spec(main_spec)
@@ -567,9 +564,9 @@ def test_algorithm_main_caps_pre_ga_dispatch_deadline(monkeypatch):
             self.solution = solution
             self.fitness = 0.0
 
+    monkeypatch.setattr(agvns_algorithm_main, "_assert_valid_dispatch_plan", lambda *args: None)
     monkeypatch.setattr(agvns_algorithm_main.Config, "set_begin_time", lambda: None)
     monkeypatch.setattr(agvns_algorithm_main.Config, "get_remaining_time", lambda: 42.0)
-    monkeypatch.setattr(agvns_algorithm_main.Config, "PRE_DISPATCH_TIME_LIMIT", 5.0, raising=False)
     monkeypatch.setattr(agvns_algorithm_main, "Input", lambda: ({}, {}, {}, {}, {}, {}))
     monkeypatch.setattr(agvns_algorithm_main, "deal_old_solution_file", lambda *args: None)
     monkeypatch.setattr(
@@ -597,69 +594,64 @@ def test_algorithm_main_caps_pre_ga_dispatch_deadline(monkeypatch):
     monkeypatch.setattr(agvns_algorithm_main, "append_current_solution", lambda *args: None)
     monkeypatch.setattr(agvns_algorithm_main.Config, "DELAY_DISPATCH", False)
 
-    before = time.monotonic()
     agvns_algorithm_main.main()
 
-    assert before + 4.0 <= captured["deadline"] <= before + 6.0
+    assert captured["deadline"] is None
 
 
-def test_gold_local_search_passes_per_operator_time_limit(monkeypatch):
+def test_gold_local_search_uses_unbounded_operator_budget(monkeypatch):
     import algorithm.Test_algorithm.new_engine as new_engine
 
     captured_limits = []
     individual = SimpleNamespace(solution={}, id_to_vehicle={}, route_map={})
 
-    def bounded_operator(*args):
+    def unbounded_operator(*args):
         captured_limits.append(args[3])
         return False
 
     monkeypatch.setattr(config, "is_timeout", lambda: False)
-    monkeypatch.setattr(config, "LS_MAX_TIME_PER_OP", 7.0)
     monkeypatch.setattr(new_engine, "total_cost", lambda *args: 0.0)
-    monkeypatch.setattr(new_engine, "new_inter_couple_exchange", bounded_operator)
-    monkeypatch.setattr(new_engine, "new_block_exchange", bounded_operator)
-    monkeypatch.setattr(new_engine, "new_block_relocate", bounded_operator)
-    monkeypatch.setattr(new_engine, "new_multi_pd_group_relocate", bounded_operator)
+    monkeypatch.setattr(new_engine, "new_inter_couple_exchange", unbounded_operator)
+    monkeypatch.setattr(new_engine, "new_block_exchange", unbounded_operator)
+    monkeypatch.setattr(new_engine, "new_block_relocate", unbounded_operator)
+    monkeypatch.setattr(new_engine, "new_multi_pd_group_relocate", unbounded_operator)
 
     new_engine.gold_algorithm_LS(individual, False)
 
-    assert captured_limits == [7.0, 7.0, 7.0, 7.0]
+    assert captured_limits == [float("inf")] * 4
 
 
-def test_gold_local_search_caps_total_final_search_time(monkeypatch):
+def test_gold_local_search_ignores_legacy_final_deadline(monkeypatch):
     import algorithm.Test_algorithm.new_engine as new_engine
 
     captured_limits = []
     individual = SimpleNamespace(solution={}, id_to_vehicle={}, route_map={})
 
-    def bounded_operator(*args):
+    def unbounded_operator(*args):
         captured_limits.append(args[3])
         return False
 
     monkeypatch.setattr(config, "is_timeout", lambda: False)
-    monkeypatch.setattr(config, "LS_MAX_TIME_PER_OP", 7.0)
-    monkeypatch.setattr(config, "FINAL_LS_TIME_LIMIT", 3.0, raising=False)
+    monkeypatch.setattr(config, "FINAL_LS_TIME_LIMIT", 0.0, raising=False)
     monkeypatch.setattr(new_engine, "total_cost", lambda *args: 0.0)
-    monkeypatch.setattr(new_engine, "new_inter_couple_exchange", bounded_operator)
-    monkeypatch.setattr(new_engine, "new_block_exchange", bounded_operator)
-    monkeypatch.setattr(new_engine, "new_block_relocate", bounded_operator)
-    monkeypatch.setattr(new_engine, "new_multi_pd_group_relocate", bounded_operator)
+    monkeypatch.setattr(new_engine, "new_inter_couple_exchange", unbounded_operator)
+    monkeypatch.setattr(new_engine, "new_block_exchange", unbounded_operator)
+    monkeypatch.setattr(new_engine, "new_block_relocate", unbounded_operator)
+    monkeypatch.setattr(new_engine, "new_multi_pd_group_relocate", unbounded_operator)
 
     new_engine.gold_algorithm_LS(individual, False)
 
-    assert len(captured_limits) == 4
-    assert all(limit == pytest.approx(3.0, abs=1e-3) for limit in captured_limits)
+    assert captured_limits == [float("inf")] * 4
 
 
-def test_local_deadline_is_honored_even_without_global_algorithm_clock(monkeypatch):
-    monkeypatch.setattr(config, "BEGIN_TIME", 0)
-    monkeypatch.setattr(config, "BEGIN_MONOTONIC", 0.0)
+def test_local_deadline_does_not_override_global_clock(monkeypatch):
+    monkeypatch.setattr(config, "BEGIN_MONOTONIC", time.monotonic())
     monkeypatch.setattr(config, "LOCAL_DEADLINE", time.monotonic() - 1.0, raising=False)
 
-    assert config.is_timeout() is True
+    assert config.is_timeout() is False
 
 
-def test_total_cost_aborts_when_local_deadline_is_expired(monkeypatch):
+def test_total_cost_ignores_expired_local_deadline(monkeypatch):
     import algorithm.engine as engine
 
     vehicle = SimpleNamespace(
@@ -669,14 +661,13 @@ def test_total_cost_aborts_when_local_deadline_is_expired(monkeypatch):
         des=None,
         board_capacity=10.0,
     )
-    monkeypatch.setattr(config, "BEGIN_TIME", 0)
-    monkeypatch.setattr(config, "BEGIN_MONOTONIC", 0.0)
+    monkeypatch.setattr(config, "BEGIN_MONOTONIC", time.monotonic())
     monkeypatch.setattr(config, "LOCAL_DEADLINE", time.monotonic() - 1.0, raising=False)
 
-    assert engine.total_cost({"V_1": vehicle}, {}, {"V_1": []}) == float("inf")
+    assert engine.total_cost({"V_1": vehicle}, {}, {"V_1": []}) != float("inf")
 
 
-def test_single_vehicle_cost_aborts_when_local_deadline_is_expired(monkeypatch):
+def test_single_vehicle_cost_ignores_expired_local_deadline(monkeypatch):
     import algorithm.engine as engine
 
     vehicle = SimpleNamespace(
@@ -686,12 +677,11 @@ def test_single_vehicle_cost_aborts_when_local_deadline_is_expired(monkeypatch):
         des=None,
         board_capacity=10.0,
     )
+    monkeypatch.setattr(config, "BEGIN_MONOTONIC", time.monotonic())
+    monkeypatch.setattr(config, "LOCAL_DEADLINE", time.monotonic() - 1.0, raising=False)
     node = SimpleNamespace(id="F1", pickup_item_list=[], delivery_item_list=[], service_time=0)
-    monkeypatch.setattr(config, "BEGIN_TIME", 0)
-    monkeypatch.setattr(config, "BEGIN_MONOTONIC", 0.0)
-    monkeypatch.setattr(config, "LOCAL_DEADLINE", time.monotonic() - 1.0, raising=False)
 
-    assert engine.single_vehicle_cost([node], vehicle, {}) == float("inf")
+    assert engine.single_vehicle_cost([node], vehicle, {}) != float("inf")
 
 
 def test_new_dispatch_restores_partial_pair_before_emergency_retry(monkeypatch):
@@ -720,7 +710,7 @@ def test_new_dispatch_restores_partial_pair_before_emergency_retry(monkeypatch):
 
     result = new_engine.new_dispatch_new_orders(
         plans,
-        {},
+        {"pickup": object(), "delivery": object()},
         {},
         {"v1": vehicle},
         {"item-3": item},
@@ -729,6 +719,72 @@ def test_new_dispatch_restores_partial_pair_before_emergency_retry(monkeypatch):
 
     assert result is False
     assert [node.id for node in plans["v1"]] == ["pickup", "delivery"]
+
+
+def test_new_dispatch_replaces_stale_requested_pairs_in_restored_route(monkeypatch):
+    import algorithm.Test_algorithm.new_engine as new_engine
+    from algorithm.Object import Factory, Node, OrderItem
+
+    item = OrderItem(
+        id="stale-route-item",
+        order_id="stale-route-order",
+        pickup_factory_id="F1",
+        delivery_factory_id="F2",
+        demand=1.0,
+    )
+    plans = {
+        "v1": [
+            Node("F1", [], [item]),
+            Node("F2", [item], []),
+            Node("F1", [], [item]),
+            Node("F2", [item], []),
+        ]
+    }
+    vehicle = SimpleNamespace(
+        board_capacity=10.0,
+        des=None,
+        carrying_items=[],
+    )
+
+    def dispatch_once(vehicleid_to_plan, *args, **kwargs):
+        vehicleid_to_plan["v1"].extend([
+            Node("F1", [], [item]),
+            Node("F2", [item], []),
+        ])
+        return True
+
+    monkeypatch.setattr(new_engine, "_dispatch_new_orders_impl", dispatch_once)
+    monkeypatch.setattr(new_engine, "random_dispatch_nodePair", lambda *args, **kwargs: False)
+    monkeypatch.setattr(config, "is_timeout", lambda: False)
+    monkeypatch.setattr(config, "get_remaining_time", lambda: 60.0)
+
+    result = new_engine.new_dispatch_new_orders(
+        plans,
+        {
+            "F1": Factory("F1", 1.0, 1.0, 1),
+            "F2": Factory("F2", 2.0, 2.0, 1),
+        },
+        {},
+        {"v1": vehicle},
+        {item.id: item},
+        [item.id],
+        strict=True,
+    )
+
+    pickup_count = sum(
+        entry.id == item.id
+        for route in plans.values()
+        for node in route
+        for entry in node.pickup_item_list
+    )
+    delivery_count = sum(
+        entry.id == item.id
+        for route in plans.values()
+        for node in route
+        for entry in node.delivery_item_list
+    )
+    assert result is True
+    assert (pickup_count, delivery_count) == (1, 1)
 
 
 def test_new_dispatch_rejects_pair_on_different_routes_or_wrong_order(monkeypatch):
@@ -755,7 +811,7 @@ def test_new_dispatch_rejects_pair_on_different_routes_or_wrong_order(monkeypatc
 
     result = new_engine.new_dispatch_new_orders(
         plans,
-        {},
+        {"pickup": object(), "delivery": object()},
         {},
         {"v1": vehicle},
         {"item-4": item},
@@ -799,6 +855,83 @@ def test_restore_scene_seeds_committed_destination_prefix(monkeypatch, tmp_path)
     assert new_ids == [item.id]
     assert plans[vehicle.id][0].id == destination.id
     assert [order_item.id for order_item in plans[vehicle.id][0].pickup_item_list] == [item.id]
+
+
+
+def test_restore_scene_trims_unloaded_deliveries_from_committed_destination():
+    import algorithm.engine as engine
+    from algorithm.Object import Node, OrderItem
+
+    items = {
+        "order-%d" % suffix: OrderItem(
+            id="order-%d" % suffix,
+            order_id="order",
+            pickup_factory_id="F1",
+            delivery_factory_id="F2",
+            demand=1.0,
+        )
+        for suffix in range(1, 6)
+    }
+    committed_item = items["order-5"]
+    destination = Node("F2", [committed_item], [], arrive_time=10, leave_time=20)
+    vehicle = SimpleNamespace(carrying_items=[committed_item], des=destination)
+    serialized_head = Node("F2", list(reversed(list(items.values()))), [])
+
+    requeued = set()
+    restored = engine._reconcile_restored_route(
+        "V_11",
+        vehicle,
+        [serialized_head],
+        set(),
+        {"order-1", "order-2", "order-3", "order-4"},
+        requeued,
+    )
+
+    assert [item.id for item in restored[0].delivery_item_list] == [committed_item.id]
+    assert requeued == {"order-1", "order-2", "order-3", "order-4"}
+    assert engine.isFeasible(restored, vehicle.carrying_items, capacity=5.0)
+
+
+
+def test_restore_scene_drops_unloaded_delivery_tail_at_committed_factory():
+    import algorithm.engine as engine
+    from algorithm.Object import Node, OrderItem
+
+    committed_item = OrderItem(
+        id="committed-1",
+        order_id="committed",
+        pickup_factory_id="F1",
+        delivery_factory_id="F2",
+        demand=1.0,
+    )
+    stale_items = [
+        OrderItem(
+            id="stale-%d" % suffix,
+            order_id="stale",
+            pickup_factory_id="F1",
+            delivery_factory_id="F2",
+            demand=1.0,
+        )
+        for suffix in range(1, 5)
+    ]
+    destination = Node("F2", [committed_item], [], arrive_time=10, leave_time=20)
+    vehicle = SimpleNamespace(carrying_items=[committed_item], des=destination)
+    saved_tail = Node("F2", list(reversed(stale_items)), [])
+
+    requeued = set()
+    restored = engine._reconcile_restored_route(
+        "V_11",
+        vehicle,
+        [saved_tail],
+        set(),
+        {item.id for item in stale_items},
+        requeued,
+    )
+
+    assert len(restored) == 1
+    assert [item.id for item in restored[0].delivery_item_list] == [committed_item.id]
+    assert requeued == {item.id for item in stale_items}
+    assert engine.isFeasible(restored, vehicle.carrying_items, capacity=5.0)
 
 
 def test_restore_scene_removes_stale_destination_actions_from_route_tail():
@@ -921,8 +1054,8 @@ def test_new_dispatch_splits_oversized_order_on_timeout(monkeypatch):
         deadline=time.monotonic() - 1,
     )
 
-    assert result is True
-    assert calls == [1, 1]
+    assert result is False
+    assert calls == []
     assert len(plans["v1"]) == 4
 
 
@@ -1224,19 +1357,701 @@ def test_restore_scene_requeues_unallocated_orphan_delivery(monkeypatch, tmp_pat
     assert plans["V_1"] == []
 
 
-def test_deal_old_solution_uses_isolated_algorithm_data_directory(monkeypatch, tmp_path):
+def test_solution_route_round_trip_preserves_noncontiguous_delivery_item_ids(
+        monkeypatch, tmp_path):
     import algorithm.engine as engine
+    from algorithm.Object import Factory, Node, OrderItem
 
-    now = datetime.now()
-    initial_time = int(datetime(now.year, now.month, now.day, 0, 0, 0).timestamp())
-    solution_path = tmp_path / "solution.json"
-    solution_path.write_text("{}", encoding="utf-8")
-    monkeypatch.setattr(engine.Configs, "algorithm_data_interaction_folder_path", str(tmp_path))
+    item_ids = ["order-1", "order-10"] + ["order-%d" % i for i in range(2, 10)]
+    items = [
+        OrderItem(
+            id=item_id,
+            order_id="order",
+            pickup_factory_id="F1",
+            delivery_factory_id="F2",
+            demand=1.0,
+        )
+        for item_id in item_ids
+    ]
+    vehicle = SimpleNamespace(
+        des=None,
+        carrying_items=[],
+        board_capacity=20.0,
+        gps_update_time=0,
+    )
+    plans = {
+        "V_1": [
+            Node("F1", [], items),
+            Node("F2", list(reversed(items)), []),
+        ]
+    }
+    monkeypatch.setattr(engine, "input_directory", str(tmp_path))
 
-    engine.deal_old_solution_file(
-        {
-            "V_1": SimpleNamespace(gps_update_time=initial_time + 600, des=None),
-        }
+    engine.update_solution_json(
+        {}, {item.id: item for item in items}, {"V_1": vehicle},
+        plans, {}, {}, used_time=0.0,
     )
 
-    assert not solution_path.exists()
+    persisted_solution = json.loads((tmp_path / "solution.json").read_text())
+    restored_plans = {}
+    restored_ids = engine.restore_scene_with_single_node(
+        restored_plans,
+        {},
+        {item.id: item for item in items},
+        {"V_1": vehicle},
+        {
+            "F1": Factory("F1", 0.0, 0.0, 1),
+            "F2": Factory("F2", 1.0, 1.0, 1),
+        },
+        {item.id: item for item in items},
+    )
+
+    assert restored_ids == []
+    assert len(restored_plans["V_1"]) == 2
+    assert [item.id for item in restored_plans["V_1"][0].pickup_item_list] == item_ids
+    assert [item.id for item in restored_plans["V_1"][1].delivery_item_list] == list(
+        reversed(item_ids)
+    )
+
+
+def test_main_captures_cheapest_insertion_fitness_before_running_ga(monkeypatch, capsys):
+    import importlib
+    import math
+
+    algorithm_main = importlib.import_module("algorithm.main")
+    state = {"timed_out": False}
+
+    class _FakeChromosome:
+        def __init__(self, solution, route_map, id_to_vehicle):
+            self.solution = solution
+
+        @property
+        def fitness(self):
+            return math.inf if state["timed_out"] else 12.5
+
+    monkeypatch.setattr(algorithm_main.Config, "set_begin_time", lambda: None)
+    monkeypatch.setattr(algorithm_main.Config, "BEGIN_TIME", time.time())
+    monkeypatch.setattr(algorithm_main.Config, "DELAY_DISPATCH", False)
+    monkeypatch.setattr(algorithm_main, "Input", lambda: ({}, {}, {}, {}, {}, {}))
+    monkeypatch.setattr(algorithm_main, "deal_old_solution_file", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "restore_scene_with_single_node", lambda *args: [])
+    monkeypatch.setattr(algorithm_main, "new_dispatch_new_orders", lambda *args, **kwargs: None)
+    monkeypatch.setattr(algorithm_main, "_assert_valid_dispatch_plan", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "get_UnongoingSuperNode", lambda *args: ({}, {}))
+    monkeypatch.setattr(algorithm_main, "Chromosome", _FakeChromosome)
+
+    def _run_ga(*args):
+        state["timed_out"] = True
+        return _FakeChromosome({}, {}, {})
+
+    monkeypatch.setattr(algorithm_main, "GAVND_7", _run_ga)
+    monkeypatch.setattr(algorithm_main, "get_route_after", lambda *args: "routes")
+    monkeypatch.setattr(algorithm_main, "total_cost", lambda *args: math.inf)
+    monkeypatch.setattr(algorithm_main, "update_solution_json", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "merge_node", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "get_output_solution", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "write_destination_json_to_file", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "write_route_json_to_file", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "append_current_solution", lambda *args: None)
+
+    algorithm_main.main()
+
+    assert "The fitness value before EA: 12.5" in capsys.readouterr().out
+
+
+
+def test_search_stops_at_570_but_finalization_uses_simulator_safety_window(monkeypatch):
+    clock = {"now": 1000.0}
+    monkeypatch.setattr(config.time, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(config, "BEGIN_MONOTONIC", 1000.0)
+    monkeypatch.setattr(config, "ALGO_TIME_LIMIT", 570.0)
+    monkeypatch.setattr(config, "SIMULATOR_HARD_TIMEOUT_SECONDS", 6000.0, raising=False)
+    monkeypatch.setattr(config, "FINALIZATION_MODE", False, raising=False)
+
+    clock["now"] = 1570.0
+    assert config.is_timeout() is True
+
+    config.begin_finalization()
+
+    assert config.is_timeout() is False
+    assert config.get_remaining_time() == pytest.approx(5430.0)
+
+    clock["now"] = 7000.0
+    assert config.is_timeout() is True
+    assert config.get_remaining_time() == 0.0
+
+
+def test_main_selects_finite_ga_incumbent_checkpoint_after_search_deadline(
+    monkeypatch, capsys
+):
+    import importlib
+    import math
+
+    algorithm_main = importlib.import_module("algorithm.main")
+    state = {"finalizing": False, "ga_score_reads": 0}
+
+    class _FakeChromosome:
+        def __init__(self, solution, route_map, id_to_vehicle):
+            self.solution = solution
+            self._fitness = 12.5 if solution.get("V_1") == ["ci"] else math.inf
+            if solution.get("V_1") == ["ga"]:
+                self._fitness_at_timeout = 9.5
+
+        @property
+        def fitness(self):
+            if self.solution.get("V_1") == ["ga"]:
+                state["ga_score_reads"] += 1
+                return math.inf
+            if not state["finalizing"]:
+                return math.inf
+            return 12.5
+
+    monkeypatch.setattr(algorithm_main.Config, "set_begin_time", lambda: None)
+    monkeypatch.setattr(algorithm_main.Config, "BEGIN_TIME", time.time())
+    monkeypatch.setattr(
+        algorithm_main.Config,
+        "begin_finalization",
+        lambda: state.update(finalizing=True),
+        raising=False,
+    )
+    monkeypatch.setattr(algorithm_main.Config, "DELAY_DISPATCH", False)
+    monkeypatch.setattr(algorithm_main, "Input", lambda: ({}, {}, {"V_1": object()}, {}, {}, {}))
+    monkeypatch.setattr(algorithm_main, "deal_old_solution_file", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "restore_scene_with_single_node", lambda *args: [])
+    monkeypatch.setattr(
+        algorithm_main,
+        "new_dispatch_new_orders",
+        lambda plans, *args, **kwargs: plans.update({"V_1": ["ci"]}),
+    )
+    monkeypatch.setattr(algorithm_main, "_assert_valid_dispatch_plan", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "get_UnongoingSuperNode", lambda *args: ({}, {}))
+    monkeypatch.setattr(algorithm_main, "Chromosome", _FakeChromosome)
+    def _run_ga(*args):
+        assert not state["finalizing"]
+        return _FakeChromosome({"V_1": ["ga"]}, {}, {})
+
+    monkeypatch.setattr(algorithm_main, "GAVND_7", _run_ga)
+    monkeypatch.setattr(
+        algorithm_main,
+        "get_route_after",
+        lambda plan, *args: ",".join(plan.get("V_1", [])),
+    )
+    monkeypatch.setattr(algorithm_main, "update_solution_json", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "merge_node", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "get_output_solution", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "write_destination_json_to_file", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "write_route_json_to_file", lambda *args: None)
+    archived_fitness = []
+    monkeypatch.setattr(
+        algorithm_main,
+        "append_current_solution",
+        lambda fitness, *args: archived_fitness.append(fitness),
+    )
+
+    algorithm_main.main()
+
+    output = capsys.readouterr().out
+    assert archived_fitness == [9.5]
+    assert state["ga_score_reads"] == 0
+    assert "The fitness value after EA: 9.5" in output
+    assert "The solution initialized by Cheapest Insertion:\nci" in output
+    assert "Selected feasible GA solution" in output
+
+def test_adaptive_ls_logs_last_finite_cost_after_timeout(monkeypatch, capsys):
+    calls = []
+    individual = SimpleNamespace(
+        solution={},
+        id_to_vehicle={},
+        route_map={},
+        improved_LS_map={
+            "PDPairExchange": 0,
+            "BlockExchange": 0,
+            "BlockRelocate": 0,
+            "mPDG": 0,
+        },
+    )
+
+    monkeypatch.setattr(config, "is_timeout", lambda: False)
+    monkeypatch.setattr(
+        gavnd7,
+        "total_cost",
+        lambda *args: calls.append(True) or (12.5 if len(calls) == 1 else float("inf")),
+    )
+    monkeypatch.setattr(
+        gavnd7,
+        "get_adaptive_order",
+        lambda *args: ["PDPairExchange", "BlockExchange", "BlockRelocate", "mPDG"],
+    )
+    monkeypatch.setattr(gavnd7, "new_inter_couple_exchange", lambda *args: False)
+    monkeypatch.setattr(gavnd7, "new_block_exchange", lambda *args: False)
+    monkeypatch.setattr(gavnd7, "new_block_relocate", lambda *args: False)
+    monkeypatch.setattr(gavnd7, "new_multi_pd_group_relocate", lambda *args: False)
+
+    gavnd7.adaptive_LS_stategy(individual, {}, False)
+
+    assert "Cost:12.50" in capsys.readouterr().out
+    assert len(calls) == 1
+
+
+def test_total_cost_reuses_known_finite_score_after_algorithm_deadline(monkeypatch):
+    import math
+
+    import algorithm.engine as engine
+    from algorithm.Object import Node
+
+    deadline = {"expired": False}
+    monkeypatch.setattr(engine.config, "is_timeout", lambda: deadline["expired"])
+    plan = {"V_1": [Node("F1", [], [])]}
+    route_map = {}
+    vehicles = {
+        "V_1": SimpleNamespace(
+            cur_factory_id="F1",
+            leave_time_at_current_factory=0,
+            gps_update_time=0,
+            des=None,
+        )
+    }
+
+    known_score = engine.total_cost(vehicles, route_map, plan)
+    assert known_score == pytest.approx(0.0)
+
+    deadline["expired"] = True
+    assert engine.total_cost(vehicles, route_map, plan) == pytest.approx(known_score)
+    plan["V_1"].append(Node("F2", [], []))
+    assert math.isinf(engine.total_cost(vehicles, route_map, plan))
+
+
+def test_total_cost_reuses_score_of_previously_scored_mutation_after_deadline(monkeypatch):
+    import algorithm.engine as engine
+    from algorithm.Object import Node
+
+    deadline = {"expired": False}
+    monkeypatch.setattr(engine.config, "is_timeout", lambda: deadline["expired"])
+    route_map = {("F1", "F2"): (10.0, 100)}
+    vehicles = {
+        "V_1": SimpleNamespace(
+            cur_factory_id="F1",
+            leave_time_at_current_factory=0,
+            gps_update_time=0,
+            des=None,
+        )
+    }
+    first_node = Node("F1", [], [])
+    second_node = Node("F2", [], [])
+    candidate_plan = {"V_1": [first_node, second_node]}
+
+    candidate_score = engine.total_cost(vehicles, route_map, candidate_plan)
+    assert candidate_score == pytest.approx(10.0)
+
+    accepted_plan = {"V_1": [first_node, second_node]}
+    deadline["expired"] = True
+    assert engine.total_cost(vehicles, route_map, accepted_plan) == pytest.approx(candidate_score)
+
+
+def test_main_keeps_ci_solution_when_ga_returns_worse_fitness(monkeypatch, capsys):
+    import importlib
+
+    algorithm_main = importlib.import_module("algorithm.main")
+
+    class _ScoredChromosome:
+        def __init__(self, solution, route_map, id_to_vehicle):
+            self.solution = solution
+
+        @property
+        def fitness(self):
+            route = self.solution.get("V_1", [])
+            return 12.5 if route == ["ci"] else 12.6
+
+    monkeypatch.setattr(algorithm_main.Config, "set_begin_time", lambda: None)
+    monkeypatch.setattr(algorithm_main.Config, "BEGIN_TIME", time.time())
+    monkeypatch.setattr(algorithm_main.Config, "DELAY_DISPATCH", False)
+    monkeypatch.setattr(algorithm_main, "Input", lambda: ({}, {}, {"V_1": object()}, {}, {}, {}))
+    monkeypatch.setattr(algorithm_main, "deal_old_solution_file", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "restore_scene_with_single_node", lambda *args: [])
+    monkeypatch.setattr(
+        algorithm_main,
+        "new_dispatch_new_orders",
+        lambda plans, *args, **kwargs: plans.update({"V_1": ["ci"]}),
+    )
+    monkeypatch.setattr(algorithm_main, "_assert_valid_dispatch_plan", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "get_UnongoingSuperNode", lambda *args: ({}, {}))
+    monkeypatch.setattr(algorithm_main, "Chromosome", _ScoredChromosome)
+    monkeypatch.setattr(
+        algorithm_main,
+        "GAVND_7",
+        lambda *args: _ScoredChromosome({"V_1": ["ga"]}, {}, {}),
+    )
+    monkeypatch.setattr(
+        algorithm_main,
+        "get_route_after",
+        lambda plan, *args: ",".join(plan.get("V_1", [])),
+    )
+    monkeypatch.setattr(algorithm_main, "update_solution_json", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "merge_node", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "get_output_solution", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "write_destination_json_to_file", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "write_route_json_to_file", lambda *args: None)
+    monkeypatch.setattr(algorithm_main, "append_current_solution", lambda *args: None)
+
+    algorithm_main.main()
+
+    output = capsys.readouterr().out
+    assert "The fitness value before EA: 12.5" in output
+    assert "The fitness value after EA: 12.5" in output
+    assert "The solution initialized by Cheapest Insertion:\nci" in output
+    assert "Selected feasible GA solution" not in output
+
+
+def test_gavnd7_treats_fractional_fitness_gain_as_an_improvement(monkeypatch):
+    class _FakeChromosome:
+        def __init__(self, score_or_solution, *args):
+            if isinstance(score_or_solution, dict):
+                self.solution = score_or_solution
+                self._fitness = self.solution["V_1"][0]
+            else:
+                self._fitness = score_or_solution
+                self.solution = {"V_1": [score_or_solution]}
+            self.improved_LS_map = {
+                "PDPairExchange": 0,
+                "BlockExchange": 0,
+                "BlockRelocate": 0,
+                "mPDG": 0,
+            }
+
+        @property
+        def fitness(self):
+            return self._fitness
+
+    incumbent = _FakeChromosome(10.8)
+    second = _FakeChromosome(11.0)
+    child_scores = iter([10.7, 10.75] + [10.76, 10.77] * 7)
+    crossover_calls = []
+
+    monkeypatch.setattr(config, "BEGIN_TIME", time.time())
+    monkeypatch.setattr(config, "NUMBER_OF_GENERATION", 8)
+    monkeypatch.setattr(config, "POPULATION_SIZE", 2)
+    monkeypatch.setattr(config, "MUTATION_RATE", 0.0)
+    monkeypatch.setattr(config, "CROSSOVER_TYPE_RATIO", 1.0)
+    monkeypatch.setattr(config, "addDelta", 0.0)
+    monkeypatch.setattr(config, "is_timeout", lambda: False)
+    monkeypatch.setattr(config, "applied_experiment_config", lambda: {
+        "configuration_id": 1,
+        "threshold_orders": 40,
+        "population_size": 2,
+        "perturbation_rate": 0.5,
+        "mutation_rate": 0.25,
+        "random_seed": 1,
+    })
+    monkeypatch.setattr(gavnd7, "adaptive_local_configs", lambda *args, **kwargs: {})
+    monkeypatch.setattr(
+        gavnd7,
+        "new_generate_random_chromosome",
+        lambda *args: ([incumbent, second], {}),
+    )
+    monkeypatch.setattr(gavnd7, "Chromosome", _FakeChromosome)
+
+    def _new_child(*args):
+        crossover_calls.append(True)
+        return _FakeChromosome(next(child_scores))
+
+    monkeypatch.setattr(gavnd7, "new_crossver2", _new_child)
+    monkeypatch.setattr(gavnd7, "randon_1_LS", lambda *args: None)
+    monkeypatch.setattr(gavnd7, "remove_similar_individuals", lambda population, threshold: population)
+    monkeypatch.setattr(gavnd7, "adaptive_LS_stategy", lambda *args: None)
+
+    result = gavnd7.GAVND_7({}, {}, {}, {0: {}, 1: {}}, {})
+
+    assert len(crossover_calls) == 10
+    assert result.fitness == pytest.approx(10.7)
+
+
+
+def test_is_feasible_rejects_missing_route_nodes_without_crashing():
+    import algorithm.engine as engine
+
+    assert not engine.isFeasible([None], [], 10.0)
+
+
+def test_legacy_route_parser_recovers_noncontiguous_factory_groups():
+    import algorithm.engine as engine
+    from algorithm.Object import Factory, Node, OrderItem
+
+    items = {}
+    for suffix in range(1, 18):
+        item_id = "legacy-order-%d" % suffix
+        items[item_id] = OrderItem(
+            id=item_id,
+            order_id="legacy-order",
+            pickup_factory_id="F2",
+            delivery_factory_id="F2",
+            demand=1.0,
+        )
+    expected_factory_items = sorted(
+        item_id for item_id in items if item_id not in {
+            "legacy-order-8", "legacy-order-9",
+        }
+    )
+    vehicle = SimpleNamespace(
+        carrying_items=[items[item_id] for item_id in expected_factory_items],
+        des=Node(
+            "F2", [items[item_id] for item_id in reversed(expected_factory_items)], [],
+        ),
+    )
+    factories = {"F2": Factory("F2", 2.0, 2.0, 1)}
+
+    pickup = engine._parse_legacy_route_node(
+        "p15_legacy-order-1", factories, items, vehicle=vehicle
+    )
+    delivery = engine._parse_legacy_route_node(
+        "d15_legacy-order-7", factories, items, vehicle=vehicle
+    )
+
+    assert [item.id for item in pickup.pickup_item_list] == expected_factory_items
+    assert [item.id for item in delivery.delivery_item_list] == list(
+        reversed(expected_factory_items)
+    )
+
+
+
+def test_dispatch_node_pair_skips_route_with_unpaired_existing_pickup(monkeypatch):
+    import algorithm.engine as engine
+    from algorithm.Object import Node, OrderItem
+
+    old_item = OrderItem(
+        id="old-item", order_id="old-order", pickup_factory_id="F1",
+        delivery_factory_id="F2", demand=1.0,
+    )
+    new_item = OrderItem(
+        id="new-item", order_id="new-order", pickup_factory_id="F1",
+        delivery_factory_id="F3", demand=1.0,
+    )
+    vehicle = SimpleNamespace(
+        des=None, board_capacity=10.0, carrying_items=[], gps_update_time=0,
+    )
+    plans = {"v1": [Node("F1", [], [old_item])]}
+    new_pair = [Node("F1", [], [new_item]), Node("F3", [new_item], [])]
+
+    monkeypatch.setattr(config, "is_timeout", lambda: False)
+    def reject_none_nodes(route, *args, **kwargs):
+        assert all(node is not None for node in route)
+        return 1.0
+    monkeypatch.setattr(engine, "cost_of_a_route", reject_none_nodes)
+
+    result = engine.dispatch_nodePair(new_pair, {"v1": vehicle}, plans, {})
+
+    assert result[1] == ""
+
+
+
+def test_deal_old_solution_uses_configured_worker_data_dir(monkeypatch, tmp_path):
+    import datetime
+    import os
+    from types import SimpleNamespace
+    import algorithm.engine as engine
+
+    class FixedDateTime(datetime.datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 9, 29, 12, 0, 0)
+
+    initial_time = int(FixedDateTime(2026, 9, 29, 0, 0, 0).timestamp())
+    expected_path = os.path.join(str(tmp_path), "solution.json")
+    removed_paths = []
+    fake_os = SimpleNamespace(
+        path=SimpleNamespace(
+            join=os.path.join,
+            exists=lambda path: path == expected_path,
+        ),
+        remove=removed_paths.append,
+    )
+    monkeypatch.setattr(engine, "datetime", FixedDateTime)
+    monkeypatch.setattr(engine, "os", fake_os)
+    monkeypatch.setattr(engine, "input_directory", str(tmp_path))
+
+    engine.deal_old_solution_file({
+        "V_1": SimpleNamespace(gps_update_time=initial_time + 600, des=None)
+    })
+
+    assert removed_paths == [expected_path]
+
+
+def test_initial_population_stops_at_global_algorithm_deadline(monkeypatch):
+    import algorithm.Test_algorithm.new_engine as new_engine
+
+    calls = []
+    class _FakeChromosome:
+        def __init__(self, solution, *args):
+            self.solution = solution
+            self.fitness = 0.0
+
+    node = SimpleNamespace()
+    pairs = {
+        0: {"v1,0": node, "v1,1": node},
+        1: {"v1,2": node, "v1,3": node},
+    }
+    monkeypatch.setattr(config, "is_timeout", lambda: True)
+    monkeypatch.setattr(new_engine, "Chromosome", _FakeChromosome)
+    monkeypatch.setattr(
+        new_engine,
+        "disturbance_opt",
+        lambda *args: calls.append(True) or object(),
+    )
+
+    population, pdg_map = new_engine.new_generate_random_chromosome(
+        {}, {}, {}, pairs, {}, quantity=2
+    )
+
+    assert calls == []
+    assert population is None
+    assert pdg_map is None
+
+
+def test_disturbance_opt_stops_before_copying_after_global_deadline(monkeypatch):
+    import algorithm.Test_algorithm.new_LS as new_ls
+
+    calls = []
+    monkeypatch.setattr(config, "is_timeout", lambda: True)
+    monkeypatch.setattr(
+        new_ls,
+        "get_UnongoingSuperNode",
+        lambda *args: calls.append(True) or ({}, {}),
+    )
+
+    result = new_ls.disturbance_opt({}, {}, {}, relocate_rate=0.5)
+
+    assert result is None
+    assert calls == []
+
+
+
+def test_epoch_log_records_nonfinite_fitness_as_unavailable(monkeypatch, tmp_path):
+    import json
+    import math
+    import algorithm.epoch_plan_log as epoch_plan_log
+
+    monkeypatch.setattr(epoch_plan_log, "_LOG_DIR", str(tmp_path))
+    monkeypatch.setattr(epoch_plan_log, "_STATE_FILE", str(tmp_path / "_run_state.json"))
+
+    epoch_plan_log.append_epoch_solution(1, "0000-0010", math.inf, "[]")
+
+    state = json.loads((tmp_path / "_run_state.json").read_text(encoding="utf-8"))
+    log_path = tmp_path / ("epoch_plans_%s.jsonl" % state["run_id"])
+    record = json.loads(log_path.read_text(encoding="utf-8").strip())
+    assert record["tc"] is None
+
+
+
+def test_nonfinite_fitness_is_reported_as_unavailable_after_deadline(monkeypatch):
+    import algorithm.main as algorithm_main
+
+    monkeypatch.setattr(algorithm_main.Config, "is_timeout", lambda: True)
+
+    assert algorithm_main._fitness_display(float("inf")) == (
+        "unavailable (algorithm budget exhausted)"
+    )
+
+
+
+def test_log_rotation_ignores_file_removed_by_another_worker(monkeypatch, tmp_path):
+    import os
+    from src.utils import log_utils
+
+    for name in ("a.log", "b.log", "c.log"):
+        (tmp_path / name).write_text("log", encoding="utf-8")
+
+    real_remove = os.remove
+
+    def raced_remove(path):
+        if os.path.basename(path) == "a.log":
+            raise FileNotFoundError(path)
+        real_remove(path)
+
+    monkeypatch.setattr(log_utils.os, "remove", raced_remove)
+
+    log_utils.delete_files(str(tmp_path), max_num=2)
+
+
+
+def test_merge_node_keeps_pickup_before_same_factory_delivery():
+    import algorithm.engine as engine
+    from algorithm.Object import Node, OrderItem
+
+    item = OrderItem(
+        id="same-factory-1",
+        order_id="same-factory",
+        pickup_factory_id="F1",
+        delivery_factory_id="F1",
+        demand=1.0,
+    )
+    vehicle = SimpleNamespace(carrying_items=[], board_capacity=15.0)
+    plans = {
+        "V_1": [
+            Node("F1", [], [item]),
+            Node("F1", [item], []),
+        ]
+    }
+
+    assert engine.isFeasible(plans["V_1"], vehicle.carrying_items, vehicle.board_capacity)
+
+    engine.merge_node({"V_1": vehicle}, plans)
+
+    assert len(plans["V_1"]) == 2
+    assert engine.isFeasible(plans["V_1"], vehicle.carrying_items, vehicle.board_capacity)
+
+
+
+def test_ensure_destination_prefix_removes_duplicate_committed_delivery():
+    import algorithm.engine as engine
+    from algorithm.Object import Node, OrderItem
+
+    item = OrderItem(
+        id="committed-delivery-1",
+        order_id="committed-delivery",
+        pickup_factory_id="F0",
+        delivery_factory_id="F1",
+        demand=1.0,
+    )
+    destination = Node("F1", [item], [])
+    vehicle = SimpleNamespace(des=destination)
+    plans = {
+        "V_1": [
+            Node("F1", [item], []),
+            Node("F1", [item], []),
+            Node("F2", [], []),
+        ]
+    }
+
+    engine._ensure_destination_prefix(plans, {"V_1": vehicle})
+
+    assert len(plans["V_1"]) == 2
+    assert [entry.id for entry in plans["V_1"][0].delivery_item_list] == [item.id]
+    assert plans["V_1"][1].id == "F2"
+
+
+def test_output_plan_validation_includes_destination_and_returned_route():
+    import pytest
+    import algorithm.main as algorithm_main
+    from algorithm.Object import Node, OrderItem
+
+    item = OrderItem(
+        id="duplicate-delivery-1",
+        order_id="duplicate-delivery",
+        pickup_factory_id="F0",
+        delivery_factory_id="F1",
+        demand=1.0,
+    )
+    destination = Node("F1", [item], [])
+    vehicle = SimpleNamespace(
+        des=destination,
+        carrying_items=[item],
+        board_capacity=15.0,
+    )
+
+    with pytest.raises(RuntimeError, match="FILO/capacity"):
+        algorithm_main._assert_valid_output_plan(
+            {"V_1": [Node("F1", [item], [])]},
+            {"V_1": destination},
+            {"V_1": vehicle},
+            [],
+            {"F1": object()},
+        )

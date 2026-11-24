@@ -16,6 +16,7 @@ replay tools so they never pollute the real run logs).
 """
 
 import json
+import math
 import os
 import time
 
@@ -47,6 +48,12 @@ def append_epoch_solution(epoch, delta_t, tc, route_after) -> None:
             run_id = time.strftime("%Y%m%d_%H%M%S") + "_" + os.urandom(4).hex()
         with open(_STATE_FILE, "w", encoding="utf-8") as f:
             json.dump({"run_id": run_id, "last_epoch": epoch}, f)
+
+        try:
+            if tc is not None and not math.isfinite(float(tc)):
+                tc = None
+        except (TypeError, ValueError, OverflowError):
+            tc = None
 
         record = {
             "epoch": epoch,

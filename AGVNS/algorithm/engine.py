@@ -1,4 +1,5 @@
 import copy
+from collections import OrderedDict
 from datetime import datetime
 import json
 import math
@@ -6,6 +7,7 @@ import os
 import random
 import re
 import sys
+import time
 from typing import Dict , List, Optional, Tuple
 from algorithm.Object import *
 import algorithm.algorithm_config as config
@@ -14,13 +16,57 @@ from src.conf.configs import Configs
 
 input_directory = Configs.algorithm_data_interaction_folder_path   
 
+_TOTAL_COST_CACHE = OrderedDict()
+_TOTAL_COST_CACHE_LIMIT = 64
+
+
+def _total_cost_cache_key(id_to_vehicle, route_map, vehicleid_to_plan):
+    vehicle_state = tuple(
+        (
+            vehicle_id,
+            vehicle.cur_factory_id,
+            vehicle.leave_time_at_current_factory,
+            vehicle.gps_update_time,
+            None if vehicle.des is None else vehicle.des.arrive_time,
+        )
+        for vehicle_id, vehicle in id_to_vehicle.items()
+    )
+    route_state = tuple(
+        (
+            vehicle_id,
+            tuple(
+                (
+                    node.id,
+                    node.service_time,
+                    tuple(
+                        (item.order_id, item.committed_completion_time)
+                        for item in (node.delivery_item_list or [])
+                    ),
+                )
+                for node in route
+            ),
+        )
+        for vehicle_id, route in vehicleid_to_plan.items()
+    )
+    return (
+        id(id_to_vehicle),
+        id(route_map),
+        config.Delta,
+        config.WAITING_WEIGHT,
+        config.APPROACHING_DOCK_TIME,
+        vehicle_state,
+        route_state,
+    )
+
 def _restore_canonical_route_after(
         route_after: str,
         vehicleid_to_plan: Dict[str, List[Node]],
+        id_to_vehicle: Dict[str, Vehicle],
         id_to_factory: Dict[str, Factory],
         id_to_allorder: Dict[str, OrderItem],
         complete_item_ids: List[str],
-        on_vehicle_item_ids: List[str],
+        unallocated_item_ids: Optional[set] = None,
+        requeued_item_ids: Optional[set] = None,
 ) -> bool:
     """Restore the canonical JSON route representation into ``vehicleid_to_plan``.
 
@@ -41,7 +87,9 @@ def _restore_canonical_route_after(
         return False
 
     complete_ids = set(complete_item_ids)
-    on_vehicle_ids = set(on_vehicle_item_ids)
+    unallocated_ids = set(unallocated_item_ids or [])
+    pending_requeued_item_ids = set()
+    pending_routes: Dict[str, List[Node]] = {}
     for encoded_route in encoded_routes:
         if (not isinstance(encoded_route, list) or len(encoded_route) != 2 or
                 not isinstance(encoded_route[0], str) or
@@ -49,7 +97,7 @@ def _restore_canonical_route_after(
             return False
 
         vehicle_id, encoded_nodes = encoded_route
-        if vehicle_id not in vehicleid_to_plan:
+        if vehicle_id not in id_to_vehicle:
             continue
 
         restored_route: List[Node] = []
@@ -68,7 +116,7 @@ def _restore_canonical_route_after(
             pickup_items = [
                 id_to_allorder[item_id] for item_id in pickup_ids
                 if (isinstance(item_id, str) and item_id in id_to_allorder and
-                    item_id not in on_vehicle_ids and item_id not in complete_ids)
+                    item_id not in complete_ids)
             ]
             delivery_items = [
                 id_to_allorder[item_id] for item_id in delivery_ids
@@ -80,143 +128,489 @@ def _restore_canonical_route_after(
                     factory_id, delivery_items, pickup_items, None, None,
                     factory.lng, factory.lat,
                 ))
-        vehicleid_to_plan[vehicle_id] = restored_route
+        vehicle = id_to_vehicle.get(vehicle_id)
+        pending_routes[vehicle_id] = _reconcile_restored_route(
+            vehicle_id, vehicle, restored_route, complete_ids,
+            unallocated_ids, pending_requeued_item_ids,
+        )
+    # Commit only after every encoded route has parsed successfully. A malformed
+    # canonical file must not leave half of the legacy fallback overwritten.
+    vehicleid_to_plan.update(pending_routes)
+    if requeued_item_ids is not None:
+        requeued_item_ids.update(pending_requeued_item_ids)
+    for vehicle_id, vehicle in id_to_vehicle.items():
+        if vehicle.des is not None and not vehicleid_to_plan.get(vehicle_id):
+            vehicleid_to_plan[vehicle_id] = [copy.deepcopy(vehicle.des)]
     return True
 
 
+def _node_covers_destination(node: Node, destination: Node) -> bool:
+    if node is None or destination is None or node.id != destination.id:
+        return False
+    node_delivery_ids = {item.id for item in (node.delivery_item_list or [])}
+    node_pickup_ids = {item.id for item in (node.pickup_item_list or [])}
+    destination_delivery_ids = {item.id for item in (destination.delivery_item_list or [])}
+    destination_pickup_ids = {item.id for item in (destination.pickup_item_list or [])}
+    if not destination_delivery_ids and not destination_pickup_ids:
+        return not node_delivery_ids and not node_pickup_ids
+    return (
+        destination_delivery_ids <= node_delivery_ids
+        and destination_pickup_ids <= node_pickup_ids
+    )
+
+
+def _ensure_destination_prefix(
+        vehicleid_to_plan: Dict[str, List[Node]],
+        id_to_vehicle: Dict[str, Vehicle],
+) -> None:
+    """Put each committed destination at route position zero and remove copies."""
+    for vehicle_id, vehicle in id_to_vehicle.items():
+        destination = getattr(vehicle, "des", None)
+        route = list(vehicleid_to_plan.get(vehicle_id) or [])
+        if destination is None:
+            vehicleid_to_plan[vehicle_id] = route
+            continue
+
+        matched_index = next(
+            (index for index, node in enumerate(route)
+             if _node_covers_destination(node, destination)),
+            None,
+        )
+        if matched_index is not None:
+            route = route[matched_index:]
+            route[0].arrive_time = destination.arrive_time
+            route[0].leave_time = destination.leave_time
+        else:
+            destination_delivery_ids = {
+                item.id for item in (destination.delivery_item_list or [])
+            }
+            destination_pickup_ids = {
+                item.id for item in (destination.pickup_item_list or [])
+            }
+            cleaned = []
+            for node in route:
+                node.delivery_item_list = [
+                    item for item in (node.delivery_item_list or [])
+                    if item.id not in destination_delivery_ids
+                ]
+                node.pickup_item_list = [
+                    item for item in (node.pickup_item_list or [])
+                    if item.id not in destination_pickup_ids
+                ]
+                if node.delivery_item_list or node.pickup_item_list:
+                    cleaned.append(node)
+            route = [copy.deepcopy(destination)] + cleaned
+
+        destination_delivery_ids = {
+            item.id for item in (destination.delivery_item_list or [])
+        }
+        destination_pickup_ids = {
+            item.id for item in (destination.pickup_item_list or [])
+        }
+        for node in route[1:]:
+            node.delivery_item_list = [
+                item for item in (node.delivery_item_list or [])
+                if item.id not in destination_delivery_ids
+            ]
+            node.pickup_item_list = [
+                item for item in (node.pickup_item_list or [])
+                if item.id not in destination_pickup_ids
+            ]
+        vehicleid_to_plan[vehicle_id] = [
+            node for index, node in enumerate(route)
+            if (index == 0 or node.id != destination.id
+                or node.delivery_item_list or node.pickup_item_list)
+        ]
+
+
+def _reconcile_restored_route(
+        vehicle_id: str,
+        vehicle: Optional[Vehicle],
+        route: List[Node],
+        complete_item_ids: set,
+        unallocated_item_ids: Optional[set] = None,
+        requeued_item_ids: Optional[set] = None,
+) -> List[Node]:
+    """Reconcile persisted actions against this vehicle's physical state.
+
+    Ongoing order status is global and does not prove that a vehicle has
+    physically picked up an item. The saved route is reconciled with the
+    vehicle's committed destination and current cargo; stale deliveries at
+    the vehicle's current factory are removed and requeued when still pending.
+    """
+    if vehicle is None:
+        return route
+
+    carrying_ids = {
+        item.id for item in (getattr(vehicle, "carrying_items", None) or [])
+    }
+    complete_ids = set(complete_item_ids)
+    unallocated_ids = set(unallocated_item_ids or [])
+    reconciled: List[Node] = []
+    for node in route:
+        pickup_items = [
+            item for item in (node.pickup_item_list or [])
+            if item.id not in carrying_ids and item.id not in complete_ids
+        ]
+        delivery_items = [
+            item for item in (node.delivery_item_list or [])
+            if item.id not in complete_ids
+        ]
+        if pickup_items or delivery_items or not (node.pickup_item_list or node.delivery_item_list):
+            reconciled.append(Node(
+                node.id, delivery_items, pickup_items, node.arrive_time,
+                node.leave_time, node.lng, node.lat,
+            ))
+
+    # The simulator has already consumed work at the vehicle's current
+    # factory. Drop a saved delivery there when the item is not physically on
+    # the vehicle; this is the stale delivery that made instances 57/58
+    # infeasible after the corresponding old pickup had been filtered out.
+    current_factory_id = getattr(vehicle, "cur_factory_id", None)
+    first_action_node = next(
+        (node for node in reconciled
+         if node.delivery_item_list or node.pickup_item_list),
+        None,
+    )
+    stale_here = set()
+    if first_action_node is not None and first_action_node.id == current_factory_id:
+        stale_here = {
+            item.id for item in (first_action_node.delivery_item_list or [])
+            if item.id not in carrying_ids
+            and item.delivery_factory_id == current_factory_id
+        }
+    if stale_here:
+        if requeued_item_ids is not None:
+            requeued_item_ids.update(stale_here & unallocated_ids)
+        cleaned: List[Node] = []
+        for node in reconciled:
+            deliveries = [
+                item for item in (node.delivery_item_list or [])
+                if item.id not in stale_here
+            ]
+            pickups = [
+                item for item in (node.pickup_item_list or [])
+                if item.id not in stale_here
+            ]
+            if deliveries or pickups:
+                cleaned.append(Node(
+                    node.id, deliveries, pickups, node.arrive_time,
+                    node.leave_time, node.lng, node.lat,
+                ))
+        reconciled = cleaned
+
+    destination = getattr(vehicle, "des", None)
+    if destination is not None:
+        destination_index = next(
+            (index for index, node in enumerate(reconciled)
+             if _node_covers_destination(node, destination)),
+            None,
+        )
+        if destination_index is not None:
+            # Everything before the simulator-committed action has already
+            # been consumed. Keep the exact current destination at route head.
+            reconciled = reconciled[destination_index:]
+            reconciled[0].arrive_time = destination.arrive_time
+            reconciled[0].leave_time = destination.leave_time
+        else:
+            # Old solution files may have lost the committed action through
+            # global filtering; seed the simulator's actual committed action.
+            destination_copy = copy.deepcopy(destination)
+            reconciled.insert(0, destination_copy)
+
+        # A committed action may also remain later in a damaged old route.
+        destination_delivery_ids = {
+            item.id for item in (destination.delivery_item_list or [])
+        }
+        destination_pickup_ids = {
+            item.id for item in (destination.pickup_item_list or [])
+        }
+        for index in range(1, len(reconciled)):
+            node = reconciled[index]
+            node.delivery_item_list = [
+                item for item in (node.delivery_item_list or [])
+                if item.id not in destination_delivery_ids
+            ]
+            node.pickup_item_list = [
+                item for item in (node.pickup_item_list or [])
+                if item.id not in destination_pickup_ids
+            ]
+        reconciled = [
+            node for index, node in enumerate(reconciled)
+            if (index == 0 or node.id != destination.id
+                or node.delivery_item_list or node.pickup_item_list)
+        ]
+        if not reconciled or not _node_covers_destination(reconciled[0], destination):
+            raise RuntimeError(
+                "Could not restore committed destination for vehicle %s at %s"
+                % (vehicle_id, destination.id)
+            )
+
+    if destination is not None:
+        # Old compact routes can merge more deliveries into the committed
+        # factory node than the simulator has physically loaded. Keep only
+        # deliveries known to be on the vehicle, while allowing committed
+        # deliveries at the route head. Requeue still-unallocated stale items.
+        available_item_ids = set(carrying_ids)
+        destination_delivery_ids = {
+            item.id for item in (destination.delivery_item_list or [])
+        }
+        for index, node in enumerate(reconciled):
+            deliveries = list(node.delivery_item_list or [])
+            if node.id == destination.id:
+                retained_deliveries = []
+                for item in deliveries:
+                    is_committed_delivery = (
+                        index == 0 and item.id in destination_delivery_ids
+                    )
+                    if item.id in available_item_ids or is_committed_delivery:
+                        retained_deliveries.append(item)
+                        available_item_ids.discard(item.id)
+                    else:
+                        if requeued_item_ids is not None and item.id in unallocated_ids:
+                            requeued_item_ids.add(item.id)
+                node.delivery_item_list = retained_deliveries
+            else:
+                for item in deliveries:
+                    available_item_ids.discard(item.id)
+
+            available_item_ids.update(
+                item.id for item in (node.pickup_item_list or [])
+            )
+
+        reconciled = [
+            node for index, node in enumerate(reconciled)
+            if (index == 0 or node.id != destination.id
+                or node.delivery_item_list or node.pickup_item_list)
+        ]
+
+    return reconciled
+
+
+def _parse_legacy_route_node(
+        token: str,
+        id_to_factory: Dict[str, Factory],
+        id_to_allorder: Dict[str, OrderItem],
+        vehicle: Optional[Vehicle] = None,
+) -> Node:
+    match = re.fullmatch(r"([pd])(\d+)_(.+)", token)
+    if not match:
+        raise ValueError("Malformed saved route token %r" % token)
+    operation, count_text, first_item_id = match.groups()
+    count = int(count_text)
+    if count <= 0:
+        raise ValueError("Saved route node has an invalid item count: %s" % token)
+    try:
+        suffix = int(first_item_id.rsplit("-", 1)[1])
+    except (IndexError, ValueError) as exc:
+        raise ValueError("Malformed saved route item ID in %s" % token) from exc
+    prefix = first_item_id.rsplit("-", 1)[0]
+    first_item = id_to_allorder.get(first_item_id)
+    if first_item is None:
+        raise ValueError("Saved route references unknown item %s" % first_item_id)
+
+    factory_attribute = (
+        "delivery_factory_id" if operation == "d" else "pickup_factory_id"
+    )
+    factory_id = getattr(first_item, factory_attribute)
+    item_ids = [
+        "%s-%d" % (prefix, suffix - offset if operation == "d" else suffix + offset)
+        for offset in range(count)
+    ]
+    contiguous_items = [id_to_allorder.get(item_id) for item_id in item_ids]
+    contiguous_group_is_valid = (
+        all(item is not None for item in contiguous_items)
+        and all(getattr(item, factory_attribute) == factory_id for item in contiguous_items)
+    )
+
+    items = None
+    candidates = [
+        item for item in id_to_allorder.values()
+        if item.order_id == first_item.order_id
+        and getattr(item, factory_attribute) == factory_id
+    ]
+    if vehicle is not None:
+        destination = getattr(vehicle, "des", None)
+        destination_items = (
+            getattr(destination, "delivery_item_list", None)
+            if operation == "d" else
+            getattr(destination, "pickup_item_list", None)
+        )
+        if (
+            destination is not None
+            and destination.id == factory_id
+            and destination_items is not None
+            and len(destination_items) == count
+            and destination_items
+            and destination_items[0].id == first_item_id
+            and all(
+                item.order_id == first_item.order_id
+                and getattr(item, factory_attribute) == factory_id
+                for item in destination_items
+            )
+        ):
+            items = list(destination_items)
+
+        if items is None:
+            carrying_ids = {
+                item.id for item in (getattr(vehicle, "carrying_items", None) or [])
+            }
+            carried_group = [item for item in candidates if item.id in carrying_ids]
+            carried_group.sort(key=lambda item: item.id, reverse=(operation == "d"))
+            if (
+                len(carried_group) == count
+                and carried_group
+                and carried_group[0].id == first_item_id
+            ):
+                items = carried_group
+
+    if items is None and contiguous_group_is_valid:
+        items = contiguous_items
+    if items is None:
+        # Recover only when the order/factory group is unique and starts at
+        # the encoded ID; otherwise the legacy record is ambiguous.
+        candidates.sort(key=lambda item: item.id, reverse=(operation == "d"))
+        if (
+            len(candidates) == count
+            and candidates
+            and candidates[0].id == first_item_id
+        ):
+            items = candidates
+
+    if items is None:
+        missing = next(
+            (item_id for item_id, item in zip(item_ids, contiguous_items) if item is None),
+            None,
+        )
+        if missing is not None:
+            raise ValueError("Saved route references unknown item %s" % missing)
+        raise ValueError("Cannot unambiguously reconstruct saved route node %s" % token)
+
+    factory = id_to_factory[factory_id]
+    return Node(
+        factory_id, items if operation == "d" else [],
+        items if operation == "p" else [], None, None, factory.lng, factory.lat,
+    )
+
+
 def restore_scene_with_single_node(vehicleid_to_plan: Dict[str , List[Node]], id_to_ongoing_items: Dict[str , OrderItem], id_to_unlocated_items: Dict[str , OrderItem], id_to_vehicle: Dict[str , Vehicle] , id_to_factory: Dict[str , Factory], id_to_allorder: Dict[str , OrderItem]) -> List[str]:
-    onVehicleOrderItems = ''
-    unallocatedOrderItems = ''
-    new_order_itemIDs = []
-    
+    global delta_t
+    unallocated_ids = set(id_to_unlocated_items)
     for vehicleID in id_to_vehicle.keys():
         vehicleid_to_plan[vehicleID] = []
-    
-    for key in id_to_ongoing_items:
-        onVehicleOrderItems += f"{key} "
-    onVehicleOrderItems.strip()
-    
-    for key in id_to_unlocated_items:
-        unallocatedOrderItems += f"{key} "
-    unallocatedOrderItems.strip()
-    
+
     solution_json_path = os.path.join(input_directory , 'solution.json')
-    if os.path.exists(solution_json_path) :
-        try:
-            with open(solution_json_path , 'r') as file:
-                before_solution = json.load(file)
-                no = int(before_solution.get('no', 0))
-                f = (no + 1) * 10
-                t = (no + 1) * 10 + 10
-                global delta_t
-                delta_t = f"{f:04d}-{t:04d}"
-                routeBefore = before_solution.get("route_after", "")
-                splited_routeBefore : List[str] = routeBefore.split("V")
-                
-                last_on_vehicle_items= before_solution.get("onvehicle_order_items", "").split()
-                curr_on_vehicle_items : List[str] = onVehicleOrderItems.split(" ")
-                completeOrderItems = ' '.join([item for item in last_on_vehicle_items if item not in curr_on_vehicle_items]).strip()
-                complete_item_array = completeOrderItems.split(" ")
-                
-                last_unallocated_items : List[str] = before_solution.get("unallocated_order_items", "").split()
-                curr_unallocated_items : List[str] = unallocatedOrderItems.split(" ")
-                newOrderItems = ' '.join([item for item in curr_unallocated_items if item not in last_unallocated_items]).strip()
-                
-                config.IMPROVED_IN_CROSS = int(before_solution.get("improved_in_cross" , 0))
-                config.IMPROVED_IN_MUTATION  = int(before_solution.get("improved_in_mutation" , 0))
-                config.IMPROVED_IN_DIVER  = int(before_solution.get("improved_in_diver" , 0))
-
-                # The MOEA/D--TS variant writes a canonical JSON route_after.
-                # If that format is detected, parse it and skip the legacy
-                # string parser below (which cannot encode arbitrary item lists).
-                restored_canonical_route = _restore_canonical_route_after(
-                    routeBefore,
-                    vehicleid_to_plan,
-                    id_to_factory,
-                    id_to_allorder,
-                    complete_item_array,
-                    curr_on_vehicle_items,
-                )
-                if restored_canonical_route:
-                    splited_routeBefore = []
-
-                for route in splited_routeBefore:
-                    if not route or len(route) < 3:
-                        continue
-                    
-                    route = route.strip()
-                    str_len : int = len(route.split(':')[1])
-                    numstr = route.split(":")[0]
-                    vehicleID = "V_" + numstr[1:]
-                    if str_len < 3: 
-                        vehicleid_to_plan[vehicleID] = []
-                        continue
-                    
-                    route_nodes_str = route.split(":")[1]
-                    route_nodes = route_nodes_str[1:len(route_nodes_str) - 1].split(" ")
-                    node_list : List[str] = list(route_nodes)
-                    
-                    # bao gồm các node (đại diện bởi itemID) cò tới thời điểm của time interval hiện tại
-                    node_list = [
-                        node for node in node_list
-                        if not (
-                            (node.startswith("d") and node.split("_")[1] in complete_item_array) or
-                            (node.startswith("p") and node.split("_")[1] in curr_on_vehicle_items)
-                        )
-                    ]
-                    
-                    if len(node_list) > 0:
-                        planroute : List[Node] = []
-                        
-                        for node in node_list:
-                            deliveryItemList : List[OrderItem] = []
-                            pickupItemList : List[OrderItem] = []
-                            temp : OrderItem = None
-                            op = node[0][0:1]           #chỉ thị trạng thái của node (pickup / delivery) (p/d)
-                            opNumstr = node.split("_")
-                            opItemNum = int(opNumstr[0][1 :]) #p3 -> 3
-                            orderItemID = node.split("_")[1]
-                            idEndNumber = int(orderItemID.split("-")[1]) #số hiệu lớn nhất của đơn hàng
-                            
-                            # nếu là node giao
-                            if op == 'd':
-                                for i in range(opItemNum):
-                                    temp = id_to_allorder[orderItemID]
-                                    deliveryItemList.append(temp)
-                                    
-                                    idEndNumber -= 1
-                                    orderItemID =  orderItemID.split("-")[0] + "-" + str(idEndNumber)
-                            # nếu là node nhận
-                            else:
-                                for i in range(opItemNum):
-                                    temp = id_to_allorder[orderItemID]
-                                    pickupItemList.append(temp)
-                                    
-                                    idEndNumber += 1
-                                    orderItemID =  orderItemID.split("-")[0] + "-" + str(idEndNumber)
-                            
-                            factoryID = ""
-                            if op == 'd':
-                                factoryID = temp.delivery_factory_id
-                            else:
-                                factoryID = temp.pickup_factory_id
-                            factory = id_to_factory[factoryID]
-                            
-                            planroute.append(Node(factoryID , deliveryItemList , pickupItemList ,None ,None , factory.lng , factory.lat))
-                            
-                        if len(planroute) > 0:
-                            vehicleid_to_plan[vehicleID] = planroute
-        except Exception as e:
-            print(f"Error: {e}" , file= sys.stderr)
-    else:
-        newOrderItems  = unallocatedOrderItems
-        completeOrderItems = ""
-        routeBefore = ""
+    if not os.path.exists(solution_json_path):
         delta_t = "0000-0010"
-        
-    new_order_itemIDs = newOrderItems.split()
-    
-    return new_order_itemIDs
+        for vehicle_id, vehicle in id_to_vehicle.items():
+            if getattr(vehicle, "des", None) is not None:
+                vehicleid_to_plan[vehicle_id] = [copy.deepcopy(vehicle.des)]
+        return sorted(unallocated_ids)
+
+    try:
+        with open(solution_json_path, 'r') as file:
+            before_solution = json.load(file)
+    except (OSError, ValueError, TypeError):
+        delta_t = "0000-0010"
+        for vehicle_id, vehicle in id_to_vehicle.items():
+            if getattr(vehicle, "des", None) is not None:
+                vehicleid_to_plan[vehicle_id] = [copy.deepcopy(vehicle.des)]
+        return sorted(unallocated_ids)
+    if not isinstance(before_solution, dict):
+        delta_t = "0000-0010"
+        for vehicle_id, vehicle in id_to_vehicle.items():
+            if getattr(vehicle, "des", None) is not None:
+                vehicleid_to_plan[vehicle_id] = [copy.deepcopy(vehicle.des)]
+        return sorted(unallocated_ids)
+    try:
+        no = int(before_solution.get('no', 0))
+    except (TypeError, ValueError, OverflowError):
+        no = 0
+    delta_t = "%04d-%04d" % ((no + 1) * 10, (no + 2) * 10)
+    route_before = before_solution.get("route_after", "")
+    if not isinstance(route_before, str):
+        route_before = ""
+    last_on_vehicle_value = before_solution.get("onvehicle_order_items", "")
+    last_on_vehicle_items = set(
+        last_on_vehicle_value.split() if isinstance(last_on_vehicle_value, str) else []
+    )
+    current_ongoing_items = set(id_to_ongoing_items)
+    complete_item_ids = last_on_vehicle_items - current_ongoing_items
+    last_unallocated_value = before_solution.get("unallocated_order_items", "")
+    last_unallocated_items = set(
+        last_unallocated_value.split() if isinstance(last_unallocated_value, str) else []
+    )
+    new_order_item_ids = sorted(unallocated_ids - last_unallocated_items)
+
+    config.IMPROVED_IN_CROSS = int(before_solution.get("improved_in_cross", 0))
+    config.IMPROVED_IN_MUTATION = int(before_solution.get("improved_in_mutation", 0))
+    config.IMPROVED_IN_DIVER = int(before_solution.get("improved_in_diver", 0))
+
+    requeued_item_ids = set()
+    canonical_restored = _restore_canonical_route_after(
+            route_before, vehicleid_to_plan, id_to_vehicle, id_to_factory,
+            id_to_allorder, list(complete_item_ids), unallocated_ids,
+            requeued_item_ids,
+    )
+
+    if not canonical_restored:
+        for route in route_before.split("V"):
+            if not route or ":" not in route:
+                continue
+            route = route.strip()
+            vehicle_token, route_nodes_text = route.split(":", 1)
+            vehicle_id = "V_" + vehicle_token[1:]
+            if vehicle_id not in id_to_vehicle:
+                continue
+            node_tokens = route_nodes_text.strip().strip("[] ").split()
+            plan: List[Node] = []
+            for token in node_tokens:
+                try:
+                    plan.append(_parse_legacy_route_node(
+                        token, id_to_factory, id_to_allorder,
+                        vehicle=id_to_vehicle[vehicle_id],
+                    ))
+                except (KeyError, TypeError, ValueError, IndexError) as exc:
+                    print("Skipping invalid saved route node %s: %s" % (token, exc), file=sys.stderr)
+            vehicleid_to_plan[vehicle_id] = _reconcile_restored_route(
+                vehicle_id, id_to_vehicle[vehicle_id], plan, complete_item_ids,
+                unallocated_ids, requeued_item_ids,
+            )
+
+    # Requeue old orphan deliveries that have no pickup action in the restored plan.
+    new_items = set(new_order_item_ids) | requeued_item_ids
+    for vehicle_id, route in vehicleid_to_plan.items():
+        pickup_ids = {
+            item.id for node in (route or []) for item in (node.pickup_item_list or [])
+        }
+        orphan_ids = {
+            item.id for node in (route or []) for item in (node.delivery_item_list or [])
+            if item.id in id_to_unlocated_items and item.id not in pickup_ids
+        }
+        if orphan_ids:
+            cleaned = []
+            for node in route or []:
+                deliveries = [
+                    item for item in (node.delivery_item_list or [])
+                    if item.id not in orphan_ids
+                ]
+                if deliveries or node.pickup_item_list:
+                    cleaned.append(Node(
+                        node.id, deliveries, list(node.pickup_item_list or []),
+                        node.arrive_time, node.leave_time, node.lng, node.lat,
+                    ))
+            vehicleid_to_plan[vehicle_id] = cleaned
+            new_items.update(orphan_ids)
+    new_order_item_ids = sorted(new_items)
+
+    # Vehicles missing from an old route file still need their committed action.
+    for vehicle_id, vehicle in id_to_vehicle.items():
+        if getattr(vehicle, "des", None) is not None and not vehicleid_to_plan[vehicle_id]:
+            vehicleid_to_plan[vehicle_id] = [copy.deepcopy(vehicle.des)]
+
+    _ensure_destination_prefix(vehicleid_to_plan, id_to_vehicle)
+
+    return new_order_item_ids
 
 def get_output_solution(id_to_vehicle: Dict[str , Vehicle] , vehicleid_to_plan: Dict[str , list[Node]] , vehicleid_to_destination : Dict[str , Node]):
     for vehicleID , vehicle in id_to_vehicle.items():
@@ -224,15 +618,19 @@ def get_output_solution(id_to_vehicle: Dict[str , Vehicle] , vehicleid_to_plan: 
         destination : Node = None
         if vehicle.des:
             if (not origin_plan):
-                print(f"Planned route of vehicle {vehicleID} is wrong", file=sys.stderr)
+                raise RuntimeError(
+                    "Vehicle %s has committed destination %s but an empty plan"
+                    % (vehicleID, vehicle.des.id)
+                )
             else:
                 destination = origin_plan[0]
+                if not _node_covers_destination(destination, vehicle.des):
+                    raise RuntimeError(
+                        "Vehicle %s plan head does not match committed destination %s"
+                        % (vehicleID, vehicle.des.id)
+                    )
                 destination.arrive_time = vehicle.des.arrive_time
                 origin_plan.pop(0)
-            
-            if destination and vehicle.des.id != destination.id:
-                print(f"Vehicle {vehicleID} returned destination id is {vehicle.des.id} "
-                    f"however the origin destination id is {destination.id}", file=sys.stderr)
         elif (origin_plan):
             destination = origin_plan[0]
             origin_plan.pop(0)
@@ -240,7 +638,77 @@ def get_output_solution(id_to_vehicle: Dict[str , Vehicle] , vehicleid_to_plan: 
             origin_plan = None
         vehicleid_to_plan[vehicleID] = origin_plan
         vehicleid_to_destination[vehicleID] = destination
+
+
+def validate_dispatch_plan(
+        vehicleid_to_plan: Dict[str, List[Node]],
+        id_to_vehicle: Dict[str, Vehicle],
+        required_item_ids: Optional[List[str]] = None,
+        id_to_factory: Optional[Dict[str, Factory]] = None,
+) -> List[str]:
+    """Return actionable errors for destination, accounting, and feasibility violations."""
+    errors: List[str] = []
+    pickup_counts: Dict[str, int] = {}
+    delivery_counts: Dict[str, int] = {}
+    for vehicle_id, vehicle in id_to_vehicle.items():
+        route = vehicleid_to_plan.get(vehicle_id) or []
+        destination = getattr(vehicle, "des", None)
+        if destination is not None:
+            if not route or not _node_covers_destination(route[0], destination):
+                errors.append(
+                    "Vehicle %s route head does not match committed destination %s"
+                    % (vehicle_id, destination.id)
+                )
+            elif route[0].arrive_time != destination.arrive_time:
+                errors.append(
+                    "Vehicle %s route head arrival time differs from committed destination"
+                    % vehicle_id
+                )
+        if id_to_factory is not None:
+            for node in route:
+                if node.id not in id_to_factory:
+                    errors.append("Vehicle %s route references unknown factory %s" % (vehicle_id, node.id))
+        if not isFeasible(
+                route, getattr(vehicle, "carrying_items", None) or [],
+                getattr(vehicle, "board_capacity", math.inf)):
+            errors.append("Vehicle %s route violates FILO/capacity feasibility" % vehicle_id)
+        for node in route:
+            for item in node.pickup_item_list or []:
+                pickup_counts[item.id] = pickup_counts.get(item.id, 0) + 1
+            for item in node.delivery_item_list or []:
+                delivery_counts[item.id] = delivery_counts.get(item.id, 0) + 1
+
+    for item_id in required_item_ids or []:
+        if pickup_counts.get(item_id, 0) != 1 or delivery_counts.get(item_id, 0) != 1:
+            errors.append(
+                "New item %s must have exactly one pickup and one delivery "
+                "(pickup=%d, delivery=%d)"
+                % (item_id, pickup_counts.get(item_id, 0), delivery_counts.get(item_id, 0))
+            )
+    return errors
         
+def _serialize_canonical_route_after(
+        vehicleid_to_plan: Dict[str, List[Node]],
+        vehicleid_to_destination: Optional[Dict[str, Node]] = None,
+) -> str:
+    """Persist every route action and item ID without inferring ID ranges."""
+    destinations = vehicleid_to_destination or {}
+    encoded_routes = []
+    for vehicle_id, route in vehicleid_to_plan.items():
+        encoded_nodes = []
+        destination = destinations.get(vehicle_id)
+        for node in ([destination] if destination is not None else []) + list(route or []):
+            if node is None:
+                raise ValueError("Cannot serialize a missing route node for %s" % vehicle_id)
+            encoded_nodes.append([
+                node.id,
+                [item.id for item in (node.pickup_item_list or [])],
+                [item.id for item in (node.delivery_item_list or [])],
+            ])
+        encoded_routes.append([vehicle_id, encoded_nodes])
+    return json.dumps(encoded_routes, ensure_ascii=False, separators=(",", ":"))
+
+
 def update_solution_json (id_to_ongoing_items: Dict[str , OrderItem] , id_to_unlocated_items: Dict[str , OrderItem] , id_to_vehicle: Dict[str , Vehicle] , vehicleid_to_plan: Dict[str , list[Node]] , vehicleid_to_destination : Dict[str , Node] , route_map: Dict[tuple , tuple] , used_time):
     order_items_json_path = os.path.join(input_directory, "solution.json")
     complete_order_items = ""
@@ -280,7 +748,9 @@ def update_solution_json (id_to_ongoing_items: Dict[str , OrderItem] , id_to_unl
             route_before += f"{car_id}:[] "
         route_before = route_before.strip()
 
-        route_after = get_route_after(vehicleid_to_plan , vehicleid_to_destination)
+        route_after = _serialize_canonical_route_after(
+            vehicleid_to_plan, vehicleid_to_destination
+        )
         
         solution_json_obj = {
             "no.": "0",
@@ -324,7 +794,9 @@ def update_solution_json (id_to_ongoing_items: Dict[str , OrderItem] , id_to_unl
 
 
         route_before = before_solution["route_after"]
-        route_after = get_route_after(vehicleid_to_plan , vehicleid_to_destination)
+        route_after = _serialize_canonical_route_after(
+            vehicleid_to_plan, vehicleid_to_destination
+        )
 
         solution_json_obj = {
             "no.": str(no),
@@ -351,29 +823,29 @@ def update_solution_json (id_to_ongoing_items: Dict[str , OrderItem] , id_to_unl
         print(f"Lỗi khi ghi file JSON: {e}", file = sys.stderr)
         
 
-def merge_node(id_to_vehicle: Dict[str , Vehicle], vehicleid_to_plan: Dict[str, list[Node]]):
+def merge_node(id_to_vehicle: Dict[str, Vehicle], vehicleid_to_plan: Dict[str, List[Node]]) -> None:
     for vehicle_id, vehicle in id_to_vehicle.items():
         origin_planned_route = vehicleid_to_plan.get(vehicle_id, [])
 
         if origin_planned_route and len(origin_planned_route) > 1:
             before_node = origin_planned_route[0]
-            i = 1  # Bắt đầu từ phần tử thứ 2
-            while (i < len(origin_planned_route)):
+            i = 1
+            while i < len(origin_planned_route):
                 next_node = origin_planned_route[i]
-
-                if before_node.id == next_node.id:
-                    # Gộp danh sách pickupItemList
+                can_merge_without_reordering = not (
+                    before_node.pickup_item_list and next_node.delivery_item_list
+                )
+                if before_node.id == next_node.id and can_merge_without_reordering:
                     if next_node.pickup_item_list:
-                        before_node.pickup_item_list.extend(next_node.pickup_item_list)  
-
-                    # Gộp danh sách deliveryItemList (dùng extend thay vì vòng lặp)
+                        before_node.pickup_item_list.extend(next_node.pickup_item_list)
                     if next_node.delivery_item_list:
-                        before_node.delivery_item_list.extend(next_node.delivery_item_list) 
-                    # Xóa phần tử trùng lặp
+                        before_node.delivery_item_list.extend(next_node.delivery_item_list)
                     origin_planned_route.pop(i)
                 else:
+                    # Keep separate actions when merging would move a later
+                    # delivery before an earlier pickup at the same factory.
                     before_node = next_node
-                    i += 1  # Chỉ tăng index khi không xóa phần tử
+                    i += 1
         vehicleid_to_plan[vehicle_id] = origin_planned_route
         
 def get_route_after(vehicleid_to_plan: Dict[str , list[Node]], vehicleid_to_destination : Dict[str , Node]):
@@ -562,7 +1034,9 @@ def dispatch_new_orders(vehicleid_to_plan: Dict[str , list[Node]] ,  id_to_facto
                 vehicleid_to_plan[bestInsertVehicleID] = route_node_list
 
 
-def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle] , vehicleid_to_plan: Dict[str, list[Node]], route_map: Dict[tuple , tuple]  , selected_vehicle: str= None , mode = 'total' ):
+def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle] , vehicleid_to_plan: Dict[str, list[Node]], route_map: Dict[tuple , tuple]  , selected_vehicle: str= None , mode = 'total', deadline: Optional[float] = None ):
+    if node_list is None or len(node_list) < 2:
+        raise ValueError("dispatch_nodePair requires a complete pickup/delivery pair")
     bestInsertVehicleID: str = ''
     bestInsertPosI: int = 0
     bestInsertPosJ: int = 1
@@ -572,11 +1046,19 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
     new_delivery_node = node_list[1]
     minCostDelta = math.inf
 
+    def deadline_reached() -> bool:
+        return deadline is not None and time.monotonic() >= deadline
+
+    def current_result():
+        return isExhausive, bestInsertVehicleID, bestInsertPosI, bestInsertPosJ, bestNodeList
+
     for vehicleID , vehicle in id_to_vehicle.items():
+        if deadline_reached():
+            return current_result()
         if selected_vehicle is not None and vehicleID != selected_vehicle:
             continue
         
-        vehicle_plan = vehicleid_to_plan[vehicleID]
+        vehicle_plan = vehicleid_to_plan.get(vehicleID) or []
         
         node_list_size = len(vehicle_plan) if vehicle_plan else 0
 
@@ -585,8 +1067,9 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
         first_merge_node_num = 0
 
         if vehicle.des:
-            if new_pickup_node.id != vehicle.des.id:
-                insert_pos = 1
+            # The committed simulator destination always remains at position 0,
+            # including when a new pickup uses the same factory.
+            insert_pos = 1
             
             if vehicle_plan is not None and vehicle_plan:
                 for node in vehicle_plan:
@@ -613,6 +1096,7 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
             
             count = 0
             i = 0
+            route_has_complete_pairs = True
             while True:
                 if (not cp_route_node_list) or (len(cp_route_node_list) == 0) or (i >= len(cp_route_node_list)):
                     break
@@ -637,6 +1121,13 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                                 break
                         j += 1
                     
+                    if delivery_node is None:
+                        # A malformed saved route must not inject None into a
+                        # candidate and crash feasibility evaluation. This
+                        # vehicle is skipped; the caller can try another one.
+                        route_has_complete_pairs = False
+                        break
+
                     # Thêm pickup_node và delivery_node vào modle_node_list tại vị trí count
                     modle_node_list.insert(count, pickup_node)
                     modle_node_list.insert(count + 1, delivery_node)
@@ -644,6 +1135,9 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                     count += 1
                 
                 i += 1
+
+            if not route_has_complete_pairs:
+                continue
 
             # Thêm new_order_pickup_node và new_order_delivery_node
             modle_node_list.insert(count, new_pickup_node)
@@ -661,6 +1155,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
             if model_nodes_num == 2:
                 exhaustive_route_node_list.append(new_pickup_node)
                 exhaustive_route_node_list.append(new_delivery_node)
+                if deadline_reached():
+                    return current_result()
                 tmp_cost = cost_of_a_route(exhaustive_route_node_list , vehicle , id_to_vehicle , route_map , vehicleid_to_plan , mode)
 
                 if tmp_cost < minCostDelta: 
@@ -675,6 +1171,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                             for j in range(1, 4):
                                 exhaustive_route_node_list.append(modle_node_list[config.modle4[i][j] - 1])
 
+                            if deadline_reached():
+                                return current_result()
                             costValue = cost_of_a_route(exhaustive_route_node_list, vehicle , id_to_vehicle , route_map , vehicleid_to_plan , mode)
 
                             if costValue < minCostDelta:
@@ -687,6 +1185,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                         for j in range(4):
                             exhaustive_route_node_list.append(modle_node_list[config.modle4[i][j]])
 
+                        if deadline_reached():
+                            return current_result()
                         costValue = cost_of_a_route(exhaustive_route_node_list, vehicle , id_to_vehicle , route_map , vehicleid_to_plan, mode)
 
                         if costValue < minCostDelta:
@@ -701,6 +1201,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                         if config.modle6[i][0] == 0:
                             for j in range(1, 6):
                                 exhaustive_route_node_list.append(modle_node_list[config.modle6[i][j] - 1])
+                            if deadline_reached():
+                                return current_result()
                             costValue = cost_of_a_route(exhaustive_route_node_list, vehicle , id_to_vehicle , route_map , vehicleid_to_plan, mode)
                             if costValue < minCostDelta:
                                 minCostDelta = costValue
@@ -712,6 +1214,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                         if config.modle6[i][0] == 0 and config.modle6[i][1] == 1:
                             for j in range(2, 6):
                                 exhaustive_route_node_list.append(modle_node_list[config.modle6[i][j] - 2])
+                            if deadline_reached():
+                                return current_result()
                             costValue = cost_of_a_route(exhaustive_route_node_list, vehicle ,id_to_vehicle ,route_map , vehicleid_to_plan , mode)
                             if costValue < minCostDelta:
                                 minCostDelta = costValue
@@ -722,6 +1226,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                     else:
                         for j in range(6):
                             exhaustive_route_node_list.append(modle_node_list[config.modle6[i][j]])
+                        if deadline_reached():
+                            return current_result()
                         costValue = cost_of_a_route(exhaustive_route_node_list, vehicle , id_to_vehicle , route_map, vehicleid_to_plan, mode)
                         if costValue < minCostDelta:
                             minCostDelta = costValue
@@ -735,6 +1241,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                         if config.modle8[i][0] == 0:
                             for j in range(1, 8):
                                 exhaustive_route_node_list.append(modle_node_list[config.modle8[i][j] - 1])
+                            if deadline_reached():
+                                return current_result()
                             costValue = cost_of_a_route(exhaustive_route_node_list, vehicle , id_to_vehicle , route_map, vehicleid_to_plan, mode)
                             if costValue < minCostDelta:
                                 minCostDelta = costValue
@@ -746,6 +1254,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                         if config.modle8[i][0] == 0 and config.modle8[i][1] == 1:
                             for j in range(2, 8):
                                 exhaustive_route_node_list.append(modle_node_list[config.modle8[i][j] - 2])
+                            if deadline_reached():
+                                return current_result()
                             costValue = cost_of_a_route(exhaustive_route_node_list, vehicle , id_to_vehicle , route_map, vehicleid_to_plan, mode)
                             if costValue < minCostDelta:
                                 minCostDelta = costValue
@@ -757,6 +1267,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                         if config.modle8[i][0] == 0 and config.modle8[i][1] == 1 and config.modle8[i][2] == 2:
                             for j in range(3, 8):
                                 exhaustive_route_node_list.append(modle_node_list[config.modle8[i][j] - 3])
+                            if deadline_reached():
+                                return current_result()
                             costValue = cost_of_a_route(exhaustive_route_node_list, vehicle , id_to_vehicle , route_map, vehicleid_to_plan, mode)
                             if costValue < minCostDelta:
                                 minCostDelta = costValue
@@ -767,6 +1279,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
                     else:
                         for j in range(8):
                             exhaustive_route_node_list.append(modle_node_list[config.modle8[i][j]])
+                        if deadline_reached():
+                            return current_result()
                         costValue = cost_of_a_route(exhaustive_route_node_list, vehicle , id_to_vehicle , route_map, vehicleid_to_plan, mode)
                         if costValue < minCostDelta:
                             minCostDelta = costValue
@@ -809,6 +1323,8 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
 
                     tempRouteNodeList.insert(j, new_delivery_node)
 
+                    if deadline_reached():
+                        return current_result()
                     costValue = cost_of_a_route(tempRouteNodeList, vehicle, id_to_vehicle , route_map , vehicleid_to_plan, mode)
                     if costValue < minCostDelta:
                         minCostDelta = costValue
@@ -823,159 +1339,90 @@ def dispatch_nodePair(node_list: list[Node]  , id_to_vehicle: Dict[str , Vehicle
     return isExhausive , bestInsertVehicleID, bestInsertPosI, bestInsertPosJ , bestNodeList
 
 
-def random_dispatch_nodePair(node_list: list[Node], id_to_vehicle: Dict[str, Vehicle], vehicleid_to_plan: Dict[str, list[Node]]):
-    """
-    Randomly insert a pickup-delivery pair into a vehicle route without:
-    - losing nodes,
-    - duplicating nodes,
-    - or altering the destination position (index 0) for vehicles that have a current destination.
-    """
-    if not node_list or len(node_list) < 2:
-        return
+def random_dispatch_nodePair(
+        node_list: list[Node],
+        id_to_vehicle: Dict[str, Vehicle],
+        vehicleid_to_plan: Dict[str, list[Node]],
+        deadline: Optional[float] = None,
+) -> bool:
+    """Insert a complete block atomically; an expired deadline uses tail append."""
+    if not node_list or not id_to_vehicle:
+        return False
 
-    is_inserted = False
-    attempts = 0
-    MAX_ATTEMPTS = 500
-    # Probability to try simple end-extension (append pickup & delivery at tail)
-    p_extend_end = 1
-    while not is_inserted:
-        selected_vehicleID = random.choice(list(id_to_vehicle.keys()))
-        selected_vehicle = id_to_vehicle[selected_vehicleID]
+    vehicle_ids = list(id_to_vehicle)
+    random.shuffle(vehicle_ids)
 
-        # Ensure the plan list exists
-        route = vehicleid_to_plan.get(selected_vehicleID)
-        if route is None:
-            route = []
-            vehicleid_to_plan[selected_vehicleID] = route
+    def carrying_list(vehicle: Vehicle) -> List[OrderItem]:
+        carrying = getattr(vehicle, "carrying_items", None)
+        try:
+            copied = copy.deepcopy(carrying)
+        except Exception:
+            copied = carrying
+        try:
+            top_first = []
+            while copied is not None and hasattr(copied, "is_empty") and not copied.is_empty():
+                top_first.append(copied.pop())
+            if top_first:
+                return list(reversed(top_first))
+        except Exception:
+            pass
+        try:
+            return list(copied) if copied is not None else []
+        except Exception:
+            return []
 
-        begin_pos = 1 if selected_vehicle.des else 0  # never insert before index 0 if a destination exists
-        check_end = False
-        old_len = len(route)
+    def try_commit(vehicle_id: str, candidate: List[Node]) -> bool:
+        vehicle = id_to_vehicle[vehicle_id]
+        if vehicle.des is not None and (
+                not candidate or not _node_covers_destination(candidate[0], vehicle.des)):
+            return False
+        if not isFeasible(candidate, carrying_list(vehicle), vehicle.board_capacity):
+            return False
+        vehicleid_to_plan[vehicle_id] = candidate
+        return True
 
-        # If route is empty but vehicle currently has a destination, put that destination at index 0 first
-        if old_len == 0 and selected_vehicle.des is not None:
-            route.append(selected_vehicle.des)
-            old_len = 1  # destination preserved at index 0
+    for vehicle_id in vehicle_ids:
+        vehicle = id_to_vehicle[vehicle_id]
+        original_route = copy.deepcopy(vehicleid_to_plan.get(vehicle_id) or [])
+        one_plan = {vehicle_id: original_route}
+        _ensure_destination_prefix(one_plan, {vehicle_id: vehicle})
+        route = one_plan[vehicle_id]
+        begin = 1 if vehicle.des is not None else 0
 
-        pickup_node = None
-        delivery_node = None
-        if node_list[0].pickup_item_list and not node_list[0].delivery_item_list:
-            pickup_node , delivery_node = node_list[0] , node_list[-1]
-        else: 
-            delivery_node , pickup_node = node_list[0] , node_list[-1]
-            
+        # Once time expires, avoid position search and try only a complete tail append.
+        if deadline is not None and time.monotonic() >= deadline:
+            if try_commit(vehicle_id, route + list(node_list)):
+                return True
+            continue
 
-        # Helper: get current carrying items as Python list (bottom -> top)
-        def _get_carrying_list(v: Vehicle) -> List[OrderItem]:
-            ci = getattr(v, 'carrying_items', None)
-            # Try to deep copy stack-like object
-            try:
-                ci_copy = copy.deepcopy(ci)
-            except Exception:
-                ci_copy = ci
-            # Stack-like: has is_empty/pop
-            try:
-                items_top_first: List[OrderItem] = []
-                while ci_copy is not None and hasattr(ci_copy, 'is_empty') and not ci_copy.is_empty():
-                    items_top_first.append(ci_copy.pop())
-                # convert top->bottom to bottom->top for isFeasible
-                return list(reversed(items_top_first)) if items_top_first else (list(ci_copy) if isinstance(ci_copy, list) else [])
-            except Exception:
-                # list-like
-                try:
-                    return list(ci_copy) if ci_copy is not None else []
-                except Exception:
-                    return []
+        if try_commit(vehicle_id, route + list(node_list)):
+            return True
+        if len(node_list) != 2:
+            continue
 
-        if old_len == 0:
-            # No destination and no existing route -> simply append pair (feasibility-checked)
-            route.extend([pickup_node, delivery_node])
-            carrying_items = _get_carrying_list(selected_vehicle)
-            if isFeasible(route, carrying_items, selected_vehicle.board_capacity):
-                is_inserted = True
-            else:
-                # revert and retry with another vehicle
-                route.pop(); route.pop()
-        else:
-            # Branch 1: try end-extension with probability p_extend_end
-            did_try_extend = False
-            if random.random() < p_extend_end:
-                did_try_extend = True
-                route.append(pickup_node)
-                route.append(delivery_node)
-                carrying_items = _get_carrying_list(selected_vehicle)
-                # Validate destination position & feasibility
-                if (selected_vehicle.des and route[0].id != selected_vehicle.des.id) or not isFeasible(route, carrying_items, selected_vehicle.board_capacity):
-                    # Revert
-                    route.pop(); route.pop()
-                else:
-                    is_inserted = True
-
-            # Branch 2: general random insertion search if not inserted yet
-            if not is_inserted and not did_try_extend:
-                # Try random feasible positions for pickup and delivery (delivery strictly after pickup)
-                feasible_position1 = [i for i in range(begin_pos, len(route) + 1)]
-                random.shuffle(feasible_position1)
-                for insert_posI in feasible_position1:
-                    feasible_position2 = [i for i in range(insert_posI + 1, len(route) + 2)]
-                    random.shuffle(feasible_position2)
-                    for insert_posJ in feasible_position2:
-                        route.insert(insert_posI, pickup_node)
-                        route.insert(insert_posJ, delivery_node)
-
-                        # Do not allow changing destination position at index 0
-                        if selected_vehicle.des and route and route[0].id != selected_vehicle.des.id:
-                            # revert immediately if destination got shifted
-                            route.pop(insert_posJ)
-                            route.pop(insert_posI)
-                            continue
-
-                        carrying_items = _get_carrying_list(selected_vehicle)
-                        if isFeasible(route, carrying_items, selected_vehicle.board_capacity):
-                            check_end = True
-                            break
-
-                        # Revert failed attempt
-                        route.pop(insert_posJ)
-                        route.pop(insert_posI)
-                    if check_end:
-                        break
-
-        # Confirm exactly two nodes were added and, if applicable, destination preserved
-        if len(route) == old_len + 2:
-            if not selected_vehicle.des or (route and route[0].id == selected_vehicle.des.id):
-                is_inserted = True
-
-        attempts += 1
-        if not is_inserted and attempts >= MAX_ATTEMPTS:
-            # Fallback: try exhaustive feasible insertion over all vehicles/positions deterministically
-            for vID, v in id_to_vehicle.items():
-                r = vehicleid_to_plan.get(vID)
-                if r is None:
-                    r = []
-                    vehicleid_to_plan[vID] = r
-                begin_pos2 = 1 if v.des else 0
-                base_len = len(r)
-                if base_len == 0 and v.des is not None:
-                    r.append(v.des); base_len = 1
-                for i in range(begin_pos2, len(r) + 1):
-                    for j in range(i + 1, len(r) + 2):
-                        r.insert(i, pickup_node)
-                        r.insert(j, delivery_node)
-                        # keep destination header
-                        if v.des and r and r[0].id != v.des.id:
-                            r.pop(j); r.pop(i)
-                            continue
-                        if isFeasible(r, _get_carrying_list(v), v.board_capacity):
-                            return
-                        r.pop(j); r.pop(i)
-            # If still not inserted, log and return without modification (caller may handle)
-            print("[random_dispatch_nodePair] Failed to insert PD pair after exhaustive search", file=sys.stderr)
-            return
-
+        pickup_node, delivery_node = node_list
+        pickup_positions = list(range(begin, len(route) + 1))
+        random.shuffle(pickup_positions)
+        for pickup_position in pickup_positions:
+            delivery_positions = list(range(pickup_position + 1, len(route) + 2))
+            random.shuffle(delivery_positions)
+            for delivery_position in delivery_positions:
+                if deadline is not None and time.monotonic() >= deadline:
+                    if try_commit(vehicle_id, route + list(node_list)):
+                        return True
+                    return False
+                candidate = list(route)
+                candidate.insert(pickup_position, pickup_node)
+                candidate.insert(delivery_position, delivery_node)
+                if try_commit(vehicle_id, candidate):
+                    return True
+    return False
 
 def isFeasible(route_node_list : List[Node] , carrying_items : List[OrderItem] , capacity : float ):
     unload_item_list = carrying_items[::-1] if carrying_items else []
+
+    if any(node is None for node in route_node_list):
+        return False
 
     for node in route_node_list:
         delivery_items : List[OrderItem] = node.delivery_item_list
@@ -1024,6 +1471,8 @@ def isFeasible(route_node_list : List[Node] , carrying_items : List[OrderItem] ,
 
 
 def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple] , vehicleid_to_plan: Dict[str , list[Node]] , mode = 'total') -> float:
+    if config.is_timeout():
+        return math.inf
     curr_factoryID = vehicle.cur_factory_id
     driving_dis  : float = 0.0
     overtime_Sum : float = 0.0
@@ -1069,6 +1518,8 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
     index = 0
     
     for vehicleID , otherVehicle in id_to_vehicle.items():
+        if config.is_timeout():
+            return math.inf
         distance = 0
         time  = 0
         
@@ -1160,6 +1611,8 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
         index += 1
     
     while (n > 0):
+        if config.is_timeout():
+            return math.inf
         minT = math.inf
         minT2VehicleIndex = 0
         tTrue = minT
@@ -1225,6 +1678,8 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
         curr_node[minT2VehicleIndex] += 1
 
         while (curr_node[minT2VehicleIndex] < n_node[minT2VehicleIndex] and cur_factory_id == minTNodeList[curr_node[minT2VehicleIndex]].id):
+            if config.is_timeout():
+                return math.inf
 
             delivery_item_list = minTNodeList[curr_node[minT2VehicleIndex]].delivery_item_list
             
@@ -1276,6 +1731,13 @@ def cost_of_a_route (temp_route_node_list : List[Node] , vehicle: Vehicle , id_t
 
 
 def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple] , vehicleid_to_plan: Dict[str , list[Node]]) -> float:
+    cache_key = _total_cost_cache_key(id_to_vehicle, route_map, vehicleid_to_plan)
+    cached = _TOTAL_COST_CACHE.get(cache_key)
+    if cached is not None and cached[0] is id_to_vehicle and cached[1] is route_map:
+        _TOTAL_COST_CACHE.move_to_end(cache_key)
+        return cached[2]
+    if config.is_timeout():
+        return math.inf
     driving_dis  : float = 0.0
     overtime_Sum : float = 0.0
     waiting_Sum  : float = 0.0
@@ -1291,6 +1753,8 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
     index = 0
     
     for vehicleID , otherVehicle in id_to_vehicle.items():
+        if config.is_timeout():
+            return math.inf
         distance = 0
         time  = 0
         
@@ -1346,6 +1810,8 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
         index += 1
     
     while n > 0:
+        if config.is_timeout():
+            return math.inf
         minT = math.inf
         minT2VehicleIndex = 0
         tTrue = minT
@@ -1409,6 +1875,8 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
 
         while (curr_node[minT2VehicleIndex] < n_node[minT2VehicleIndex] and
             cur_factory_id == minTNodeList[curr_node[minT2VehicleIndex]].id):
+            if config.is_timeout():
+                return math.inf
 
             delivery_item_list = minTNodeList[curr_node[minT2VehicleIndex]].delivery_item_list
             
@@ -1452,6 +1920,11 @@ def total_cost(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tupl
     objF = (config.Delta * overtime_Sum) + (driving_dis / float(len(id_to_vehicle))) + (waiting_weight * waiting_Sum)
     if objF < 0:
         print("the objective function less than 0" , file= sys.stderr)
+    if math.isfinite(objF):
+        _TOTAL_COST_CACHE[cache_key] = (id_to_vehicle, route_map, objF)
+        _TOTAL_COST_CACHE.move_to_end(cache_key)
+        while len(_TOTAL_COST_CACHE) > _TOTAL_COST_CACHE_LIMIT:
+            _TOTAL_COST_CACHE.popitem(last=False)
     return objF
 
 def get_UnongoingSuperNode (vehicleid_to_plan: Dict[str , List[Node]] , id_to_vehicle: Dict[str , Vehicle] ) -> Tuple[Dict[int , Dict[str, Node]] , Dict[str , List[Node]]]:
@@ -1632,11 +2105,13 @@ def deal_old_solution_file(id2VehicleMap):
                 return
 
         # Xóa file solution.json nếu tồn tại
-        file_path = "./algorithm/data_interaction/solution.json"
+        file_path = os.path.join(input_directory, "solution.json")
         if os.path.exists(file_path):
             os.remove(file_path)
             
 def single_vehicle_cost(route_node_list: List[Node] , vehicle:Vehicle , route_map: Dict[tuple[str , str] , tuple[str , str]]):
+    if config.is_timeout():
+        return math.inf
     curr_factoryID = vehicle.cur_factory_id
     utilTime :int = 0
     driving_dis :float= 0.0
@@ -1655,6 +2130,8 @@ def single_vehicle_cost(route_node_list: List[Node] , vehicle:Vehicle , route_ma
         utilTime = vehicle.leave_time_at_current_factory
         
         for next_node in route_node_list:
+            if config.is_timeout():
+                return math.inf
             next_factoryID = next_node.id
             distance = 0
             time= 0
@@ -1690,6 +2167,8 @@ def single_vehicle_cost(route_node_list: List[Node] , vehicle:Vehicle , route_ma
                 before_orderID = next_orderID
         
         for next_node in route_node_list[1:]:
+            if config.is_timeout():
+                return math.inf
             next_factoryID = next_node.id
             distance = 0
             time = 0

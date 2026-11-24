@@ -130,7 +130,7 @@ class SimulateEnvironment(object):
             # 校验, 车辆目的地不能改变
             if not Checker.check_dispatch_result(dispatch_result, self.id_to_vehicle, self.id_to_order):
                 logger.error("Dispatch result is infeasible")
-                return
+                raise RuntimeError("infeasible dispatch result")
 
             # 根据派单指令更新车辆
             self.deliver_control_command_to_vehicles(dispatch_result)

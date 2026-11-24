@@ -268,15 +268,25 @@ def delaytime_for_each_node(id_to_vehicle: Dict[str , Vehicle] , route_map: Dict
     return delaytime_to_node
 
 def disturbance_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_vehicle: Dict[str , Vehicle] , route_map: Dict[tuple , tuple] , relocate_rate = 0.3):
-    begin = time.time()
-    
+    if config.is_timeout():
+        return None
+    deadline = time.monotonic() + config.get_remaining_time()
+
     new_vehicle_to_plan : Dict[str , List[Node]] = {}
     for VID , plan in vehicleid_to_plan.items():
+        if config.is_timeout():
+            return None
         new_vehicle_to_plan[VID] = []
-        for node in plan:
+        for node_index, node in enumerate(plan):
+            if node_index % 32 == 0 and config.is_timeout():
+                return None
             new_vehicle_to_plan[VID].append(copy.deepcopy(node))
-            
+
+    if config.is_timeout():
+        return None
     dis_order_super_node,  _ = get_UnongoingSuperNode(vehicleid_to_plan , id_to_vehicle)
+    if config.is_timeout():
+        return None
     ls_node_pair_num = len(dis_order_super_node)
     if ls_node_pair_num == 0:
         return None
@@ -284,6 +294,8 @@ def disturbance_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_vehicle: Di
     pdg_Map : Dict[str , List[Node]] = {}
     
     for idx, pdg in dis_order_super_node.items():
+        if config.is_timeout():
+            return None
         pickup_node = None
         delivery_node = None
         node_list: List[Node] = []
@@ -294,6 +306,8 @@ def disturbance_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_vehicle: Di
 
         if pdg:
             for v_and_pos_str, node in pdg.items():
+                if index % 64 == 0 and config.is_timeout():
+                    return None
                 if index % 2 == 0:
                     vehicleID = v_and_pos_str.split(",")[0]
                     pos_i = int(v_and_pos_str.split(",")[1])
@@ -323,6 +337,8 @@ def disturbance_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_vehicle: Di
     vehicle_removal_info : Dict[str, List[tuple]] = {}
     
     for key in pairs_to_relocate:
+        if config.is_timeout():
+            return None
         relocated_pairs[key] = pdg_Map[key]
         
         # Lấy thông tin vị trí và xe
@@ -342,6 +358,8 @@ def disturbance_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_vehicle: Di
     
     # Xây dựng lời giải sau khi bỏ những cặp sẽ được gán lại
     for vehicle_id, removal_list in vehicle_removal_info.items():
+        if config.is_timeout():
+            return None
         route_node_list = new_vehicle_to_plan.get(vehicle_id, [])
         
         # Thu thập tất cả các chỉ số cần xóa
@@ -361,6 +379,8 @@ def disturbance_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_vehicle: Di
         
         # Xóa các node theo thứ tự từ cuối lên đầu
         for idx in sorted_indices:
+            if config.is_timeout():
+                return None
             if idx < len(route_node_list):
                 del route_node_list[idx]
         
@@ -368,8 +388,12 @@ def disturbance_opt(vehicleid_to_plan: Dict[str , List[Node]], id_to_vehicle: Di
     
     # Gán lại các cặp node đã đánh dấu một cách ngẫu nhiên vào tuyến đường
     for key, node_list in relocated_pairs.items():
+        if config.is_timeout():
+            return None
         # Sử dụng random_dispatch_nodePair để gán ngẫu nhiên cặp node
-        random_dispatch_nodePair(node_list, id_to_vehicle, new_vehicle_to_plan)
+        if not random_dispatch_nodePair(
+                node_list, id_to_vehicle, new_vehicle_to_plan, deadline=deadline):
+            return None
     
     
     #print(time.time() - begin)

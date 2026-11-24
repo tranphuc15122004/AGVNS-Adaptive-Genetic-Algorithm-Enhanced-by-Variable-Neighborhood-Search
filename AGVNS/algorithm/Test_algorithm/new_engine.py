@@ -6,13 +6,178 @@ import os
 import random
 import re
 import sys
+import time
 from algorithm.algorithm_config import *
 from typing import Dict , List, Optional, Tuple
 from algorithm.Object import *
 from algorithm.engine import *
+from algorithm import engine as engine_module
 import algorithm.algorithm_config as config
 from algorithm.local_search import *
 from algorithm.Test_algorithm.new_LS import *
+
+def _dispatch_new_orders_impl(vehicleid_to_plan: Dict[str, List[Node]],
+                              id_to_factory: Dict[str, Factory],
+                              route_map: Dict[tuple, tuple],
+                              id_to_vehicle: Dict[str, Vehicle],
+                              id_to_unlocated_items: Dict[str, OrderItem],
+                              new_order_itemIDs: List[str],
+                              strict: bool = False,
+                              deadline: Optional[float] = None):
+    """Insert every new pickup/delivery block within one absolute deadline.
+
+    Cheapest insertion is used while time remains. If it expires or finds no
+    candidate, a bounded append-only feasibility check preserves committed
+    destinations and assigns the complete block atomically.
+    """
+    all_exhaustive = True
+    if not new_order_itemIDs:
+        return all_exhaustive
+    if deadline is None:
+        deadline = time.monotonic() + config.get_remaining_time()
+
+    order_id_to_items: Dict[str, List[OrderItem]] = {}
+    requested_item_ids = set(new_order_itemIDs)
+    missing_item_ids = sorted(requested_item_ids - set(id_to_unlocated_items))
+    if missing_item_ids:
+        raise RuntimeError("New orders missing from input: %s" % missing_item_ids)
+    for item_id in new_order_itemIDs:
+        item = id_to_unlocated_items[item_id]
+        order_id_to_items.setdefault(item.order_id, []).append(item)
+
+    capacity = min((vehicle.board_capacity for vehicle in id_to_vehicle.values()), default=None)
+
+    def _carrying_list(vehicle: Vehicle) -> List[OrderItem]:
+        carrying = getattr(vehicle, "carrying_items", None)
+        try:
+            copied = copy.deepcopy(carrying)
+        except Exception:
+            copied = carrying
+        try:
+            top_first = []
+            while copied is not None and hasattr(copied, "is_empty") and not copied.is_empty():
+                top_first.append(copied.pop())
+            if top_first:
+                return list(reversed(top_first))
+        except Exception:
+            pass
+        try:
+            return list(copied) if copied is not None else []
+        except Exception:
+            return []
+
+    def _route_has_destination(route: List[Node], vehicle: Vehicle) -> bool:
+        destination = vehicle.des
+        if destination is None:
+            return True
+        if not route or route[0].id != destination.id:
+            return False
+        return (
+            {item.id for item in destination.delivery_item_list or []}
+            <= {item.id for item in route[0].delivery_item_list or []}
+            and {item.id for item in destination.pickup_item_list or []}
+            <= {item.id for item in route[0].pickup_item_list or []}
+        )
+
+    def _append_feasible_block(node_list: List[Node]) -> bool:
+        for vehicle_id, vehicle in id_to_vehicle.items():
+            route = list(vehicleid_to_plan.get(vehicle_id) or [])
+            if vehicle.des is not None and not _route_has_destination(route, vehicle):
+                route.insert(0, copy.deepcopy(vehicle.des))
+            candidate = route + list(node_list)
+            if not _route_has_destination(candidate, vehicle):
+                continue
+            if isFeasible(candidate, _carrying_list(vehicle), vehicle.board_capacity):
+                vehicleid_to_plan[vehicle_id] = candidate
+                return True
+        return False
+
+    def _insert_block(node_list: List[Node]) -> bool:
+        nonlocal all_exhaustive
+        if not node_list:
+            raise RuntimeError("Cannot dispatch an empty pickup/delivery block")
+
+        best_vehicle_id = ""
+        best_is_exhaustive = False
+        best_pickup_pos = 0
+        best_delivery_pos = 1
+        best_route: List[Node] = []
+        if len(node_list) == 2 and time.monotonic() < deadline:
+            (best_is_exhaustive, best_vehicle_id, best_pickup_pos,
+             best_delivery_pos, best_route) = dispatch_nodePair(
+                node_list, id_to_vehicle,
+                {vehicle_id: list(route or [])
+                 for vehicle_id, route in vehicleid_to_plan.items()},
+                route_map,
+                deadline=deadline,
+            )
+
+        if best_vehicle_id in id_to_vehicle:
+            vehicle = id_to_vehicle[best_vehicle_id]
+            current_route = list(vehicleid_to_plan.get(best_vehicle_id) or [])
+            if best_is_exhaustive and best_route:
+                candidate = list(best_route)
+            else:
+                pickup_pos = max(0, min(best_pickup_pos, len(current_route)))
+                delivery_pos = max(pickup_pos + 1, min(best_delivery_pos, len(current_route) + 1))
+                candidate = current_route
+                candidate.insert(pickup_pos, node_list[0])
+                candidate.insert(delivery_pos, node_list[-1])
+            if (_route_has_destination(candidate, vehicle)
+                    and isFeasible(candidate, _carrying_list(vehicle), vehicle.board_capacity)):
+                vehicleid_to_plan[best_vehicle_id] = candidate
+                all_exhaustive = all_exhaustive and best_is_exhaustive
+                return best_is_exhaustive
+
+        if _append_feasible_block(node_list):
+            all_exhaustive = False
+            return False
+        raise RuntimeError(
+            "No feasible vehicle can accept complete pickup/delivery block for items %s"
+            % sorted({item.id for node in node_list
+                      for item in (node.pickup_item_list or []) + (node.delivery_item_list or [])})
+        )
+
+    for order_id, order_items in order_id_to_items.items():
+        order_demand = sum(item.demand for item in order_items)
+        if capacity is not None and order_demand > capacity:
+            block_items: List[OrderItem] = []
+            block_demand = 0.0
+            for item in order_items:
+                if block_items and block_demand + item.demand > capacity:
+                    _insert_block(create_Pickup_Delivery_nodes(block_items, id_to_factory))
+                    block_items = []
+                    block_demand = 0.0
+                if item.demand > capacity:
+                    raise RuntimeError(
+                        "Item %s demand %s exceeds every vehicle capacity %s"
+                        % (item.id, item.demand, capacity)
+                    )
+                block_items.append(item)
+                block_demand += item.demand
+            if block_items:
+                _insert_block(create_Pickup_Delivery_nodes(block_items, id_to_factory))
+        else:
+            _insert_block(create_Pickup_Delivery_nodes(order_items, id_to_factory))
+
+    pickup_counts: Dict[str, int] = {}
+    delivery_counts: Dict[str, int] = {}
+    for route in vehicleid_to_plan.values():
+        for node in route or []:
+            for item in node.pickup_item_list or []:
+                pickup_counts[item.id] = pickup_counts.get(item.id, 0) + 1
+            for item in node.delivery_item_list or []:
+                delivery_counts[item.id] = delivery_counts.get(item.id, 0) + 1
+    invalid_items = [
+        item_id for item_id in sorted(requested_item_ids)
+        if pickup_counts.get(item_id, 0) != 1 or delivery_counts.get(item_id, 0) != 1
+    ]
+    if invalid_items:
+        raise RuntimeError(
+            "New items do not have exactly one pickup and delivery: %s" % invalid_items
+        )
+    return all_exhaustive
+
 
 def new_dispatch_new_orders(vehicleid_to_plan: Dict[str, List[Node]],
                             id_to_factory: Dict[str, Factory],
@@ -20,260 +185,191 @@ def new_dispatch_new_orders(vehicleid_to_plan: Dict[str, List[Node]],
                             id_to_vehicle: Dict[str, Vehicle],
                             id_to_unlocated_items: Dict[str, OrderItem],
                             new_order_itemIDs: List[str],
-                            strict: bool = False):
-    """Dispatch new orders with CI before timeout, random after timeout.
-
-    - Trước khi timeout: dùng `dispatch_nodePair` (cheapest insertion) để chèn.
-    - Sau khi timeout (config.is_timeout() == True): mọi block mới được gán
-      nhanh bằng `random_dispatch_nodePair`, không cần đếm đơn tồn đọng.
-    """
-    all_exhaustive = True
-
-    if not new_order_itemIDs:
-        return all_exhaustive
-
-    # Gom các order item theo order_id
-    # Đồng thời lưu lại tập ID item đầu vào để sau này validate đã được gán hết chưa
-    orderId_to_Item: Dict[str, List[OrderItem]] = {}
-    requested_item_ids: set[str] = set()
-    missing_item_ids: List[str] = []
-    for new_order_item in new_order_itemIDs:
-        requested_item_ids.add(new_order_item)
-        new_item = id_to_unlocated_items.get(new_order_item)
-        if new_item is None:
-            # Ghi nhận nhưng không làm hỏng luồng chèn; có thể in log để debug
-            missing_item_ids.append(new_order_item)
-            continue
-        orderID = new_item.order_id
-        orderId_to_Item.setdefault(orderID, []).append(new_item)
-
-    # Lấy sức chứa (giả sử tất cả xe cùng capacity như cũ)
-    capacity = None
-    for vehicle in id_to_vehicle.values():
-        capacity = vehicle.board_capacity
-        break
-
-    # Helper: chèn 1 block node_list theo CI hoặc random tùy trạng thái timeout
-    # YÊU CẦU: node_list phải chứa đủ các item tương ứng trong tmp_itemList/order_items;
-    # không được bỏ block nào nếu create_Pickup_Delivery_nodes trả về rỗng.
-    def _insert_block(node_list: List[Node]) -> None:
-        nonlocal all_exhaustive
-        if not node_list:
-            # Nếu node_list rỗng nhưng về logic lẽ ra phải có item, đây là tình huống lỗi;
-            # với strict=True ta raise để lộ bug sớm, còn không thì chỉ log.
-            msg = "[new_dispatch_new_orders] ERROR: _insert_block được gọi với node_list rỗng"
-            if strict:
-                raise RuntimeError(msg)
-            print(msg, file=sys.stderr)
-            all_exhaustive = False
-            return
-
-        # Đếm tổng node trước khi chèn để chắc chắn sau đó tăng đúng +2
-        before_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
-        # Nếu đã timeout tại thời điểm này -> random
-        if config.is_timeout():
-            random_dispatch_nodePair(node_list, id_to_vehicle, vehicleid_to_plan)
-            after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
-            if after_nodes != before_nodes + 2:
-                msg = f"[new_dispatch_new_orders] WARNING: random_dispatch_nodePair không tăng đúng 2 node (before={before_nodes}, after={after_nodes})"
-                print(msg, file=sys.stderr)
-                all_exhaustive = False
-                if strict:
-                    raise RuntimeError(msg)
-            return
-
-        isExhaustive = False
-        bestVID = ''
-        bestI = 0
-        bestJ = 1
-        bestList: List[Node] = []
-
-        isExhaustive, bestVID, bestI, bestJ, bestList = dispatch_nodePair(
-            node_list, id_to_vehicle, vehicleid_to_plan, route_map
-        )
-
-        # Nếu sau khi chạy CI mà timeout thì coi như đã trễ, block này dùng random
-        if config.is_timeout():
-            random_dispatch_nodePair(node_list, id_to_vehicle, vehicleid_to_plan)
-            after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
-            if after_nodes != before_nodes + 2:
-                msg = f"[new_dispatch_new_orders] WARNING: random_dispatch_nodePair (sau CI timeout) không tăng đúng 2 node (before={before_nodes}, after={after_nodes})"
-                print(msg, file=sys.stderr)
-                all_exhaustive = False
-                if strict:
-                    raise RuntimeError(msg)
-            return
-
-        # Kiểm tra kết quả CI hợp lệ
-        if not bestVID or bestVID not in id_to_vehicle:
-            random_dispatch_nodePair(node_list, id_to_vehicle, vehicleid_to_plan)
-            after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
-            if after_nodes != before_nodes + 2:
-                msg = f"[new_dispatch_new_orders] WARNING: CI trả về bestVID không hợp lệ, random fallback cũng không tăng đúng 2 node (before={before_nodes}, after={after_nodes})"
-                print(msg, file=sys.stderr)
-                all_exhaustive = False
-                if strict:
-                    raise RuntimeError(msg)
-            return
-
-        route_node_list = vehicleid_to_plan.get(bestVID, []) or []
-
-        if isExhaustive and bestList:
-            vehicleid_to_plan[bestVID] = bestList[:]
-        else:
-            all_exhaustive = False
-            # Bảo vệ chỉ số chèn
-            if bestI < 0:
-                bestI = 0
-            if bestJ < bestI + 1:
-                bestJ = bestI + 1
-            if bestI > len(route_node_list):
-                bestI = len(route_node_list)
-            if bestJ > len(route_node_list) + 1:
-                bestJ = len(route_node_list) + 1
-
-            new_pickup = node_list[0]
-            new_delivery = node_list[1]
-            route_node_list.insert(bestI, new_pickup)
-            route_node_list.insert(bestJ, new_delivery)
-            vehicleid_to_plan[bestVID] = route_node_list
-
-        # Kiểm tra lại: sau khi chèn bằng CI, tổng số node phải tăng đúng 2
-        after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
-        if after_nodes != before_nodes + 2:
-            msg = f"[new_dispatch_new_orders] WARNING: dispatch_nodePair/CI không làm tăng đúng 2 node (before={before_nodes}, after={after_nodes})"
-            print(msg, file=sys.stderr)
-            all_exhaustive = False
-            if strict:
-                raise RuntimeError(msg)
-
-    # Duyệt từng order; tại mọi thời điểm, chỉ check timeout để quyết định
-    for orderID, order_items in orderId_to_Item.items():
-        order_demand = sum(item.demand for item in order_items)
-
-        # Nếu timeout xảy ra ở thời điểm bắt đầu xử lý order này -> toàn bộ order dùng random
-        if config.is_timeout():
-            node_list = create_Pickup_Delivery_nodes(order_items, id_to_factory)
-            if node_list:
-                random_dispatch_nodePair(node_list, id_to_vehicle, vehicleid_to_plan)
-            continue
-
-        # Đơn vượt sức chứa: tách thành nhiều block
-        if capacity is not None and order_demand > capacity:
-            tmp_demand = 0
-            tmp_itemList: List[OrderItem] = []
-
-            for item in order_items:
-                # Nếu tại đây đã timeout thì phần block hiện tại và phần về sau
-                # đều sẽ được xử lý bằng random qua _insert_block (vì _insert_block
-                # kiểm tra timeout ở đầu).
-                if (tmp_demand + item.demand) > capacity:
-                    node_list = create_Pickup_Delivery_nodes(tmp_itemList, id_to_factory)
-                    _insert_block(node_list)
-                    tmp_itemList = []
-                    tmp_demand = 0
-
-                tmp_itemList.append(item)
-                tmp_demand += item.demand
-
-            if tmp_itemList:
-                node_list = create_Pickup_Delivery_nodes(tmp_itemList, id_to_factory)
-                _insert_block(node_list)
-        else:
-            # Đơn không vượt capacity
-            node_list = create_Pickup_Delivery_nodes(order_items, id_to_factory)
-            _insert_block(node_list)
-
-    # ===================== HẬU KIỂM: đảm bảo tất cả item mới đã được gán =====================
-    # Thu thập các item id đã xuất hiện trong mọi route sau khi chèn
-    assigned_item_ids: set[str] = set()
-
-    def _collect_items_from_node(nd: Node) -> None:
-        if nd is None:
-            return
-        if getattr(nd, 'pickup_item_list', None):
-            for it in nd.pickup_item_list:
-                if hasattr(it, 'id'):
-                    assigned_item_ids.add(it.id)
-        if getattr(nd, 'delivery_item_list', None):
-            for it in nd.delivery_item_list:
-                if hasattr(it, 'id'):
-                    assigned_item_ids.add(it.id)
-
-    for route in vehicleid_to_plan.values():
-        for nd in route or []:
-            _collect_items_from_node(nd)
-
-    # Những item mới mà không xuất hiện trong bất kỳ route nào
-    unassigned_items = [iid for iid in requested_item_ids if iid not in assigned_item_ids]
-
-    # ===================== BƯỚC CỨU HỘ: cố gắng gán lại các item chưa được gán =====================
-    if unassigned_items:
-        rescue_failed: List[str] = []
-
-        for iid in unassigned_items:
-            item = id_to_unlocated_items.get(iid)
-            if not item:
-                rescue_failed.append(iid)
+                            strict: bool = False,
+                            deadline: Optional[float] = None):
+    """Repair pre-matched pickups and dispatch new blocks transactionally."""
+    requested_ids = list(new_order_itemIDs)
+    try:
+        original_plans = copy.deepcopy(vehicleid_to_plan)
+    except Exception:
+        original_plans = {vehicle_id: list(route or [])
+                          for vehicle_id, route in vehicleid_to_plan.items()}
+    pre_matched_by_vehicle: Dict[str, List[OrderItem]] = {}
+    try:
+        engine_module._ensure_destination_prefix(vehicleid_to_plan, id_to_vehicle)
+        for vehicle_id, vehicle in id_to_vehicle.items():
+            destination = getattr(vehicle, "des", None)
+            if destination is None:
                 continue
-
-            node_list = create_Pickup_Delivery_nodes([item], id_to_factory)
-            if not node_list:
-                rescue_failed.append(iid)
+            matched = [
+                item for item in (destination.pickup_item_list or [])
+                if item.id in requested_ids and item.id in id_to_unlocated_items
+            ]
+            if not matched:
                 continue
+            pre_matched_by_vehicle[vehicle_id] = matched
+            route = copy.deepcopy(vehicleid_to_plan.get(vehicle_id) or [])
+            matched_ids = {item.id for item in matched}
+            cleaned_tail = []
+            for node in route[1:]:
+                node.pickup_item_list = [
+                    item for item in (node.pickup_item_list or [])
+                    if item.id not in matched_ids
+                ]
+                node.delivery_item_list = [
+                    item for item in (node.delivery_item_list or [])
+                    if item.id not in matched_ids
+                ]
+                if node.pickup_item_list or node.delivery_item_list:
+                    cleaned_tail.append(node)
+            delivery_nodes = []
+            for item in reversed(matched):
+                factory = id_to_factory[item.delivery_factory_id]
+                delivery_nodes.append(Node(
+                    item.delivery_factory_id, [item], [], None, None,
+                    factory.lng, factory.lat,
+                ))
+            vehicleid_to_plan[vehicle_id] = route[:1] + delivery_nodes + cleaned_tail
+    except Exception as pre_match_error:
+        vehicleid_to_plan.clear()
+        vehicleid_to_plan.update(copy.deepcopy(original_plans))
+        if strict:
+            raise RuntimeError(
+                "Could not repair pickups already committed to a destination: %s"
+                % pre_match_error
+            ) from pre_match_error
+        print("Committed-pickup repair failed; plans rolled back: %s" % pre_match_error,
+              file=sys.stderr)
+        return False
 
-            # Thử random_dispatch_nodePair trước
-            before_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
-            random_dispatch_nodePair(node_list, id_to_vehicle, vehicleid_to_plan)
-            after_nodes = sum(len(r or []) for r in vehicleid_to_plan.values())
-            if after_nodes == before_nodes + 2:
-                continue
+    matched_ids = {
+        item.id for items in pre_matched_by_vehicle.values() for item in items
+    }
+    remaining_ids = [item_id for item_id in requested_ids if item_id not in matched_ids]
 
-            # Nếu random thất bại, thử append cuối một xe bất kỳ (đơn giản, ưu tiên khả thi hơn tối ưu)
-            assigned = False
-            for vehicleID, vehicle in id_to_vehicle.items():
-                route = vehicleid_to_plan.get(vehicleID) or []
-                tempRouteNodeList = route + node_list
-                # Lấy carrying_items robust như trong fast_cheapest_insertion_for_block
-                def _carrying_list(v: Vehicle) -> List[OrderItem]:
-                    ci = getattr(v, 'carrying_items', None)
-                    try:
-                        ci_copy = copy.deepcopy(ci)
-                    except Exception:
-                        ci_copy = ci
-                    try:
-                        items_top_first: List[OrderItem] = []
-                        while ci_copy is not None and hasattr(ci_copy, 'is_empty') and not ci_copy.is_empty():
-                            items_top_first.append(ci_copy.pop())
-                        return list(reversed(items_top_first)) if items_top_first else (list(ci_copy) if isinstance(ci_copy, list) else [])
-                    except Exception:
-                        try:
-                            return list(ci_copy) if ci_copy is not None else []
-                        except Exception:
-                            return []
-
-                carrying_items = _carrying_list(vehicle)
-                if not isFeasible(tempRouteNodeList, carrying_items, vehicle.board_capacity):
+    # New/unlocated IDs can remain in a saved route from a prior failed dispatch.
+    # Remove those stale actions before inserting each requested pair again.
+    remaining_set = set(remaining_ids)
+    if remaining_set:
+        for vehicle_id, route in list(vehicleid_to_plan.items()):
+            destination = getattr(id_to_vehicle.get(vehicle_id), "des", None)
+            committed_ids = set()
+            if destination is not None:
+                committed_ids.update(
+                    item.id for item in (destination.pickup_item_list or [])
+                )
+                committed_ids.update(
+                    item.id for item in (destination.delivery_item_list or [])
+                )
+            cleaned_route = []
+            for index, node in enumerate(route or []):
+                pickup_items = list(node.pickup_item_list or [])
+                delivery_items = list(node.delivery_item_list or [])
+                node_ids = {
+                    item.id for item in pickup_items + delivery_items
+                }
+                stale_ids = remaining_set - (
+                    committed_ids if index == 0 else set()
+                )
+                if not node_ids.intersection(stale_ids):
+                    cleaned_route.append(node)
                     continue
+                node.pickup_item_list = [
+                    item for item in pickup_items if item.id not in stale_ids
+                ]
+                node.delivery_item_list = [
+                    item for item in delivery_items if item.id not in stale_ids
+                ]
+                if node.pickup_item_list or node.delivery_item_list:
+                    cleaned_route.append(node)
+                elif index == 0 and destination is not None and node.id == destination.id:
+                    cleaned_route.append(node)
+            vehicleid_to_plan[vehicle_id] = cleaned_route
 
-                vehicleid_to_plan[vehicleID] = tempRouteNodeList
-                assigned = True
+    try:
+        base_plans = copy.deepcopy(vehicleid_to_plan)
+    except Exception:
+        base_plans = {vehicle_id: list(route or [])
+                      for vehicle_id, route in vehicleid_to_plan.items()}
+
+    try:
+        result = _dispatch_new_orders_impl(
+            vehicleid_to_plan, id_to_factory, route_map, id_to_vehicle,
+            id_to_unlocated_items, remaining_ids, strict=strict,
+            deadline=deadline,
+        )
+        plan_errors = engine_module.validate_dispatch_plan(
+            vehicleid_to_plan, id_to_vehicle, requested_ids, id_to_factory
+        )
+        if plan_errors:
+            raise RuntimeError("Dispatch plan validation failed: %s" % "; ".join(plan_errors))
+        return bool(result) and not bool(pre_matched_by_vehicle)
+    except Exception as dispatch_error:
+        vehicleid_to_plan.clear()
+        vehicleid_to_plan.update(copy.deepcopy(base_plans))
+
+        groups: Dict[str, List[OrderItem]] = {}
+        for item_id in remaining_ids:
+            item = id_to_unlocated_items.get(item_id)
+            if item is not None:
+                groups.setdefault(item.order_id, []).append(item)
+        capacity = min(
+            (vehicle.board_capacity for vehicle in id_to_vehicle.values()),
+            default=None,
+        )
+        fallback_ok = not any(item_id not in id_to_unlocated_items for item_id in remaining_ids)
+        for items in groups.values():
+            blocks: List[List[OrderItem]] = []
+            if capacity is None:
+                blocks = [items]
+            else:
+                block: List[OrderItem] = []
+                demand = 0.0
+                for item in items:
+                    if block and demand + item.demand > capacity:
+                        blocks.append(block)
+                        block = []
+                        demand = 0.0
+                    if item.demand > capacity:
+                        fallback_ok = False
+                        break
+                    block.append(item)
+                    demand += item.demand
+                if block:
+                    blocks.append(block)
+            for block in blocks:
+                nodes = create_Pickup_Delivery_nodes(block, id_to_factory)
+                if not nodes or not random_dispatch_nodePair(
+                        nodes, id_to_vehicle, vehicleid_to_plan, deadline=deadline):
+                    fallback_ok = False
+                    break
+            if not fallback_ok:
                 break
 
-            if not assigned:
-                rescue_failed.append(iid)
+        if fallback_ok:
+            fallback_errors = engine_module.validate_dispatch_plan(
+                vehicleid_to_plan, id_to_vehicle, requested_ids, id_to_factory
+            )
+            if fallback_errors:
+                fallback_ok = False
+                dispatch_error = RuntimeError(
+                    "%s; emergency plan validation failed: %s"
+                    % (dispatch_error, "; ".join(fallback_errors))
+                )
 
-        if missing_item_ids or rescue_failed:
-            if missing_item_ids:
-                print(f"[new_dispatch_new_orders] WARNING: {len(missing_item_ids)} new_order_itemIDs không tìm thấy trong id_to_unlocated_items: {missing_item_ids}", file=sys.stderr)
-            if rescue_failed:
-                print(f"[new_dispatch_new_orders] ERROR: {len(rescue_failed)} items không thể gán ngay cả sau bước cứu hộ: {rescue_failed}", file=sys.stderr)
-            all_exhaustive = False
-            if strict and rescue_failed:
-                raise RuntimeError(f"new_dispatch_new_orders strict mode: không thể gán {len(rescue_failed)} items: {rescue_failed}")
+        if fallback_ok:
+            print("Cheapest insertion failed; feasible emergency insertion was used", file=sys.stderr)
+            return False
 
-    return all_exhaustive
-
+        vehicleid_to_plan.clear()
+        vehicleid_to_plan.update(copy.deepcopy(base_plans))
+        if strict:
+            raise RuntimeError(
+                "Dispatch failed and emergency insertion found no feasible plan: %s"
+                % dispatch_error
+            ) from dispatch_error
+        print("Dispatch failed; plans rolled back: %s" % dispatch_error, file=sys.stderr)
+        return False
 
 
 def worse_dispatch_new_orders(vehicleid_to_plan: Dict[str , list[Node]] ,  id_to_factory:Dict[str , Factory] , route_map: Dict[tuple , tuple] ,  id_to_vehicle: Dict[str , Vehicle] , id_to_unlocated_items:Dict[str , OrderItem], new_order_itemIDs: list[str]):
@@ -646,6 +742,9 @@ def generate_random_chromosome(initial_vehicleid_to_plan : Dict[str , List[Node]
 
 
 def new_generate_random_chromosome(initial_vehicleid_to_plan : Dict[str , List[Node]],  route_map: Dict[Tuple, Tuple], id_to_vehicle: Dict[str, Vehicle], Unongoing_super_nodes : Dict[int , Dict[str, Node]]  ,Base_vehicleid_to_plan : Dict[str , List[Node]] , quantity : int):
+    if config.is_timeout():
+        return None, None
+
     ls_node_pair_num = len(Unongoing_super_nodes)
     if ls_node_pair_num == 0:
         return None , None
@@ -660,6 +759,8 @@ def new_generate_random_chromosome(initial_vehicleid_to_plan : Dict[str , List[N
     
     # tao Dict cac super node
     for idx, pdg in Unongoing_super_nodes.items():
+        if config.is_timeout():
+            return None, None
         pickup_node = None
         delivery_node = None
         node_list: List[Node] = []
@@ -689,9 +790,13 @@ def new_generate_random_chromosome(initial_vehicleid_to_plan : Dict[str , List[N
     if len(pdg_Map) < 2:
         return None , None
     
-    while len(population) < quantity:
-        new_individual = disturbance_opt(initial_vehicleid_to_plan , id_to_vehicle , route_map , 0.5)
-        
+    while len(population) < quantity and not config.is_timeout():
+        new_individual = disturbance_opt(
+            initial_vehicleid_to_plan, id_to_vehicle, route_map,
+            config.PERTURBATION_RATE,
+        )
+        if config.is_timeout():
+            break
         if new_individual:
             population.append(new_individual)
     
@@ -904,11 +1009,7 @@ def randon_1_LS(indivisual: Chromosome  , PDG_map: Dict[str, List[Node]], is_lim
     while i < 1:
         if config.is_timeout():
             break
-        op_begin = time.time()
         improved = methods[chosen_method]()
-        op_elapsed = time.time() - op_begin
-        if op_elapsed > config.LS_MAX_TIME_PER_OP:
-            print(f"LS: {chosen_method} aborted (per-op time {op_elapsed:.3f}s > {config.LS_MAX_TIME_PER_OP}s)", file=sys.stderr)
         if improved:
             i +=1 
             counters[chosen_method] += 1
@@ -2885,7 +2986,7 @@ def gold_algorithm_LS(indivisual : Chromosome , is_limited = False):
             break
         
         begin = time.time()
-        if new_inter_couple_exchange(indivisual.solution , indivisual.id_to_vehicle , indivisual.route_map , math.inf , is_limited):
+        if new_inter_couple_exchange(indivisual.solution , indivisual.id_to_vehicle , indivisual.route_map , float("inf") , is_limited):
             n1 +=1
             cur = total_cost(indivisual.id_to_vehicle, indivisual.route_map, indivisual.solution)
             if cur < best_cost:
@@ -2898,7 +2999,7 @@ def gold_algorithm_LS(indivisual : Chromosome , is_limited = False):
             break
         
         begin = time.time()
-        if new_block_exchange(indivisual.solution , indivisual.id_to_vehicle , indivisual.route_map, math.inf , is_limited):
+        if new_block_exchange(indivisual.solution , indivisual.id_to_vehicle , indivisual.route_map, float("inf") , is_limited):
             n2 +=1
             cur = total_cost(indivisual.id_to_vehicle, indivisual.route_map, indivisual.solution)
             if cur < best_cost:
@@ -2911,7 +3012,7 @@ def gold_algorithm_LS(indivisual : Chromosome , is_limited = False):
             break
 
         begin  = time.time()
-        if new_block_relocate(indivisual.solution , indivisual.id_to_vehicle , indivisual.route_map, math.inf , is_limited):
+        if new_block_relocate(indivisual.solution , indivisual.id_to_vehicle , indivisual.route_map, float("inf") , is_limited):
             n3 +=1
             cur = total_cost(indivisual.id_to_vehicle, indivisual.route_map, indivisual.solution)
             if cur < best_cost:
@@ -2926,7 +3027,7 @@ def gold_algorithm_LS(indivisual : Chromosome , is_limited = False):
 
         begin  = time.time()
         
-        if new_multi_pd_group_relocate(indivisual.solution , indivisual.id_to_vehicle , indivisual.route_map, math.inf , is_limited):
+        if new_multi_pd_group_relocate(indivisual.solution , indivisual.id_to_vehicle , indivisual.route_map, float("inf") , is_limited):
             n4 +=1
             cur = total_cost(indivisual.id_to_vehicle, indivisual.route_map, indivisual.solution)
             if cur < best_cost:
@@ -3235,5 +3336,3 @@ def write_route_json_to_file_with_delay_time(vehicleid_to_plan: Dict[str, list[N
             json.dump(result_json, file, ensure_ascii=False, indent=4)
     except IOError as e:
         print(f"Lỗi khi ghi file JSON: {e}", file = sys.stderr)
-
-

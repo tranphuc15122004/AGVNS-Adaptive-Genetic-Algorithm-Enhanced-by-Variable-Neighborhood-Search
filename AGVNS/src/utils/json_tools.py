@@ -21,6 +21,8 @@
 import json
 import os
 import platform
+import shlex
+import signal
 import subprocess
 import sys
 import time
@@ -77,49 +79,64 @@ def get_algorithm_calling_command():
 
 
 # 开启进程，调用算法
-""" def subprocess_function(cmd):
-    # 开启子进程，并连接到它们的输入/输出/错误管道，获取返回值
-    sub_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, shell=True)
-    try:
-        start_time = time.time()
-        # 设置超时
-        sub_process.wait(Configs.MAX_RUNTIME_OF_ALGORITHM)
-        end_time = time.time()
-        # 返回算法运行时间和算法返回值
-        return end_time - start_time, sub_process.stdout.read().decode()
-    except Exception as e:
-        logger.error(e)
-        sys.exit(-1) """
-
 def subprocess_function(cmd):
-    # Capture both stdout and stderr to provide complete logs back to simulator
-    # Force UTF-8 for child process stdio to avoid UnicodeEncodeError on Windows consoles
+    # Run the algorithm in its own process group so timeouts also stop children.
     env = os.environ.copy()
     env.setdefault('PYTHONIOENCODING', 'utf-8')
-    sub_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, shell=True, env=env)
+    command = shlex.split(cmd) if isinstance(cmd, str) else cmd
+    sub_process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        shell=False,
+        env=env,
+        cwd=Configs.root_folder_path,
+        start_new_session=(os.name == 'posix'),
+    )
     try:
         start_time = time.time()
-        stdout, stderr = sub_process.communicate(timeout=Configs.MAX_RUNTIME_OF_ALGORITHM)
+        stdout, _ = sub_process.communicate(timeout=Configs.MAX_RUNTIME_OF_ALGORITHM)
         end_time = time.time()
-        # Be tolerant to encoding issues across platforms; keep ASCII like 'SUCCESS' intact
-        message = stdout.decode('utf-8', errors='replace') if isinstance(stdout, (bytes, bytearray)) else str(stdout)
-        return end_time - start_time, message 
-    
+        message = stdout.decode('utf-8', errors='replace') if isinstance(
+            stdout, (bytes, bytearray)
+        ) else str(stdout)
+        return end_time - start_time, message
+
     except subprocess.TimeoutExpired:
         print("Tiến trình chạy quá lâu, đang hủy...")
-        sub_process.terminate()  # Kết thúc tiến trình con an toàn
-        sub_process.wait()  # Đợi tiến trình con kết thúc hoàn toàn
+        if os.name == 'posix':
+            try:
+                os.killpg(sub_process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+        else:
+            sub_process.terminate()
+        try:
+            sub_process.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            if os.name == 'posix':
+                try:
+                    os.killpg(sub_process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            else:
+                sub_process.kill()
+            sub_process.communicate()
         return None, "Timeout"
 
-    except Exception as e:
-        # Return error string as message so caller can log it
-        return None, f"subprocess error: {e}"
+    except Exception as exc:
+        return None, "subprocess error: %s" % exc
 
     finally:
-        # Đảm bảo tiến trình không bị treo sau khi chạy
         if sub_process.poll() is None:
-            print("Tiến trình con vẫn chưa kết thúc, đang kill...")
-            sub_process.kill()
+            if os.name == 'posix':
+                try:
+                    os.killpg(sub_process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            else:
+                sub_process.kill()
+            sub_process.wait()
 
 
 
