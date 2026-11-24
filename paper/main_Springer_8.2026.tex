@@ -146,7 +146,7 @@ The first objective, overtime penalty ($OVP$), focuses on timely delivery of ord
 OVP = \sum_{i=1}^{N} \max(0, a_d^i - t_l^i)
 \end{equation}
 
-where $N$ is the total number of orders, $a_d^i$ is the arrival time of the order $o^i$ at its destination node. The $\max(0, \cdot)$ function ensures that only delays (where $a_d^i > t_l^i$) contribute to the total timeout cost, while on-time or early deliveries do not incur any penalty.
+where $N$ is the total number of orders, $a_d^i$ is the arrival time of the order $o^i$ at its destination node. The $\max(0, \cdot)$ function ensures that only delays (where $a_d^i > t_l^i$) contribute to the total timeout cost, while on-time or early deliveries do not incur any penalty. All simulator timestamps are measured in seconds.
 
 The second objective, average traveling distance ($ATD$), aims to minimize the operational costs associated with vehicle travel. It is represented by the average travel distance across the entire fleet. This objective is formulated as follows:
 
@@ -162,7 +162,7 @@ The final objective is a combination of the two sub-objectives, formulated to pr
 f = \lambda \times OVP + ATD    
 \end{equation}
 
-In this formulation, $\lambda$ is a large positive constant. The use of a large $\lambda$ value ensures that minimizing the total timeout ($OVP$) is given significantly higher priority than minimizing the average travel distance ($ATD$). This weighting scheme reflects the business reality where meeting delivery deadlines is paramount, while travel distance optimization serves as a secondary concern to improve overall efficiency without compromising service quality. This formulation guides the optimization algorithm to find a solution that first and foremost prevents late deliveries before seeking to reduce operational costs.
+In this formulation, $\lambda$ is determined by the benchmark scoring rule. Because $OVP$ is measured in seconds, we use $\lambda=10000/3600\approx2.7778$ in Eq.~\eqref{eq:f}. Equivalently, the implementation multiplies the overtime measured in seconds by $10000$ and then divides by $3600$ before adding $ATD$. Thus, minimizing late-delivery time is prioritized according to the official benchmark score, while travel distance remains the secondary component.
 
 \textbf{Constraints}
 
@@ -206,7 +206,7 @@ The proposed model operates under a series of real-world constraints that govern
 \begin{equation}
   (a_{d}^j - a_{d}^i) \leq \mathcal{M}(1 - z_{ij}) - \epsilon, \quad \forall i, j \in [1 , \dots , N], i \neq j   
 \end{equation}
-where $\epsilon$ is a small positive value (e.g., 0.001) to enforce a strict inequality and $\mathcal{M}$ is a very large positive constant.
+where $\epsilon=0.001$ is the small positive value used to enforce a strict inequality and $\mathcal{M}$ is a very large positive constant. The value of $\epsilon$ is a formulation constant and is not tuned during the search; the heuristic feasibility check enforces LIFO directly.
 
     \item Each factory node $F^i$ has a limited number of cargo docks. The number of vehicles being serviced at a factory at any time cannot exceed this capacity. This can be expressed as:
 \begin{equation}
@@ -320,7 +320,7 @@ Our proposed approach is divided into two main phases: the Evolution Stage and t
 
 The evolution stage begins by constructing a high quality seed solution \(x^0\) from the warm started partial routes using an advanced hybrid construction heuristic, then generates a diverse initial population of size \(p_{size}\) by repeatedly destroying a random fraction of requests in \(x^0\) and random reconstructing them. A steady state memetic loop is then executed: tournament selection forms the mating pool; for each of the \(p_{size}\) offspring, the adaptive crossover ratio decides whether to apply the block-oriented crossover or a destroy-and-reconstruct perturbation. After all offspring are generated, only the top-ranked subset undergoes adaptive mutation, where one of the four local search operators is selected using roulette-wheel selection based on their historical success rates. Each offspring replaces the worst population member if it is better, preserving elitism. The loop terminates when reaching the generation limit, time budget, or convergence, and the population is passed to the \gls{vns} Stage for final intensification.
 
-Upon completion of the evolution stage, the refined population is transfered to the \gls{vns} stage for local optimization. First, a filter is applied to eliminate duplicates, ensuring population diversity and potential. The stage then applies a hierarchical sequence of local search operators to each surviving solution. These operators are organized in an adaptive decision-tree structure, in which they are sequentially tested for improvement, and the order of application is dynamically adjusted for each individual solution. If an operator yields a better solution, the process restarts from the top of the hierarchy; otherwise, it proceeds to the next. This descent mechanism systematically explores variable neighborhoods until no further improvements are possible, culminating in the identification of the best solution found. This hybrid approach effectively balances global exploration via genetic evolution with intensive local exploitation through \gls{vns}, enhancing solution quality for the static \gls{pdp} subproblems within our periodic re-optimization framework.
+Upon completion of the evolution stage, the refined population is transferred to the \gls{vns} stage for local optimization. First, a filter is applied to eliminate duplicates, ensuring population diversity and potential. The stage then applies a hierarchical sequence of local search operators to each surviving solution. These operators are organized in an adaptive decision-tree structure, in which they are sequentially tested for improvement, and the order of application is dynamically adjusted for each individual solution. If an operator yields a better solution, the process restarts from the top of the hierarchy; otherwise, it proceeds to the next. This descent mechanism systematically explores variable neighborhoods until no further improvements are possible, culminating in the identification of the best solution found. This hybrid approach effectively balances global exploration via genetic evolution with intensive local exploitation through \gls{vns}, enhancing solution quality for the static \gls{pdp} subproblems within our periodic re-optimization framework.
 
 \subsection{Evolution stage}
 \subsubsection{Solution representation}
@@ -652,16 +652,24 @@ The mutation phase employs four request-centric neighborhood operators specifica
     \item \textbf{Block-Relocate:} This operator removes a contiguous request block from its current position and evaluates its relocation to alternative feasible positions. The feasible relocation providing the greatest improvement is selected, allowing larger portions of the routing plan to be reorganized when request-level modifications are insufficient (Figure~\ref{fig:block_LS}, right).
 \end{itemize}
 
-In the evolutionary stage, the four mutation operators are initialized with equal priority because no historical performance information is available. For each selected chromosome, the mutation operator is subsequently chosen using roulette-wheel selection based on its success history. Thus, all four operators initially have the same probability of being selected. During the evolutionary search, when a selected operator successfully improves a solution, its success counter is incremented, thereby increasing its probability of being selected in subsequent mutation operations. Each selected chromosome maintains its own success-history vector for the four operators, allowing the mutation mechanism to progressively favor operators that have been more effective for that solution lineage. Each selected mutation operator is executed within a strict per-operator time budget. The evolutionary stage is first completed, during which the success histories of the mutation operators are accumulated. Only after the termination of the evolutionary stage does the algorithm proceed to the VNS stage. The operator-performance information learned during evolution is then transferred to the VNS stage and used to initialize the neighborhood-search order, with historically better-performing operators receiving higher priority. Therefore, the information flow between the two stages is strictly sequential: the evolutionary stage learns operator-performance information, and the subsequent VNS stage exploits this information for further solution refinement.
+In the evolutionary stage, each chromosome maintains a success-history vector $h=(h_1,h_2,h_3,h_4)$ for the four mutation operators, and all entries are initialized to zero. When mutation is applied, operator $j$ is selected by roulette-wheel selection with weight $w_j=h_j+1$ and probability
+\begin{equation}
+P(j)=\frac{h_j+1}{\sum_{r=1}^{4}(h_r+1)}.
+\end{equation}
+If the selected operator produces an improving solution, its counter is incremented, $h_j\leftarrow h_j+1$; otherwise, the history is unchanged. Newly generated offspring are initialized with a new zero history, whereas a surviving chromosome retains the history accumulated during its own evolutionary search. Each selected mutation operator is given the implementation budget $\texttt{LS\_MAX\_TIME\_IN\_SINGLE}=1.0$~s. The separate configuration value $\texttt{LS\_MAX\_TIME\_PER\_OP}=8.0$~s is used as a diagnostic guard; it is not the time argument passed to the VNS operators.
 
 
 
 \subsection{Variable neighborhood search stage}
 The second component of our algorithm is the \gls{vns} stage, which is incorporated to further enhance the solution quality obtained from the evolutionary stage. Acting as an intensification mechanism, VNS systematically explores multiple neighborhood structures to escape local optima and refine routing plans. At the start of this stage, a set of unique, high-quality solutions is selected from the final evolved population to serve as distinct starting points for VNS; duplicates  are filtered out so that the search is applied to diverse promising regions of the solution space.
 
-The VNS framework iteratively applies a set of neighborhood operators, as illustrated in \autoref{fig:block_LS} and \autoref{fig:couple_LS}. For each neighborhood, a corresponding local search procedure is executed to perform fine-grained exploitation within that structure. When an improved solution is found, it replaces the current one and the search restarts from the first neighborhood; if no improvement is achieved, the procedure advances to the next neighborhood in the predefined sequence.
+The VNS framework iteratively applies a set of neighborhood operators, as illustrated in \autoref{fig:block_LS} and \autoref{fig:couple_LS}. For each neighborhood, a corresponding local search procedure is executed to perform fine-grained exploitation within that structure. When an improved solution is found, it replaces the current one and the search restarts from the first neighborhood; if no improvement is achieved, the procedure advances to the next neighborhood in the current adaptive sequence. The VNS stage is bounded by the global 570~s algorithm deadline; unlike the mutation calls, the current implementation does not assign an independent per-operator time argument to these VNS calls.
 
-The ordering of local search operators is dynamically adapted based on their self-improvement history during the evolutionary stage-operators that have produced more successful improvements are given higher priority. The VNS search for each selected individual terminates once none of the four operators can produce further improvements consecutively.
+The ordering of local search operators is dynamically adapted based on the success history retained by each surviving chromosome after the evolutionary stage. Let $H=\sum_{r=1}^{4}h_r$. If $H>0$, the ordering score for operator $j$ is
+\begin{equation}
+s_j=\frac{h_j}{H}\,u_j, \qquad u_j\sim\mathcal{U}(0.8,1.2),
+\end{equation}
+and the four operators are sorted by decreasing $s_j$. If $H=0$, independent $\mathcal{U}(0.5,1.0)$ scores are used to obtain the initial ordering. The VNS search for each selected individual terminates once none of the four operators can produce further improvements consecutively or the global algorithm deadline is reached. No information produced by VNS is fed back into the evolutionary stage.
 
 By selecting distinct top-performing solutions and applying this intensive VNS refinement to each, the hybrid strategy balances focused exploitation with population-level diversity. This combination increases the likelihood of discovering high-quality solutions across different promising regions of the search space, which is particularly important for large-scale and time-constrained dynamic scenarios.
 \subsection{Computational Complexity Analysis}
@@ -753,10 +761,17 @@ Replacement strategy & Elitist steady-state \\
 Individuals mutated per epoch & Top 25\% \\
 Crossover probability & Adaptive (erfc-based, $T{=}80$, $\mu{=}0.5$, $\sigma{=}0.2$) \\
 Mutation time budget & 1.0 s \\
+Mutation history & $h_j=0$ initially; increment by one after an improvement \\
+Mutation selection & $P(j)=(h_j+1)/\sum_r(h_r+1)$ \\
 \midrule
 \multicolumn{2}{l}{\textit{Destroy \& repair operators}} \\
 Perturbation strength & Remove 50\% of requests \\
 Repair heuristic & Randomised insertion \\
+\midrule
+\multicolumn{2}{l}{\textit{Objective and local-search constants}} \\
+Overtime coefficient & $\lambda=10000/3600$ for $OVP$ in seconds \\
+LIFO strictness constant & $\epsilon=0.001$ \\
+VNS time control & Global 570~s deadline; no separate per-operator argument \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1570,12 +1585,28 @@ many instances. The results indicate that the proposed adaptive mechanisms contr
 largest instances, suggesting that further improvements in search efficiency are needed.
 
 While this study focused specifically on the original ICAPS 2021 DPDP, its generalizability to other DPDP variants has not yet been established. Future work will focus on improving the scalability of \gls{aglisa} for very 
-large-scale instances by investigating learning-assisted operator selection and more efficient neighborhood search mechanisms. Extending the framework to other dynamic routing variants will also be considered.
+large-scale instances by investigating learning-assisted operator selection and more efficient neighborhood search mechanisms. We will also consider extending the framework to other dynamic routing variants.
 \subsection*{Acknowledgements}
 This research is funded by the Vietnam National Foundation for Science and Technology Development (NAFOSTED) under grant number 102.01-2025.106.
 \bibliographystyle{plain}
 \bibliography{sn-bibliography}% common bib file
 %% if required, the content of .bbl file can be included here once bbl is generated
 %%\input sn-article.bbl
-
+\newpage	
+\begin{appendices}
+	\textbf{Declarations}
+	
+	The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+	
+	\textbf{Authors’ contribution statements}
+	\begin{itemize}
+		\item Tran Dinh Phuc: Conceptualization, methodology, algorithm design, software implementation, experimental setup, data analysis, and writing – original draft.
+		\item Nguyen Thi Tam: Supervision,  methodology, algorithm design, result interpretation, writing – review and editing, and funding acquisition.
+		\item Huynh Thi Thanh Binh: Experimental evaluation, data curation, result analysis, visualization, and writing – review and editing.
+	\end{itemize}
+	
+	\textbf{Data availability}
+	
+	Data will be made available on request
+\end{appendices}
 \end{document}

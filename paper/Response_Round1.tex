@@ -108,21 +108,21 @@ Below, we provide a detailed, point-by-point response to all reviewer comments.
 
 
 \question{1}{The paper states that each re-optimization epoch has a 10-minute budget, but no actual runtime measurements are reported for AGVNS vs. baselines.}
+
 \answer
-% TODO: Add response.
-\textcolor{red}{\Large Xem lai thoi gian thuc te chay}
+Thank you for this important observation. In the ICAPS 2021 DPDP benchmark, each problem instance is evaluated under a fixed computational budget of 10 minutes. Therefore, our experimental comparison focuses primarily on the solution quality achieved within this common computational budget rather than on termination time. To further clarify the computational requirements of AGVNS, we have added a dedicated computational complexity analysis in Section~4.4 of the revised manuscript.
 
 \question{2}{Table 4 shows ``how many instances AGVNS wins,'' but not by what margin or at what computational cost.}
+
 \answer
-% TODO: Add response.
-\textcolor{red}{\Large Xem lai thoi gian chay thuc te}
+Thank you for this helpful comment. We have revised the experimental analysis to provide a more detailed interpretation of the performance differences rather than reporting only the number of winning instances. Regarding computational cost, all algorithms are evaluated under the same fixed 10-minute computational budget. In addition, we have added a dedicated computational complexity analysis of AGVNS in Section~4.4 to clarify the computational requirements of its main search components.
 
 \question{3}{If convergence curves are provided, the readability would be enhanced.}
 \answer
 % TODO: Add response.
 Thank you for this helpful suggestion. We agree that convergence curves are informative for evaluating search behavior on a fixed optimization problem. However, the DPDP considered in this study is addressed through a periodic re-optimization framework, in which the system state is updated every 10 minutes as new orders arrive and vehicle states change. Consequently, successive re-optimization epochs correspond to different subproblems with different numbers of active orders, vehicle states, and routing conditions. A conventional convergence curve across these epochs could therefore be misleading, since its variation would reflect changes in the underlying problem as well as the convergence behavior of the algorithm.
 
-Instead, we assess the effectiveness and computational behavior of the proposed algorithm from three complementary perspectives: final solution quality over the complete dynamic simulation, computational performance under the fixed re-optimization time budget, and statistical significance across the benchmark instances. In particular, the experiments are conducted on all 64 real-world benchmark instances with multiple independent runs, and the observed performance differences are further validated using non-parametric statistical tests. These evaluations directly measure whether an algorithm can consistently obtain high-quality routing solutions within the limited computational time available at each dynamic decision stage.
+Instead, we assess the effectiveness and computational behavior of the proposed algorithm from three complementary perspectives: final solution quality over the complete dynamic simulation, computational performance under the fixed re-optimization time budget, and statistical significance across the benchmark instances. In particular, the experiments are conducted on all 64 real-world benchmark instances with multiple independent runs, and the observed performance differences are further validated using non-parametric statistical tests. These evaluations directly measure whether an algorithm can obtain high-quality routing solutions within the limited computational time available at each dynamic decision stage.
 
 We believe that these measures provide a more representative evaluation of algorithm effectiveness in the considered dynamic optimization setting than a single conventional convergence curve. For this reason, we respectfully chose not to include convergence curves in the revised manuscript.
 
@@ -205,7 +205,7 @@ Thank you for this important comment.
     \item Regarding computational complexity, we have added an analysis of the major components of AGVNS, including the hybrid initialization, evolutionary operators, and VNS neighborhood search. The analysis clarifies how the computational cost scales with the population size, the number of active pickup-delivery requests, and the neighborhood operations. This discussion has been added to the revised Proposed Methodology section.
 {
     \color{blue}
-    \subsection*{4.3 Computational Complexity Analysis}
+    \subsection*{4.4 Computational Complexity Analysis}
 
 The computational complexity of \gls{aglisa} is analyzed with respect to the notation introduced in the problem formulation. Let $N$ denote the number of orders, $K$ the number of vehicles, and $l_k$ the number of unfinished 
 route nodes of vehicle $v^k$. For convenience, we define
@@ -240,13 +240,9 @@ At each re-optimization epoch, \gls{aglisa} searches for improved solutions with
 \end{itemize}
 \question{4}{Heavy reliance on benchmark-specific tuning limits generalizability}
 \answer
-\textcolor{red}{\Large Internal note: parameter sensitivity analysis}
-\begin{itemize}[leftmargin=2em]
-\item $T$: 40, 60, 80, 100, 120;
-\item population: 20, 40, 60;
-\item perturbation: 25\%, 50\%, 75\%;
-\item mutation subset: 10\%, 25\%, 50\%.
-\end{itemize}
+Thank you for this important observation. We agree that the proposed AGVNS is specifically designed for the original ICAPS 2021 DPDP rather than intended as a general-purpose optimization framework. Its main components are deliberately designed to exploit the dynamic characteristics and operational constraints of this particular problem.
+
+We would also like to clarify that the same parameter configuration is used across all 64 benchmark instances, without instance-specific tuning. Therefore, the present study focuses on developing an effective problem-specific solution method rather than demonstrating generalizability across different routing problems. We have clarified this scope in the revised manuscript and avoided making broad claims regarding the general applicability of AGVNS. Extending and validating the proposed framework on other DPDP variants and dynamic routing problems is identified as an important direction for future work.
 
 \question{5}{No validation beyond ICAPS benchmark}
 \answer
@@ -271,8 +267,7 @@ Thank you for this helpful comment. We have carefully revised the figures, capti
 
 \question{9}{Discussion of computational cost versus competing methods is highly recommended which is missing from their analysis}
 \answer
-% TODO: Add response.
-\textcolor{red}{\Large Phuc tra loi cau ve chi phi tinh toan}
+Thank you for this valuable suggestion. To address this concern, we have added a dedicated computational complexity analysis in Section~4.4 of the revised manuscript. The analysis examines the computational costs of the main components of AGVNS, including initialization, evolutionary search, and VNS refinement, and discusses how the computational complexity scales with the problem size and algorithmic parameters.
 \newpage
 \begin{center}
 \textbf{\Large Authors' Response to Reviewer 4}
@@ -311,12 +306,12 @@ To address this issue, we recomputed the Friedman test and all subsequent pairwi
 \answer
 Thank you for pointing out this ambiguity.
 
-In the revised manuscript, we now explicitly state that each stochastic algorithm was independently executed xxx times on each benchmark instance. The corresponding results are reported as mean $\pm$ standard deviation.
+In the revised manuscript, we now explicitly state that each stochastic algorithm was independently executed 10 times on each benchmark instance. The corresponding results are reported as mean $\pm$ standard deviation.
 
 Tables~5 and~6 have therefore been revised to include the standard deviations for all methods for which repeated-run results are available. For benchmark or reference methods for which only a single result is available from the original competition results or published sources, we report only that value and do not assign an artificial standard deviation.
 
 We have also revised the description of Table~3 and the experimental settings to ensure a  distinction between repeated-run averages and single reference values. These changes improve the reproducibility of the experiments and provide a clearer assessment of the robustness and stability of AGVNS.
-
+{\color{blue}
 \begin{sidewaystable}[p]
 \centering
 \caption*{Table 5: Objective values obtained by different algorithms on Sets~5--8.
@@ -702,11 +697,10 @@ All objective values are reported in scientific notation.}
 
 \end{tabular}
 \end{sidewaystable}
-
+}
 \question{5}{Section 5.2 states that ``computational time'' is part of the evaluation, but no runtime table is presented. Runtime must be reported given the 10-minute re-optimization window.}
 \answer
-
-\textcolor{red}{\Large Xem thoi gian tinh toan thuc te}
+Thank you for this important observation. We would like to clarify that the 10-minute limit in our experimental setting refers to the computational budget for each problem instance, rather than to each individual re-optimization epoch. Since the algorithms are evaluated under this fixed computational budget, our comparison primarily focuses on the solution quality obtained within the same time constraint. We have revised Section~5.2 to clarify this point and have also added a dedicated computational complexity analysis in Section~4.4 to characterize the computational requirements of AGVNS.
 % TODO: Add response.
 
 \question{6}{Recent relevant DPDP solvers are cited but not compared, including the decomposition-based multi-objective evolutionary approach with tabu search [2], the deep reinforcement learning method [13], and the ALNS family [10]. At least one modern DPDP-specific solver beyond the 2021 winners should be included.}
@@ -714,13 +708,18 @@ All objective values are reported in scientific notation.}
 \answer
 Thank you for this important suggestion. We agree that comparison with a more recent DPDP-specific solver beyond the ICAPS 2021 competition winners would provide a stronger evaluation of the proposed method.
 
-To address this concern, we have implemented Evo-RL, a recent evolutionary reinforcement learning approach specifically developed for large-scale dynamic pickup and delivery problems, and included it as an additional baseline in the revised experiments. Evo-RL represents one of the most recent DPDP-specific optimization frameworks and combines evolutionary search with reinforcement learning to address large-scale dynamic routing scenarios.
+To address this concern, we have implemented Evo-RL [14], a recent evolutionary reinforcement learning approach specifically developed for large-scale dynamic pickup and delivery problems, and included it as an additional baseline in the revised experiments. Evo-RL represents one of the most recent DPDP-specific optimization frameworks and combines evolutionary search with reinforcement learning to address large-scale dynamic routing scenarios.
 
 We evaluated Evo-RL on the same eight benchmark sets used for AGVNS. The corresponding results have been added to the revised experimental tables and discussion. For completeness, the average objective values obtained by Evo-RL and AGVNS are summarized below.
 
+\noindent
+{\color{blue}
+   [14] Xiaoying Yang, Yiran Li, Tianxiang Cui, and Ruibin Bai. A collaborativeevolutionary reinforcement learning approach to dynamic pickup and deliverychallenges. Transportation Research Part E: Logistics and Transportation Review, 212:104885, 2026.
+}
+
 \begin{table}[htp]
 \centering
-\caption{Comparison of average objective values between Evo-RL and AGVNS across the eight benchmark sets.}
+\caption{Comparison of average objective values between Evo-RL[14] and AGVNS across the eight benchmark sets.}
 \label{tab:evorl_agvns_response}
 \begin{tabular}{c r r r r}
 \toprule
@@ -750,8 +749,6 @@ To facilitate reproducibility, the implementation of Evo-RL used in our experime
 
 \answer
 
-\textcolor{red}{\Large Phuc them cac tham so cu the vao trong bai bao}
-
 Thank you for this important observation. We agree that several parameters and implementation details were not sufficiently specified in the original manuscript. We have revised the corresponding sections to explicitly define these settings and clarify their roles in AGVNS.
 
 \begin{itemize}
@@ -760,7 +757,7 @@ Thank you for this important observation. We agree that several parameters and i
     \item Third, the per-operator computational budget used during the evolutionary search has been explicitly reported in the revised manuscript.
     \item Finally, we have substantially clarified the VNS operator ordering in Section~4.3. The evolutionary and VNS stages are executed sequentially and are completely separated. The four operators are first used as mutation operators during the evolutionary stage, where their success information is accumulated. Only after the evolutionary stage has terminated is this information transferred to the VNS stage. For each solution selected for VNS refinement, the same four operators are ordered according to their success history accumulated during evolution, with the more successful operators receiving higher priority. Therefore, the VNS ordering is determined entirely from information learned in the preceding evolutionary stage and does not affect mutation-operator selection during that stage.
 
-These parameter values, update rules, and implementation details have now been added to the revised manuscript. 
+These parameter values, update rules, and implementation details have now been added to Table 2 in the revised manuscript. 
 \end{itemize}
 % TODO: Add response.
 
@@ -768,11 +765,11 @@ These parameter values, update rules, and implementation details have now been a
 \answer
 Thank you for identifying these inconsistencies. We agree that the reference to ``LS2'' was not clearly defined and that the inconsistent use of $n$ and $m$ for the number of active requests could cause confusion.
 
-In the revised manuscript, we have corrected and standardized the notation throughout the methodology section and replaced the ambiguous ``LS2'' reference with the corresponding operator name. More importantly, rather than providing isolated complexity statements within the operator descriptions, we have added a dedicated computational complexity analysis that systematically evaluates the major components of AGVNS, including initialization, crossover, mutation, and VNS (\textcolor{blue}{see Section 4.4}). The notation used in this analysis is consistently defined and aligned with the problem formulation.
+In the revised manuscript, we have corrected and standardized the notation throughout the methodology section and replaced the ambiguous ``LS2'' reference with the corresponding operator name. More importantly, rather than providing isolated complexity statements within the operator descriptions, we have added a dedicated computational complexity analysis that systematically evaluates the major components of AGVNS, including initialization, crossover, mutation, and VNS (\textcolor{blue}{see Section 4.4}). The notation used in this analysis is defined and aligned with the problem formulation.
 % TODO: Add response.
 
 \question{9}{The acronym AGVNS is expanded as ``adaptive genetic and local search algorithm'' in the abstract but as ``adaptive genetic and variable neighborhood search algorithm'' in the body. The latter should be used throughout.}
-\answer Thank you for identifying this inconsistency. We have corrected the expansion of AGVNS in the Abstract and carefully checked the entire manuscript. The term ``adaptive genetic and variable neighborhood search algorithm'' is now used consistently throughout the revised manuscript.
+\answer Thank you for identifying this inconsistency. We have corrected the expansion of AGVNS in the Abstract and carefully checked the entire manuscript. The term ``adaptive genetic and variable neighborhood search algorithm'' is now used throughout the revised manuscript.
 % TODO: Add response.
 
 \question{10}{Section 4.3 derives VNS operator ordering from ``self-improvement history during the evolutionary stage,'' but the same operators are used for mutation in that stage, creating a circular dependency. The first-generation initialization is not specified.}
