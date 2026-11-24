@@ -1,0 +1,6 @@
+#!/bin/sh
+# Record elapsed wall time for each Java subprocess in its worker-owned directory.
+if [ -z "${MA_DATA_INTERACTION_DIR:-}" ]; then
+    exec /usr/bin/java "$@"
+fi
+exec /usr/bin/time -a -o "$MA_DATA_INTERACTION_DIR/java_dispatch_times.csv" -f '%e,%x' /usr/bin/java "$@"

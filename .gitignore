@@ -91,3 +91,9 @@ reports/**/v[0-9][0-9]/
 reports/**/v[0-9][0-9]_output/
 reports/**/runs/**/jobs/
 reports/**/*.ipynb
+
+# Raw account snapshots; curated findings and cross-version summaries are tracked.
+reports/kaggle_gold_audit/trnphc15122004/
+reports/kaggle_gold_audit/trp1512/
+reports/kaggle_gold_medal/metadata/
+reports/kaggle_gold_trp1512/metadata/
