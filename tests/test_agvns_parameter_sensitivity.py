@@ -92,3 +92,13 @@ def test_job_seed_is_stable_and_configuration_is_joined():
     assert first[0]["instance_id"] == 1
     assert first[-1]["configuration_id"] == 10
     assert first[-1]["instance_id"] == 58
+
+
+def test_worker_environment_isolates_simulator_log_output():
+    from design import iter_jobs
+    from run_screening import _worker_environment
+
+    workspace = pathlib.Path("/tmp/agvns-sensitivity-worker")
+    environment = _worker_environment(next(iter_jobs(base_seed=7000)), workspace)
+
+    assert environment["AGVNS_SIMULATOR_OUTPUT_DIR"] == str(workspace / "simulator_output")

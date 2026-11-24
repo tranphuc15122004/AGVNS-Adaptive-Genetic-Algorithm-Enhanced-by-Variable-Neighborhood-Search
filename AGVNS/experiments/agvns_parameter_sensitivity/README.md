@@ -16,6 +16,9 @@ python AGVNS/experiments/agvns_parameter_sensitivity/run_screening.py --dry-run
 pytest -q tests/test_agvns_parameter_sensitivity.py
 ```
 
+The runner writes every execution to a new timestamped directory. A targeted
+run never appends to the historical `20260903_141120` batch.
+
 ## Run with tmux
 
 ```bash
@@ -23,24 +26,34 @@ tmux new-session -d -s agvns_taguchi_screening \
   "python AGVNS/experiments/agvns_parameter_sensitivity/run_screening.py --execute --workers 8 --cores 0,1,2,3,4,5,6,7 --base-seed 20260824"
 ```
 
-The outer worker wall-time guard is disabled by default.  The simulator's own
-algorithm timeout remains active.  To opt into a hard outer guard for a diagnostic
-run, pass a positive value such as `--job-timeout-seconds 660`.
-
 Parallel workers use an output/log directory inside their isolated workspace to
 avoid races in the shared simulator log directory.
 
-To rerun only jobs recorded as `FAILED` because of the runner's outer timeout,
-point the runner at the previous run. This creates a new run directory and does
-not rerun unrelated failures:
+`--job-timeout-seconds` optionally terminates a stuck worker process group.
+Choose its value from the allowed wall time for the selected instances; the
+570-second algorithm budget applies per algorithm call, while a full
+simulation instance can make multiple calls.
+
+Run the seven-job repair canary with the original seed schedule:
 
 ```bash
 python AGVNS/experiments/agvns_parameter_sensitivity/run_screening.py \
-  --execute \
-  --retry-timeouts-from AGVNS/experiments/agvns_parameter_sensitivity/runs/<timestamp> \
-  --workers 16 --cores 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 \
-  --base-seed 20260824
+  --execute --job-list AGVNS/experiments/agvns_parameter_sensitivity/canary_jobs.csv \
+  --workers 4 --cores 0,1,2,3 --base-seed 20260824
 ```
+
+Rerun all 60 designed jobs for instances 57 and 58 (30 per instance) in a
+separate run directory:
+
+```bash
+python AGVNS/experiments/agvns_parameter_sensitivity/run_screening.py \
+  --execute --instances 57,58 --workers 4 --cores 0,1,2,3 --base-seed 20260824
+```
+
+The manifest records selected job keys, seed schedule, Git revision, a hash of
+the dirty worktree, and the simulator timeout settings. The runner accepts
+`--job-list`, `--instances`, and optional `--job-timeout-seconds`; it does not
+implement `--retry-timeouts-from`.
 
 Monitor with:
 

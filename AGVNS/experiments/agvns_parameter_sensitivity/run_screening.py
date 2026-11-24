@@ -4,14 +4,16 @@ import argparse
 import csv
 import datetime
 import json
+import hashlib
 import os
 import pathlib
 import shutil
+import signal
 import subprocess
 import sys
 import time
 from collections import deque
-from typing import Any, Deque, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Deque, Dict, Iterable, List, Optional, Tuple
 
 EXPERIMENT_DIR = pathlib.Path(__file__).resolve().parent
 AGVNS_ROOT = EXPERIMENT_DIR.parents[1]
@@ -23,6 +25,14 @@ if str(AGVNS_ROOT) not in sys.path:
 
 from aggregate_results import aggregate_run, parse_worker_log_text
 from design import DESIGN, expected_job_count, iter_jobs, validate_design
+try:
+    from src.conf.configs import Configs
+except Exception:  # pragma: no cover - manifest can still be written if optional imports fail
+    Configs = None
+try:
+    from algorithm.algorithm_config import ALGO_TIME_LIMIT
+except Exception:  # pragma: no cover - diagnostics remain available if imports fail
+    ALGO_TIME_LIMIT = None
 
 
 RESULT_FIELDS = (
@@ -30,7 +40,7 @@ RESULT_FIELDS = (
     "instance_id", "repetition", "seed", "core", "pid", "status", "return_code",
     "wall_time_seconds", "score", "total_distance", "sum_over_time", "total_score",
     "simulation_runtime_seconds", "algorithm_time_seconds", "algorithm_dispatch_count",
-    "workspace", "log_path", "error",
+    "workspace", "log_path", "error", "effective_status", "failure_reason",
 )
 
 
@@ -72,18 +82,80 @@ def build_jobs(base_seed: int, configuration_id: Optional[int] = None) -> List[D
     return jobs
 
 
+def select_job_list(path: str, jobs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    expected_fields = ["configuration_id", "instance_id", "repetition"]
+    available = {job_key(job): job for job in jobs}
+    selected = []
+    seen = set()
+    with open(path, "r", newline="", encoding="utf-8-sig") as handle:
+        reader = csv.DictReader(handle)
+        if reader.fieldnames != expected_fields:
+            raise ValueError("Job list header must be: %s" % ",".join(expected_fields))
+        for row_number, row in enumerate(reader, start=2):
+            key = tuple(int(row[field]) for field in expected_fields)
+            if key in seen:
+                raise ValueError("Duplicate job key on row %d: %s" % (row_number, key))
+            if key not in available:
+                raise ValueError("Job key is outside the screening design: %s" % (key,))
+            seen.add(key)
+            selected.append(available[key])
+    if not selected:
+        raise ValueError("Job list selected no jobs")
+    return selected
+
+
+def _code_provenance() -> Dict[str, Any]:
+    def _git(*arguments: str) -> str:
+        try:
+            return subprocess.check_output(
+                ["git", *arguments], cwd=str(REPO_ROOT), stderr=subprocess.DEVNULL,
+                text=True,
+            ).strip()
+        except (OSError, subprocess.CalledProcessError):
+            return "unknown"
+
+    revision = _git("rev-parse", "HEAD")
+    status = _git("status", "--short", "--untracked-files=all")
+    fingerprint = hashlib.sha256()
+    fingerprint.update(status.encode("utf-8", errors="replace"))
+    for line in status.splitlines():
+        relative_path = line[3:].strip()
+        if not relative_path:
+            continue
+        candidate = REPO_ROOT / relative_path
+        if candidate.is_file():
+            try:
+                fingerprint.update(relative_path.encode("utf-8", errors="replace"))
+                fingerprint.update(candidate.read_bytes())
+            except OSError:
+                fingerprint.update(b"<unreadable>")
+    return {
+        "git_revision": revision,
+        "worktree_dirty": bool(status),
+        "dirty_worktree_fingerprint_sha256": fingerprint.hexdigest(),
+    }
+
+
 def write_manifest(run_dir: pathlib.Path, args: argparse.Namespace, jobs: List[Dict[str, Any]], cores: List[int]) -> None:
+    code = _code_provenance()
     manifest = {
         "experiment": "agvns_parameter_sensitivity_screening",
         "created_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "run_dir": str(run_dir),
         "expected_jobs": len(jobs),
         "design_jobs": expected_job_count(),
+        "selected_job_keys": [list(job_key(job)) for job in jobs],
         "base_seed": args.base_seed,
         "seed_formula": "base_seed + instance_id * 1000 + repetition",
         "cores": cores,
         "workers": args.workers or len(cores),
-        "command": " ".join(sys.argv),
+        "timeouts": {
+            "algorithm_budget_seconds": ALGO_TIME_LIMIT,
+            "simulator_subprocess_timeout_seconds": getattr(Configs, "MAX_RUNTIME_OF_ALGORITHM", None),
+            "outer_job_timeout_seconds": getattr(args, "job_timeout_seconds", None),
+        },
+        "code": code,
+        "command": list(sys.argv),
     }
     with open(run_dir / "manifest.json", "w", encoding="utf-8") as handle:
         json.dump(manifest, handle, indent=2, ensure_ascii=False)
@@ -101,26 +173,13 @@ def append_result(run_dir: pathlib.Path, result: Dict[str, Any]) -> None:
         handle.write(json.dumps(result, ensure_ascii=False, sort_keys=True) + "\n")
 
 
-def load_completed(run_dir: pathlib.Path) -> Set[Tuple[int, int, int]]:
-    path = run_dir / "results.jsonl"
-    if not path.exists():
-        return set()
-    completed = set()
-    with open(path, "r", encoding="utf-8") as handle:
-        for line in handle:
-            if line.strip():
-                row = json.loads(line)
-                if row.get("status") == "SUCCESS":
-                    completed.add(job_key(row))
-    return completed
-
-
 def _worker_environment(job: Dict[str, Any], workspace: pathlib.Path) -> Dict[str, str]:
     environment = os.environ.copy()
     environment.update(
         {
             "MA_DATA_INTERACTION_DIR": str(workspace),
             "DPDP_DATA_INTERACTION_DIR": str(workspace),
+            "AGVNS_SIMULATOR_OUTPUT_DIR": str(workspace / "simulator_output"),
             "DPDP_RANDOM_SEED": str(job["seed"]),
             "AGVNS_RANDOM_SEED": str(job["seed"]),
             "AGVNS_EXPERIMENT_ID": str(job["configuration_id"]),
@@ -146,7 +205,11 @@ def launch(job: Dict[str, Any], run_dir: pathlib.Path, core: int, python_exec: s
     log_path = workspace / "worker.log"
     command = [python_exec, str(AGVNS_ROOT / "main.py"), "--instances", str(job["instance_id"]), "--data-dir", str(workspace), "--cpu", str(core), "--seed", str(job["seed"])]
     log_handle = open(log_path, "w", encoding="utf-8")
-    process = subprocess.Popen(command, cwd=str(AGVNS_ROOT), stdout=log_handle, stderr=subprocess.STDOUT, env=_worker_environment(job, workspace), text=True)
+    process = subprocess.Popen(
+        command, cwd=str(AGVNS_ROOT), stdout=log_handle,
+        stderr=subprocess.STDOUT, env=_worker_environment(job, workspace),
+        text=True, start_new_session=True,
+    )
     if hasattr(os, "sched_setaffinity"):
         os.sched_setaffinity(process.pid, {core})
     return {
@@ -169,6 +232,12 @@ def finish(worker: Dict[str, Any]) -> Dict[str, Any]:
     parsed = parse_worker_log_text(message, int(worker["job"]["instance_id"]), return_code)
     result = dict(worker["job"])
     result.update(parsed)
+    if worker.get("outer_timeout"):
+        result["status"] = "FAILED"
+        result["effective_status"] = "FAILED"
+        result["failure_reason"] = "outer_timeout"
+        timeout_message = "outer job wall-time exceeded %.3f seconds" % worker["timeout_seconds"]
+        result["error"] = "; ".join(filter(None, [result.get("error", ""), timeout_message]))
     result.update(
         {
             "core": worker["core"],
@@ -182,13 +251,30 @@ def finish(worker: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+def terminate_worker(worker: Dict[str, Any]) -> None:
+    """Terminate one worker process group and wait for it to exit."""
+    process = worker["process"]
+    if process.poll() is not None:
+        return
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except (AttributeError, OSError):
+        process.terminate()
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except (AttributeError, OSError):
+            process.kill()
+        process.wait()
+
+
 def run_jobs(args: argparse.Namespace, run_dir: pathlib.Path, jobs: List[Dict[str, Any]], cores: List[int]) -> None:
     workers = max(1, min(args.workers or len(cores), len(cores)))
     core_queue: Deque[int] = deque(cores[:workers])
     pending: Deque[Dict[str, Any]] = deque(jobs)
     active: List[Dict[str, Any]] = []
-    completed = load_completed(run_dir) if args.resume else set()
-    pending = deque(job for job in pending if job_key(job) not in completed)
     while pending or active:
         while pending and core_queue:
             job = pending.popleft()
@@ -199,12 +285,19 @@ def run_jobs(args: argparse.Namespace, run_dir: pathlib.Path, jobs: List[Dict[st
         remaining = []
         for worker in active:
             if worker["process"].poll() is None:
-                remaining.append(worker)
-                continue
+                timeout_seconds = getattr(args, "job_timeout_seconds", None)
+                elapsed = time.monotonic() - worker["started_monotonic"]
+                if timeout_seconds is not None and elapsed >= timeout_seconds:
+                    worker["outer_timeout"] = True
+                    worker["timeout_seconds"] = timeout_seconds
+                    terminate_worker(worker)
+                if worker["process"].poll() is None:
+                    remaining.append(worker)
+                    continue
             result = finish(worker)
             append_result(run_dir, result)
             core_queue.append(worker["core"])
-            print("Finished config_%03d instance_%d repetition_%d: %s score=%s" % (result["configuration_id"], result["instance_id"], result["repetition"], result["status"], result.get("score")), flush=True)
+            print("Finished config_%03d instance_%d repetition_%d: %s score=%s" % (result["configuration_id"], result["instance_id"], result["repetition"], result.get("effective_status", result["status"]), result.get("score")), flush=True)
         active = remaining
 
 
@@ -216,15 +309,31 @@ def main() -> None:
     parser.add_argument("--config-id", type=int)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--workers", type=int)
+    parser.add_argument("--job-timeout-seconds", type=float, help="Optional outer worker wall-time limit")
     parser.add_argument("--cores")
     parser.add_argument("--base-seed", type=int, default=20260824)
     parser.add_argument("--python", default=sys.executable)
-    parser.add_argument("--resume", action="store_true")
+    selector = parser.add_mutually_exclusive_group()
+    selector.add_argument("--job-list", help="CSV with configuration_id,instance_id,repetition columns")
+    selector.add_argument("--instances", help="Comma-separated instance IDs to select from the design")
     args = parser.parse_args()
     validate_design()
     if not args.execute and not args.dry_run:
         parser.error("Use --dry-run or --execute explicitly")
+    if args.job_timeout_seconds is not None and args.job_timeout_seconds <= 0:
+        parser.error("--job-timeout-seconds must be positive")
     jobs = build_jobs(args.base_seed, args.config_id)
+    if args.job_list:
+        jobs = select_job_list(args.job_list, jobs)
+    elif args.instances:
+        try:
+            instance_ids = {int(value.strip()) for value in args.instances.split(",") if value.strip()}
+        except ValueError:
+            parser.error("--instances must be a comma-separated list of integers")
+        unknown = instance_ids - {int(job["instance_id"]) for job in jobs}
+        if not instance_ids or unknown:
+            parser.error("Unknown or empty instance selection: %s" % sorted(unknown or instance_ids))
+        jobs = [job for job in jobs if job["instance_id"] in instance_ids]
     if args.limit is not None:
         if args.limit <= 0:
             parser.error("--limit must be positive")
@@ -233,7 +342,7 @@ def main() -> None:
     print("Validated jobs: %d; cores: %s" % (len(jobs), cores))
     if args.dry_run:
         return
-    run_dir = create_run_dir(args.run_root) if not args.resume else pathlib.Path(args.run_root).resolve()
+    run_dir = create_run_dir(args.run_root)
     run_dir.mkdir(parents=True, exist_ok=True)
     write_manifest(run_dir, args, jobs, cores)
     run_jobs(args, run_dir, jobs, cores)

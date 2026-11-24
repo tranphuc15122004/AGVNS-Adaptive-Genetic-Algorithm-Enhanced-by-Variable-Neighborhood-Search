@@ -7,6 +7,7 @@ import math
 import os
 import re
 import statistics
+import sys
 from collections import defaultdict
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -43,6 +44,7 @@ def parse_worker_log_text(message: str, instance_id: int, return_code: int) -> D
     score = scores[-1] if scores else None
     simulation_runtime = runtime_matches[-1] if runtime_matches else None
     errors = []
+    failure_reason = None
     if return_code != 0:
         errors.append("worker exited with code %d" % return_code)
     if "SUCCESS" not in message:
@@ -51,13 +53,29 @@ def parse_worker_log_text(message: str, instance_id: int, return_code: int) -> D
         errors.append("missing final score")
     elif not math.isfinite(score):
         errors.append("final score is not finite")
+        failure_reason = "invalid_score"
+    elif score < 0:
+        errors.append("final score is negative")
+        failure_reason = "invalid_score"
+    elif score >= sys.maxsize:
+        errors.append("final score is a sentinel failure value")
+        failure_reason = "sentinel_score"
+    if "Dispatch result is infeasible" in message or "infeasible dispatch result" in message:
+        failure_reason = "infeasible_dispatch"
+        errors.append("simulator rejected infeasible dispatch")
     if simulation_runtime is None:
         errors.append("missing simulation runtime")
     if "FAIL" in message:
         errors.append("worker emitted FAIL")
 
+    runner_status = "SUCCESS" if return_code == 0 and "SUCCESS" in message else "FAILED"
+    effective_status = "SUCCESS" if runner_status == "SUCCESS" and not errors else "FAILED"
+    if effective_status != "SUCCESS" and failure_reason is None:
+        failure_reason = "worker_failure"
     result: Dict[str, Any] = {
-        "status": "SUCCESS" if not errors else "FAILED",
+        "status": runner_status,
+        "effective_status": effective_status,
+        "failure_reason": failure_reason,
         "score": score,
         "total_distance": _last_float(_TOTAL_DISTANCE, message),
         "sum_over_time": _last_float(_SUM_OVER_TIME, message),
@@ -99,6 +117,22 @@ def _summary(values: Iterable[Optional[float]]) -> Dict[str, Optional[float]]:
     }
 
 
+def _valid_score(score: Any) -> bool:
+    try:
+        value = float(score)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return math.isfinite(value) and 0 <= value < sys.maxsize
+
+
+def _effective_status(row: Dict[str, Any]) -> str:
+    if not _valid_score(row.get("score")):
+        return "FAILED"
+    if row.get("status") not in (None, "SUCCESS"):
+        return "FAILED"
+    return row.get("effective_status", row.get("status", "FAILED"))
+
+
 def _group_summary(rows: List[Dict[str, Any]], group_key: str) -> List[Dict[str, Any]]:
     grouped = defaultdict(list)
     for row in rows:
@@ -106,7 +140,7 @@ def _group_summary(rows: List[Dict[str, Any]], group_key: str) -> List[Dict[str,
     output = []
     for key in sorted(grouped, key=lambda value: (value is None, value)):
         group = grouped[key]
-        successful = [row for row in group if row.get("status") == "SUCCESS"]
+        successful = [row for row in group if _effective_status(row) == "SUCCESS"]
         score = _summary(row.get("score") for row in successful)
         simulation_runtime = _summary(row.get("simulation_runtime_seconds") for row in successful)
         algorithm_runtime = _summary(row.get("algorithm_time_seconds") for row in successful)
@@ -134,10 +168,34 @@ def _group_summary(rows: List[Dict[str, Any]], group_key: str) -> List[Dict[str,
 def aggregate_rows(rows: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
     """Build paper-ready summaries while retaining raw rows separately."""
     enriched = []
+    seen_job_keys = set()
     for row in rows:
         current = dict(row)
         instance_id = int(current["instance_id"])
+        if all(current.get(field) is not None for field in (
+                "configuration_id", "instance_id", "repetition")):
+            key = (
+                int(current["configuration_id"]), instance_id,
+                int(current["repetition"]),
+            )
+            if key in seen_job_keys:
+                raise ValueError("Duplicate sensitivity job row: %s" % (key,))
+            seen_job_keys.add(key)
         current["set_id"] = ((instance_id - 1) // 8) + 1
+        score = current.get("score")
+        score_is_invalid = not _valid_score(score)
+        if score_is_invalid:
+            current["effective_status"] = "FAILED"
+            if not current.get("failure_reason"):
+                try:
+                    is_sentinel = score is not None and float(score) >= sys.maxsize
+                except (TypeError, ValueError, OverflowError):
+                    is_sentinel = False
+                current["failure_reason"] = "sentinel_score" if is_sentinel else "invalid_score"
+        elif current.get("effective_status") is None:
+            current["effective_status"] = current.get("status", "FAILED")
+            if current["effective_status"] == "FAILED" and not current.get("failure_reason"):
+                current["failure_reason"] = "worker_failure"
         if current.get("configuration_id") is not None:
             config = configuration_by_id(int(current["configuration_id"]))
             current["threshold_orders"] = config.threshold_orders
@@ -177,8 +235,8 @@ def aggregate_run(run_dir: str) -> Dict[str, Any]:
     output = {
         "run_dir": os.path.abspath(run_dir),
         "total_rows": len(rows),
-        "successful_rows": sum(row.get("status") == "SUCCESS" for row in rows),
-        "failed_rows": sum(row.get("status") != "SUCCESS" for row in rows),
+        "successful_rows": sum(_effective_status(row) == "SUCCESS" for row in rows),
+        "failed_rows": sum(_effective_status(row) != "SUCCESS" for row in rows),
         "summaries": summaries,
     }
     with open(os.path.join(run_dir, "aggregate_summary.json"), "w", encoding="utf-8") as handle:
