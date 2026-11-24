@@ -305,3 +305,76 @@
 - Thiết kế đã được người dùng duyệt: mặc định `0` (disable outer guard), vẫn giữ
   tham số CLI; thêm bộ lọc đọc các record có lỗi `outer job wall-time exceeded` để
   tạo run mới chỉ chứa các job timeout.
+
+---
+
+# Findings — kế hoạch follow-up sensitivity instance 57–58 (2026-10-05)
+
+- Batch `20261005_014745` có manifest 24 job, 12 worker/core `0–11`, fingerprint
+  `afa5adc6e9179ded92e745598ca8212186c83932472b9c53f3ef09b95c173b4b`.
+- Snapshot 02:11 UTC: batch chưa có ledger/summary cuối; `SUCCESS` trong worker log
+  có thể chỉ là một lần gọi thuật toán trong các tick simulator, không chứng minh
+  toàn bộ job đã xong.
+- Có 7 job instance 57 cùng fingerprint từ batch `20261002_191917`; log/runtime
+  stats là nguồn đối chiếu nhưng thiếu row chuẩn trong `results.jsonl`.
+- Sau khi 24 job được xác minh, dự kiến cohort 57–58 có 31/60 key và thiếu 29
+  (6 instance 57, 23 instance 58). Nếu 7 key cũ không đối chiếu được hoặc job mới
+  lỗi, số phải chạy lại tăng tương ứng.
+- Không gộp để xếp hạng các score cũ fingerprint khác: lịch sử có thay đổi đường
+  chọn nghiệm và thời gian chạy, nên “score có dữ liệu” chưa đồng nghĩa so sánh
+  sensitivity hợp lệ.
+
+## Cập nhật tiến độ — 2026-10-06
+
+- Batch `20261005_014745` không còn runner: 12/24 workspace (đều instance 57), mô
+  phỏng mới tới 00:40; không có `results.jsonl`, `runtime_stats.csv` hoặc `summary.json`.
+  12 key còn lại chưa được tạo workspace. Không thấy traceback/error trong log hiện có.
+- Đã khởi chạy lại đủ 24 key trong `20261006_090008` bằng Conda Python, 12 worker,
+  core 0–11. Khi kiểm tra sau launch: 12 key đầu đang chạy, 12 key còn lại trong queue,
+  chưa có kết quả cuối.
+- Hash worktree đổi từ `afa5...` sang `9ffb...` vì tài liệu kế hoạch được cập nhật;
+  git revision vẫn `51e499a...` và không có thay đổi thuật toán trong lượt tiếp tục này.
+  Ghi nhận khác biệt này khi chuẩn hóa provenance và tổng hợp 7 kết quả cũ.
+- Lần chạy `20261005_014653` có 24 result rows lỗi thiếu `simpy`; đây là lỗi môi
+  trường Python và không tính là kết quả thuật toán. Batch hiện tại dùng Conda Python.
+- Batch `20261005_014745` được gắn với phiên exec foreground, không có phiên tmux
+  hoặc supervisor bền vững. Ngày 2026-10-06 session `74191` trả `Unknown process id`,
+  runner không còn, và worker logs không có exit code/signal/traceback. Khả năng phù
+  hợp nhất là phiên exec hoặc môi trường kết thúc process; bằng chứng không đủ để
+  phân biệt chính xác timeout/cleanup với một sự kiện bên ngoài khác, cũng không có
+  bằng chứng OOM hay lỗi thuật toán.
+- Batch mới `20261006_090008` đang chạy trong detached tmux. 12/24 worker đã start,
+  12 key chờ queue; chưa có result row cuối. Log cập nhật đến 09:28 UTC và vẫn ở
+  simulated time 00:40 khi các lượt tìm kiếm tiếp diễn, không có traceback/error.
+- Affinity của 12 process simulator được xác nhận lần lượt là core 0–11. Mỗi job
+  được gán một core; sau khi job xong runner tái sử dụng core cho key tiếp theo.
+- Theo yêu cầu tiếp tục toàn bộ job còn thiếu, đã khởi chạy sequencer detached
+  `agvns_sensitivity_followup_20261006`. Sequencer chờ tmux wave đầu kết thúc, đọc
+  ledger và loại chỉ các key có `effective_status=SUCCESS`, return code 0 và score
+  hữu hạn trong miền hợp lệ; sau đó chạy key còn lại trong cohort 60 bằng 12 worker.
+  Dự kiến 36 job tiếp theo nếu 24 hiện tại hợp lệ (gồm 7 key cũ cần chạy lại vì
+  fingerprint full worktree khác, cộng 29 key chưa chạy). Nếu có lỗi, key lỗi cũng
+  được đưa vào danh sách follow-up.
+
+---
+
+# Findings — MA runtime batch (2026-11-14)
+
+- Scope: 64 benchmark instances, 4 repetitions each (256 jobs), 12 workers on cores 0–11.
+- `MA/run_parallel.py` accepts the requested batch settings and creates a fresh timestamped run directory.
+- Shared root benchmark contains 64 instances. CPU affinity exposes cores 0–19.
+- Default Python lacks `simpy`; Conda base has `simpy 4.1.1`, NumPy 2.3.4 and pandas 2.3.3. The MA simulator imports `simpy`, but does not import FastAPI on the simulation path.
+- Use Conda Python for the runner and workers, with base seed 0 for reproducible seeds `instance_id*1000 + repetition`.
+
+## Batch launch snapshot
+
+- Run `20261114_192618` was created by the MA adapter. Manifest confirms 64 instances × 4 repetitions, 12 workers on cores 0–11, base seed 0, and Conda Python for the parent and workers.
+- Initial snapshot: summary status `RUNNING`, 0/256 finalized, 12 job workspaces with worker logs; logs show simulated time advancing.
+- The runner remains attached to managed exec session `74006` for monitoring.
+
+- Snapshot 2026-11-14 19:32 UTC: batch đang chạy; 4/256 job thành công, chưa có failure nào.
+- Snapshot 2026-11-14 19:33:47 UTC: 8/256 job thành công, 0 failure; instance 1 có 2 lượt, instance 2 có 4, instance 3 có 2. Batch còn `RUNNING`.
+- Snapshot 2026-11-14 19:36:30 UTC: 12/256 job thành công, 0 failure; log các lượt instance 4–6 đang tăng, cho thấy runner đã chuyển sang các job kế tiếp. `summary.json` chỉ lưu kết quả đã finalize, không liệt kê worker active.
+- Chuyển sang tmux: runner foreground không có TTY (`?`), stdout/stderr là pipe và không có `reptyr`, nên không thể attach trực tiếp. SIGINT được xử lý có kiểm soát; batch nguồn ghi `INTERRUPTED` với 32 success (instance 1–8 đủ 4 lượt), không có failure.
+- Resume plan `/MA/algorithm/data_interaction_runs/20261114_192618/tmux_resume_plan.json` chọn 224 key còn thiếu theo ledger `SUCCESS`; seed các job còn thiếu vẫn theo `instance_id*1000+repetition`.
+- Batch resume `20261114_195217` đang chạy trong tmux `ma_runtime_resume_20261114`; manifest xác nhận 224 job/12 worker/core 0–11. Log worker cập nhật lúc 19:52:41 UTC. Cần ghép thành công 32 kết quả nguồn với kết quả resume để tạo đủ bộ 256 và tổng hợp runtime sau khi xong.

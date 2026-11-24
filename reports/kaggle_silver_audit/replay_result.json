@@ -1,0 +1,42 @@
+{
+  "simulation_time_utc": "2026-11-15T03:30:00+00:00",
+  "available_vehicles": [],
+  "missing_unallocated_items": [
+    "2323390097-1",
+    "2326550098-1"
+  ],
+  "destinations_and_routes_match_saved_output": true,
+  "vehicle_filter": [
+    {
+      "id": "V_1",
+      "has_destination": false,
+      "seconds_until_leave": 504.0,
+      "carrying_items": 0
+    },
+    {
+      "id": "V_2",
+      "has_destination": false,
+      "seconds_until_leave": 312.0,
+      "carrying_items": 0
+    },
+    {
+      "id": "V_3",
+      "has_destination": false,
+      "seconds_until_leave": 60.0,
+      "carrying_items": 0
+    },
+    {
+      "id": "V_4",
+      "has_destination": false,
+      "seconds_until_leave": 996.0,
+      "carrying_items": 0
+    },
+    {
+      "id": "V_5",
+      "has_destination": true,
+      "seconds_until_leave": 96.0,
+      "carrying_items": 1
+    }
+  ],
+  "algorithm_stdout": "----- Current round information -----\nUnloading_items\n5e2e9efa5ade4984bb18af66028bc0c8\nf6faef4b36e743328800b961aced4a2c\ncurrent vehicle: V_1\ncurrent vehicle: V_2\ncurrent vehicle: V_3\ncurrent vehicle: V_4\ncurrent vehicle: V_5\nNo available vehicle\n"
+}

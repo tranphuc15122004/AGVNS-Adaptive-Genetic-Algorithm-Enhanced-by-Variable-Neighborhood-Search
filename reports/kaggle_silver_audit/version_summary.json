@@ -1,0 +1,122 @@
+[
+  {
+    "version": 1,
+    "status": "KernelWorkerStatus.COMPLETE",
+    "last_run_time": "2026-11-12 08:25:49.697000",
+    "log_end_seconds": 3127.586879104,
+    "errors": [
+      "2026-11-14 20:45:33,836 [simulate_environment.py | 297] ERROR: 2026-11-15 03:30:00, Item 2323390097-1's committed_completion_time is 2026-11-15 03:23:39 which has timed out, however it is still ignored in the dispatch result.",
+      "2026-11-14 20:45:33,836 [simulate_environment.py | 129] ERROR: Simulator terminated"
+    ],
+    "scores": [
+      "2026-11-14 19:59:32,237 [main.py         | 115] INFO: Score of instance_1: 2303.5933333333332, runtime: 335.338727s",
+      "2026-11-14 20:05:19,184 [main.py         | 115] INFO: Score of instance_2: 30478.904444444444, runtime: 346.945288s",
+      "2026-11-14 20:10:56,576 [main.py         | 115] INFO: Score of instance_3: 35800.72222222222, runtime: 337.390925s",
+      "2026-11-14 20:16:42,955 [main.py         | 115] INFO: Score of instance_4: 5491.577777777778, runtime: 346.377552s",
+      "2026-11-14 20:22:20,247 [main.py         | 115] INFO: Score of instance_5: 16928.786666666667, runtime: 337.289938s",
+      "2026-11-14 20:27:53,560 [main.py         | 115] INFO: Score of instance_6: 4761.8711111111115, runtime: 333.311659s",
+      "2026-11-14 20:33:42,123 [main.py         | 115] INFO: Score of instance_7: 12847.393333333333, runtime: 348.561276s",
+      "2026-11-14 20:39:34,934 [main.py         | 115] INFO: Score of instance_8: 797.1133333333333, runtime: 352.809665s"
+    ],
+    "start_instances": [],
+    "commands": [
+      "! python main.py --instances $(seq -s, 1 32)"
+    ]
+  },
+  {
+    "version": 2,
+    "status": "KernelWorkerStatus.COMPLETE",
+    "last_run_time": "2026-11-12 08:25:52.713000",
+    "log_end_seconds": 3038.717688087,
+    "errors": [
+      "2026-11-14 20:44:06,763 [simulate_environment.py | 297] ERROR: 2026-11-15 03:30:00, Item 2323390097-1's committed_completion_time is 2026-11-15 03:23:39 which has timed out, however it is still ignored in the dispatch result.",
+      "2026-11-14 20:44:06,763 [simulate_environment.py | 129] ERROR: Simulator terminated"
+    ],
+    "scores": [
+      "2026-11-14 19:59:25,480 [main.py         | 115] INFO: Score of instance_1: 2303.5933333333332, runtime: 320.977737s",
+      "2026-11-14 20:04:57,479 [main.py         | 115] INFO: Score of instance_2: 30478.904444444444, runtime: 331.997099s",
+      "2026-11-14 20:10:22,142 [main.py         | 115] INFO: Score of instance_3: 35800.72222222222, runtime: 324.661956s",
+      "2026-11-14 20:15:52,748 [main.py         | 115] INFO: Score of instance_4: 5491.577777777778, runtime: 330.603780s",
+      "2026-11-14 20:21:11,303 [main.py         | 115] INFO: Score of instance_5: 16928.786666666667, runtime: 318.553733s",
+      "2026-11-14 20:26:37,318 [main.py         | 115] INFO: Score of instance_6: 4761.8711111111115, runtime: 326.013255s",
+      "2026-11-14 20:32:07,810 [main.py         | 115] INFO: Score of instance_7: 12847.393333333333, runtime: 330.490753s",
+      "2026-11-14 20:38:23,870 [main.py         | 115] INFO: Score of instance_8: 797.1133333333333, runtime: 376.057444s"
+    ],
+    "start_instances": [],
+    "commands": [
+      "! python main.py --instances $(seq -s, 1 32)"
+    ]
+  },
+  {
+    "version": 3,
+    "status": "KernelWorkerStatus.COMPLETE",
+    "last_run_time": "2026-11-12 08:25:55.839000",
+    "log_end_seconds": 2905.000654727,
+    "errors": [
+      "2026-11-14 20:41:58,564 [simulate_environment.py | 297] ERROR: 2026-11-15 03:30:00, Item 2323390097-1's committed_completion_time is 2026-11-15 03:23:39 which has timed out, however it is still ignored in the dispatch result.",
+      "2026-11-14 20:41:58,564 [simulate_environment.py | 129] ERROR: Simulator terminated"
+    ],
+    "scores": [
+      "2026-11-14 19:59:11,421 [main.py         | 115] INFO: Score of instance_1: 2303.5933333333332, runtime: 307.123650s",
+      "2026-11-14 20:04:44,101 [main.py         | 115] INFO: Score of instance_2: 30478.904444444444, runtime: 332.678506s",
+      "2026-11-14 20:09:53,226 [main.py         | 115] INFO: Score of instance_3: 35800.72222222222, runtime: 309.122820s",
+      "2026-11-14 20:15:12,426 [main.py         | 115] INFO: Score of instance_4: 5491.577777777778, runtime: 319.198531s",
+      "2026-11-14 20:20:21,271 [main.py         | 115] INFO: Score of instance_5: 16928.786666666667, runtime: 308.844244s",
+      "2026-11-14 20:25:30,032 [main.py         | 115] INFO: Score of instance_6: 4761.8711111111115, runtime: 308.759238s",
+      "2026-11-14 20:30:57,389 [main.py         | 115] INFO: Score of instance_7: 12847.393333333333, runtime: 327.355429s",
+      "2026-11-14 20:36:26,671 [main.py         | 115] INFO: Score of instance_8: 797.1133333333333, runtime: 329.280689s"
+    ],
+    "start_instances": [],
+    "commands": [
+      "! python main.py --instances $(seq -s, 1 32)"
+    ]
+  },
+  {
+    "version": 4,
+    "status": "KernelWorkerStatus.COMPLETE",
+    "last_run_time": "2026-11-12 08:25:57.698000",
+    "log_end_seconds": 3034.203216562,
+    "errors": [
+      "2026-11-14 20:44:12,117 [simulate_environment.py | 297] ERROR: 2026-11-15 03:30:00, Item 2323390097-1's committed_completion_time is 2026-11-15 03:23:39 which has timed out, however it is still ignored in the dispatch result.",
+      "2026-11-14 20:44:12,117 [simulate_environment.py | 129] ERROR: Simulator terminated"
+    ],
+    "scores": [
+      "2026-11-14 19:59:31,201 [main.py         | 115] INFO: Score of instance_1: 2303.5933333333332, runtime: 318.414844s",
+      "2026-11-14 20:05:14,169 [main.py         | 115] INFO: Score of instance_2: 30478.904444444444, runtime: 342.966958s",
+      "2026-11-14 20:10:35,910 [main.py         | 115] INFO: Score of instance_3: 35800.72222222222, runtime: 321.739230s",
+      "2026-11-14 20:16:12,821 [main.py         | 115] INFO: Score of instance_4: 5491.577777777778, runtime: 336.909101s",
+      "2026-11-14 20:21:37,437 [main.py         | 115] INFO: Score of instance_5: 16928.786666666667, runtime: 324.613806s",
+      "2026-11-14 20:26:57,443 [main.py         | 115] INFO: Score of instance_6: 4761.8711111111115, runtime: 320.004495s",
+      "2026-11-14 20:32:35,273 [main.py         | 115] INFO: Score of instance_7: 12847.393333333333, runtime: 337.828514s",
+      "2026-11-14 20:38:22,194 [main.py         | 115] INFO: Score of instance_8: 797.1133333333333, runtime: 346.919113s"
+    ],
+    "start_instances": [],
+    "commands": [
+      "! python main.py --instances $(seq -s, 1 32)"
+    ]
+  },
+  {
+    "version": 5,
+    "status": "KernelWorkerStatus.COMPLETE",
+    "last_run_time": "2026-11-12 08:26:00.815000",
+    "log_end_seconds": 2832.587640092,
+    "errors": [
+      "2026-11-14 20:40:55,046 [simulate_environment.py | 297] ERROR: 2026-11-15 03:30:00, Item 2323390097-1's committed_completion_time is 2026-11-15 03:23:39 which has timed out, however it is still ignored in the dispatch result.",
+      "2026-11-14 20:40:55,046 [simulate_environment.py | 129] ERROR: Simulator terminated"
+    ],
+    "scores": [
+      "2026-11-14 19:59:17,239 [main.py         | 115] INFO: Score of instance_1: 2303.5933333333332, runtime: 303.220923s",
+      "2026-11-14 20:04:30,409 [main.py         | 115] INFO: Score of instance_2: 30478.904444444444, runtime: 313.168579s",
+      "2026-11-14 20:09:35,513 [main.py         | 115] INFO: Score of instance_3: 35800.72222222222, runtime: 305.102414s",
+      "2026-11-14 20:14:47,510 [main.py         | 115] INFO: Score of instance_4: 5491.577777777778, runtime: 311.995772s",
+      "2026-11-14 20:19:52,063 [main.py         | 115] INFO: Score of instance_5: 16928.786666666667, runtime: 304.550996s",
+      "2026-11-14 20:24:49,848 [main.py         | 115] INFO: Score of instance_6: 4761.8711111111115, runtime: 297.783656s",
+      "2026-11-14 20:30:04,231 [main.py         | 115] INFO: Score of instance_7: 12847.393333333333, runtime: 314.380972s",
+      "2026-11-14 20:35:23,386 [main.py         | 115] INFO: Score of instance_8: 797.1133333333333, runtime: 319.153882s"
+    ],
+    "start_instances": [],
+    "commands": [
+      "! python main.py --instances $(seq -s, 1 32)"
+    ]
+  }
+]

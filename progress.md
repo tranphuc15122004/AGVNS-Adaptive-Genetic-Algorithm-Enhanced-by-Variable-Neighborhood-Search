@@ -214,3 +214,80 @@
   cho từng workspace và không có traceback ở thời điểm khởi động.
 - Đã khởi động lại tmux session `agvns_sensitivity_large_first_20260828`, run
   `20260828_090646`: 480 jobs, 16 workers, bắt đầu từ instance 57, outer timeout 0.
+
+## 2026-10-05 — Lưu kế hoạch tiếp tục sensitivity 57–58
+
+- Đã đọc skill `planning-with-files`, kiểm tra session catch-up (không có nội dung
+  chưa đồng bộ), đọc lại trạng thái kế hoạch và báo cáo sensitivity liên quan.
+- Đã ghi kế hoạch chi tiết sau batch hiện hành vào
+  `AGVNS/experiments/agvns_parameter_sensitivity/plans/2026-10-05-followup-after-24-fixed-version-57-58.md`
+  và thêm trạng thái vào `task_plan.md`.
+- Batch `20261005_014745` đang chạy theo manifest: 24 job, 12 worker, core 0–11;
+  tại 02:11 UTC có 12 workspace/log và chưa có ledger tổng kết. Không coi dòng
+  `SUCCESS` bên trong một worker log là kết thúc simulator job.
+- Kế hoạch tiếp theo: audit đủ 24 job, xác minh 7 success instance 57 thiếu ledger,
+  rồi mới lập danh sách và chạy dự kiến 29 key còn thiếu; không khởi chạy batch kế
+  tiếp trong phiên lưu kế hoạch này.
+- Sự cố khởi chạy đầu tiên do Python mặc định thiếu `simpy` đã được xử lý bằng
+  interpreter Conda cho batch hiện tại.
+
+## 2026-10-06 — Kiểm tra và khởi chạy lại batch sensitivity 24 job
+
+- Kiểm tra batch `20261005_014745`: không còn runner; 12/24 workspace được tạo,
+  đều instance 57 và mới đến simulated time 00:40. Không có `results.jsonl`,
+  `runtime_stats.csv` hay `summary.json`; 12 key chưa khởi chạy. Log không cho thấy
+  traceback hoặc lỗi xác định, nên nguyên nhân dừng chưa biết.
+- Job list cũ được kiểm tra bằng `--dry-run`: chọn đúng 24 key.
+- Theo yêu cầu trước đó tiếp tục chạy đủ 24 job, đã khởi chạy batch mới
+  `20261006_090008` bằng `/home/tuantb/miniconda3/bin/python`, 12 worker trên
+  core 0–11. Detached tmux session: `agvns_sensitivity_20261006`.
+- Snapshot ngay sau launch: 12 job đã start, 12 queued, 0 result rows. Không có
+  score cuối để báo cáo ở thời điểm này.
+- Batch mới ghi worktree hash `9ffb9b681ae3cbd789021dba5bc46a5761281b8a7560533ea147333a8a69bc6c`;
+  batch cũ là `afa5adc6e9179ded92e745598ca8212186c83932472b9c53f3ef09b95c173b4b`.
+  Revision git không đổi; khác biệt do cập nhật tài liệu kế hoạch, không do sửa code
+  thuật toán trong lượt này.
+
+## 2026-10-06 — Truy nguyên việc batch cũ dừng và kiểm tra affinity
+
+- Bằng chứng dừng: batch `20261005_014745` không có ledger, summary, exit code hay
+  traceback; 12 log cuối cùng dừng sau tick mô phỏng tới 00:40. Session exec cũ
+  `74191` trả `Unknown process id`, và process runner không còn trong `ps`.
+- Kết luận có giới hạn: nguyên nhân phù hợp nhất là runner đã gắn với phiên exec
+  foreground nên bị kết thúc khi phiên/môi trường không còn. Không thể xác định
+  chính xác signal hoặc sự kiện kết thúc; không có bằng chứng OOM/lỗi thuật toán.
+- Xác nhận batch mới vẫn sống trong tmux `agvns_sensitivity_20261006`. Có 12 job
+  worker đang chạy, 12 key chờ, 0/24 result cuối; log gần nhất cập nhật 09:28 UTC,
+  đang tìm kiếm ở simulated time 00:40 và không có lỗi.
+- Đã xác minh affinity cho worker simulator: core 0 đến core 11, mỗi worker một
+  core; 12 worker sẽ tự lấy các key queued tiếp theo khi hoàn tất.
+- Log đã tiến tới simulated time 00:50 ở cả 12 workspace; cập nhật cuối đến
+  09:38 UTC. Hiện vẫn 0 result row cuối, không có traceback/error; 12 tiến trình
+  thuật toán con đang hoạt động, mỗi tiến trình thừa hưởng một core riêng.
+- Theo yêu cầu chạy hết các key còn thiếu, đã tạo session detached
+  `agvns_sensitivity_followup_20261006`. Session chờ wave 24 kết thúc rồi sinh
+  list từ ledger hợp lệ của chính fingerprint hiện tại và chạy phần bù để đủ 60
+  key instance 57–58, không overlap và giữ giới hạn 12 core. Nếu 24 job đều tốt,
+  dự kiến wave sau có 36 job, trong đó có 7 key success cũ được chạy lại.
+- Một lần `apply_patch` dùng anchor không chính xác nên bị từ chối, không làm đổi
+  file; đã đọc lại nội dung và patch theo anchor đúng.
+
+---
+
+# Progress — MA runtime batch
+
+- 2026-11-14: Preflight confirmed 64 instances, 20 available CPU cores, requested runner options and Conda `simpy` dependency. No active MA runner was visible in `ps`; `tmux ls` was denied by sandbox permissions, so tmux state is unverified.
+- Default Python lacks `simpy`; use `/home/tuantb/miniconda3/bin/python`. No algorithm code changed.
+- Full-run import check: `/home/tuantb/miniconda3/bin/python MA/main.py --help` completed successfully.
+- Detached launcher attempt exited before creating a manifest; no batch was started by that attempt. The empty tracking files were removed.
+- Started the runner in managed exec session `74006`; batch `20261114_192618` is `RUNNING`, 256 jobs planned, 0 finalized at first snapshot. The first 12 per-job workspaces and worker logs were created, and simulator logs advanced through initial ticks.
+
+- Snapshot 2026-11-14 19:32 UTC: batch `20261114_192618` vẫn `RUNNING`; đã ghi 4/256 job `SUCCESS`, 0 `FAILED`. Có 16 workspace đã được khởi tạo; managed exec session `74006` tiếp tục giữ runner hoạt động. Instance 1 chưa đủ repetition tại snapshot này.
+
+- Snapshot 2026-11-14 19:33:47 UTC: 8/256 job `SUCCESS`, 0 `FAILED`; kết quả đã ghi cho instance 1 (2 lượt), instance 2 (4 lượt), instance 3 (2 lượt). Batch còn `RUNNING`.
+
+- Snapshot 2026-11-14 19:36:30 UTC: batch vẫn chạy; `summary.json` ghi 12/256 `SUCCESS`, 0 failure. Các log workspace của instance 4–6 đang tiếp tục tăng kích thước và được cập nhật tới 19:36:30 UTC, xác nhận worker hiện vẫn thực thi. Summary chỉ liệt kê job đã hoàn tất nên không hiện các job active; chưa khởi chạy trùng batch.
+
+- 2026-11-14 19:50 UTC: đã gửi SIGINT có kiểm soát cho runner foreground vì không thể reparent vào tmux (runner dùng pipe, TTY `?`, không có `reptyr`). Batch nguồn `20261114_192618` được ghi trạng thái `INTERRUPTED`, giữ 32 kết quả `SUCCESS` cho instance 1–8; các job dở được loại khỏi kết quả cuối.
+- Tạo helper ngoài repo `/tmp/ma_resume_runner_20261114.py`: đọc ledger nguồn, bỏ qua đúng các key `(instance,repetition)` đã `SUCCESS`, giữ nguyên seed formula; dry-run xác nhận 32 lượt reuse + 224 lượt còn thiếu = 256.
+- Đã khởi chạy phần còn thiếu trong tmux session `ma_runtime_resume_20261114`; batch tiếp tục `20261114_195217`, manifest xác nhận 224 job, 12 worker, cores 0–11. Snapshot 19:52:41 UTC: trạng thái `RUNNING`, 0/224 job đã finalize; 12 workspace worker logs đã được tạo và đang cập nhật.

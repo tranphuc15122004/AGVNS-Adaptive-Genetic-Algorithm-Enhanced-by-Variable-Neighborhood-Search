@@ -81,3 +81,13 @@ progress.md
 AGVNS/experiments/agvns_parameter_sensitivity/runs
 
 .agents/
+.aider*
+
+# Raw downloaded run snapshots stay local; commit curated summaries instead.
+reports/**/versions/
+reports/**/latest/
+reports/**/latest_output/
+reports/**/v[0-9][0-9]/
+reports/**/v[0-9][0-9]_output/
+reports/**/runs/**/jobs/
+reports/**/*.ipynb

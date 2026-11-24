@@ -1,0 +1,129 @@
+algorithm,instance,score_original_ports,score_100_ports,simulator_modified_for_score,score_source,score_source_table,score_source_page,score_precision_decimals,runtime_seconds_v5_kaggle,runtime_mean_seconds_5_kaggle,runtime_sample_count,runtime_source,runtime_note,zhou_figure5_chart_estimate,zhou_figure5_lower_2px,zhou_figure5_upper_2px,zhou_silver_assumed_raw_seconds,zhou_runtime_source_note
+Silver,1,2303.59,2303.59,not_marked,Horvath_Kis_2025,3,4,2,303.220923,317.015176,5,Kaggle_trnphc15122004_silver_versions_1_to_5,wall runtime per instance; separate run from published score,9.771,9.044,10.556,288.24,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,1,130.20,130.20,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,14.379,13.309,15.534,,digitized; seconds assumed
+Silver,2,30478.90,30478.90,not_marked,Horvath_Kis_2025,3,4,2,313.168579,333.551286,5,Kaggle_trnphc15122004_silver_versions_1_to_5,wall runtime per instance; separate run from published score,10.556,9.771,11.404,311.4,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,2,91.40,91.42,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,14.379,13.309,15.534,,digitized; seconds assumed
+Silver,3,35800.72,35800.72,not_marked,Horvath_Kis_2025,3,4,2,305.102414,319.603469,5,Kaggle_trnphc15122004_silver_versions_1_to_5,wall runtime per instance; separate run from published score,10.556,9.771,11.404,311.4,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,3,96.50,96.54,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,12.32,11.404,13.309,,digitized; seconds assumed
+Silver,4,5491.58,5491.58,not_marked,Horvath_Kis_2025,3,4,2,311.995772,329.016947,5,Kaggle_trnphc15122004_silver_versions_1_to_5,wall runtime per instance; separate run from published score,10.156,9.401,10.972,299.59,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,4,104.20,104.18,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,13.309,12.32,14.379,,digitized; seconds assumed
+Silver,5,16928.79,16928.79,not_marked,Horvath_Kis_2025,3,4,2,304.550996,318.770543,5,Kaggle_trnphc15122004_silver_versions_1_to_5,wall runtime per instance; separate run from published score,10.156,9.401,10.972,299.59,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,5,5446.30,5446.28,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,12.805,11.853,13.834,,digitized; seconds assumed
+Silver,6,4761.87,4761.87,not_marked,Horvath_Kis_2025,3,4,2,297.783656,317.174461,5,Kaggle_trnphc15122004_silver_versions_1_to_5,wall runtime per instance; separate run from published score,10.156,9.401,10.972,299.59,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,6,118.10,118.08,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,12.32,11.404,13.309,,digitized; seconds assumed
+Silver,7,12847.39,12847.39,not_marked,Horvath_Kis_2025,3,4,2,314.380972,331.723389,5,Kaggle_trnphc15122004_silver_versions_1_to_5,wall runtime per instance; separate run from published score,10.556,9.771,11.404,311.4,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,7,7355.40,7355.39,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,13.834,12.805,14.945,,digitized; seconds assumed
+Silver,8,797.11,797.11,not_marked,Horvath_Kis_2025,3,4,2,319.153882,344.844159,5,Kaggle_trnphc15122004_silver_versions_1_to_5,wall runtime per instance; separate run from published score,10.556,9.771,11.404,311.4,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,8,768.50,768.52,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,13.834,12.805,14.945,,digitized; seconds assumed
+Silver,9,181179.60,181179.60,yes,Horvath_Kis_2025,3,4,2,,,,,not reported in table,10.972,10.156,11.853,323.66,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,9,8481.40,8481.44,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,12.805,11.853,13.834,,digitized; seconds assumed
+Silver,10,1766275.80,1766275.00,yes,Horvath_Kis_2025,3,4,2,,,,,not reported in table,12.32,11.404,13.309,363.43,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,10,187123.30,187123.26,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,14.945,13.834,16.146,,digitized; seconds assumed
+Silver,11,180883.50,180883.50,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,10.972,10.156,11.853,323.66,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,11,3041.60,3041.61,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,13.309,12.32,14.379,,digitized; seconds assumed
+Silver,12,567136.40,567136.40,yes,Horvath_Kis_2025,3,4,2,,,,,not reported in table,10.972,10.156,11.853,323.66,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,12,84158.30,84158.32,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,13.309,12.32,14.379,,digitized; seconds assumed
+Silver,13,220249.20,220249.20,yes,Horvath_Kis_2025,3,4,2,,,,,not reported in table,10.972,10.156,11.853,323.66,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,13,277.30,277.27,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,13.309,12.32,14.379,,digitized; seconds assumed
+Silver,14,236920.60,236920.60,yes,Horvath_Kis_2025,3,4,2,,,,,not reported in table,10.556,9.771,11.404,311.4,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,14,7824.40,7824.43,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,14.945,13.834,16.146,,digitized; seconds assumed
+Silver,15,792942.10,792942.10,yes,Horvath_Kis_2025,3,4,2,,,,,not reported in table,11.404,10.556,12.32,336.41,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,15,148730.60,148730.64,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,14.379,13.309,15.534,,digitized; seconds assumed
+Silver,16,853875.00,853875.00,yes,Horvath_Kis_2025,3,4,2,,,,,not reported in table,10.156,9.401,10.972,299.59,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,16,57804.40,57804.37,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,13.834,12.805,14.945,,digitized; seconds assumed
+Silver,17,96.48,96.50,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.401,8.702,10.156,277.32,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,17,411.10,411.14,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,15.534,14.379,16.782,,digitized; seconds assumed
+Silver,18,111.54,111.50,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.771,9.044,10.556,288.24,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,18,8557.80,10254.39,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,15.534,14.379,16.782,,digitized; seconds assumed
+Silver,19,477.69,477.70,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.401,8.702,10.156,277.32,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,19,4150.20,4150.20,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,16.782,15.534,18.13,,digitized; seconds assumed
+Silver,20,3984.23,3984.20,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.771,9.044,10.556,288.24,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,20,16224.40,16224.41,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,15.534,14.379,16.782,,digitized; seconds assumed
+Silver,21,2341.34,2341.30,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.401,8.702,10.156,277.32,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,21,18501.40,18501.39,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,16.782,15.534,18.13,,digitized; seconds assumed
+Silver,22,3320.96,3321.00,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.771,9.044,10.556,288.24,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,22,21102.60,21102.62,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,15.534,14.379,16.782,,digitized; seconds assumed
+Silver,23,6865.84,6865.80,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.401,8.702,10.156,277.32,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,23,808.90,808.88,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,16.782,15.534,18.13,,digitized; seconds assumed
+Silver,24,1287.69,1287.70,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.771,9.044,10.556,288.24,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,24,2001.10,9428.11,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,16.782,15.534,18.13,,digitized; seconds assumed
+Silver,25,92380.91,92380.90,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.771,9.044,10.556,288.24,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,25,21451.30,24070.75,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,18.844,17.443,20.358,,digitized; seconds assumed
+Silver,26,275468.88,275468.90,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.044,8.372,9.771,266.81,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,26,53998.50,53998.47,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,20.358,18.844,21.993,,digitized; seconds assumed
+Silver,27,18439.83,18439.80,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.044,8.372,9.771,266.81,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,27,18812.00,17760.98,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,18.844,17.443,20.358,,digitized; seconds assumed
+Silver,28,9444.74,9444.70,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.401,8.702,10.156,277.32,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,28,14868.00,14867.96,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,18.844,17.443,20.358,,digitized; seconds assumed
+Silver,29,162951.92,162951.90,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,9.401,8.702,10.156,277.32,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,29,42397.80,40338.77,not_marked,Horvath_Kis_2025,3,4,2,,,,,not reported in table,19.586,18.13,21.159,,digitized; seconds assumed
+Silver,30,74026.88,74026.90,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.401,8.702,10.156,277.32,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,30,21113.30,20279.66,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,18.13,16.782,19.586,,digitized; seconds assumed
+Silver,31,147256.33,147256.30,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.401,8.702,10.156,277.32,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,31,23311.90,32594.38,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,19.586,18.13,21.159,,digitized; seconds assumed
+Silver,32,60425.37,60425.40,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.401,8.702,10.156,277.32,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,32,19553.60,22472.58,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,18.844,17.443,20.358,,digitized; seconds assumed
+Silver,33,7031.30,7031.30,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,33,95017.10,57708.90,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,32.246,29.825,34.864,,digitized; seconds assumed
+Silver,34,10503.40,10503.40,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,8.895,8.227,9.617,262.41,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,34,54373.60,50365.80,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,32.246,29.825,34.864,,digitized; seconds assumed
+Silver,35,15760.60,15760.60,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,35,103753.30,44314.25,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,32.246,29.825,34.864,,digitized; seconds assumed
+Silver,36,23186.20,23186.20,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,8.895,8.227,9.617,262.41,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,36,112878.60,111794.31,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,32.246,29.825,34.864,,digitized; seconds assumed
+Silver,37,5141.80,5141.80,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,37,95739.60,37494.98,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,29.825,27.585,32.246,,digitized; seconds assumed
+Silver,38,30136.40,30136.30,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,8.895,8.227,9.617,262.41,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,38,94229.90,86580.14,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,32.246,29.825,34.864,,digitized; seconds assumed
+Silver,39,22253.00,22252.40,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,8.895,8.227,9.617,262.41,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,39,85226.10,92519.27,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,32.246,29.825,34.864,,digitized; seconds assumed
+Silver,40,24261.70,27456.20,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,40,117140.60,106522.37,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,33.529,31.012,36.251,,digitized; seconds assumed
+Silver,41,124253.30,93265.10,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,41,548755.60,422615.02,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,92.491,85.547,100.0,,digitized; seconds assumed
+Silver,42,164002.20,145392.40,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,42,600981.80,233253.26,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,76.095,70.381,82.272,,digitized; seconds assumed
+Silver,43,166646.40,170619.30,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,43,550660.70,445425.43,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,73.182,67.688,79.123,,digitized; seconds assumed
+Silver,44,190604.40,124446.90,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,44,715480.90,509249.51,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,70.381,65.097,76.095,,digitized; seconds assumed
+Silver,45,181170.60,166700.40,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,45,616244.70,332937.88,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,79.123,73.182,85.547,,digitized; seconds assumed
+Silver,46,176490.70,218913.80,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,46,798330.90,280641.27,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,92.491,85.547,100.0,,digitized; seconds assumed
+Silver,47,104337.20,95512.60,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,47,602968.10,334238.94,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,73.182,67.688,79.123,,digitized; seconds assumed
+Silver,48,119848.20,84447.30,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,48,782136.90,241104.19,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,76.095,70.381,82.272,,digitized; seconds assumed
+Silver,49,1184048.30,65398.40,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.617,8.895,10.398,283.71,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,49,1594689.90,619541.97,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,255.141,235.983,275.853,,digitized; seconds assumed
+Silver,50,572493.20,28963.60,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.617,8.895,10.398,283.71,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,50,2512247.10,702290.81,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,265.295,245.375,286.832,,digitized; seconds assumed
+Silver,51,515466.90,47035.00,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.617,8.895,10.398,283.71,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,51,1335194.40,613350.81,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,218.264,201.876,235.983,,digitized; seconds assumed
+Silver,52,447647.30,36449.30,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.617,8.895,10.398,283.71,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,52,2030603.40,604531.98,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,218.264,201.876,235.983,,digitized; seconds assumed
+Silver,53,316974.00,41996.60,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,53,1930298.90,556281.89,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,310.117,286.832,335.292,,digitized; seconds assumed
+Silver,54,1629783.60,47312.50,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.249,8.555,10.0,272.85,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,54,1995016.00,622635.39,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,226.951,209.91,245.375,,digitized; seconds assumed
+Silver,55,729537.30,34597.60,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.617,8.895,10.398,283.71,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,55,1975595.90,478129.65,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,298.247,275.853,322.459,,digitized; seconds assumed
+Silver,56,1840739.90,24532.30,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.617,8.895,10.398,283.71,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,56,2157437.00,571717.56,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,209.91,194.149,226.951,,digitized; seconds assumed
+Silver,57,22433901.40,66942.40,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.468,8.622,10.398,279.31,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,57,16517326.30,996135.28,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,348.637,317.464,382.87,,digitized; seconds assumed
+Silver,58,13243401.10,71211.00,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.468,8.622,10.398,279.31,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,58,11214248.90,1250928.24,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,440.624,401.227,483.889,,digitized; seconds assumed
+Silver,59,12351487.90,83130.90,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.922,9.035,10.897,292.71,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,59,9542269.40,1215468.30,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,461.75,420.464,507.09,,digitized; seconds assumed
+Silver,60,21521731.90,114287.90,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.468,8.622,10.398,279.31,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,60,13191277.80,1355281.44,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,531.403,483.889,583.582,,digitized; seconds assumed
+Silver,61,9095705.50,72155.90,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.468,8.622,10.398,279.31,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,61,7207770.30,896033.22,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,401.227,365.352,440.624,,digitized; seconds assumed
+Silver,62,14541495.90,82006.40,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.468,8.622,10.398,279.31,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,62,10857350.80,1053966.23,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,382.87,348.637,420.464,,digitized; seconds assumed
+Silver,63,30883610.50,61902.40,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.468,8.622,10.398,279.31,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,63,25025232.80,950872.83,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,365.352,332.686,401.227,,digitized; seconds assumed
+Silver,64,25356899.00,54880.60,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,9.468,8.622,10.398,279.31,digitized; seconds assumed; Silver raw assumes chart was divided by 29.5
+Bronze,64,27427053.70,1014885.07,not_marked,Horvath_Kis_2025,3,5,2,,,,,not reported in table,365.352,332.686,401.227,,digitized; seconds assumed

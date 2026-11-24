@@ -1,0 +1,38 @@
+{
+  "created_at_utc": "2026-11-13T07:20:14.299411+00:00",
+  "git_head": "df2966e7835d41137bd35c68b467c9002d15dc5b",
+  "sha256": {
+    "1/compiled_files/main_algorithm.class": "c46991000efaf786eb6b3b94557d55d38db15781eb0f273a6b0de4b81d55756d",
+    "1/compiled_files/main.py": "b4e95df46fe431b36fa1ce12faf5408b736f1366d71546e6f9af241a0a1ad352",
+    "parallel_runner.py": "4f13571f43b389cd4ba229e4d5e01868f8169e113ecd4207083ec192ca9b3231",
+    "1/compiled_files/src/simulator/simulate_environment.py": "382782fe1b09812fe4d8e0b6c3fdbbb1b6c0f8e4836947b76cbcd84dc3ec666a"
+  },
+  "instances": [
+    57,
+    58,
+    59,
+    60,
+    63,
+    64
+  ],
+  "repetitions": 4,
+  "workers": 12,
+  "cores": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "base_seed": 20261113,
+  "python": "/home/tuantb/miniconda3/bin/python",
+  "java": "/usr/bin/java",
+  "java_timing_resolution_seconds": 0.01
+}

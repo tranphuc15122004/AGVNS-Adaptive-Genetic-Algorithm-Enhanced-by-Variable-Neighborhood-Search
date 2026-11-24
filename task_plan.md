@@ -61,13 +61,13 @@ Chưa có.
 
 ## Errors Encountered — task hiện tại
 
-| Error | Attempt | Resolution |
-|---|---:|---|
-| `LaTeX Error: File cuted.sty not found` tại `sn-jnl.cls:774` | 1 | Đã tái hiện; xác nhận `kpsewhich cuted.sty` không tìm thấy. Đang xác định package/provider trước khi cài dependency. |
-| `tlmgr install sttools` bị từ chối vì `tlmgr itself needs to be updated` | 2 | Đã xác nhận repository hợp lệ nhưng manager local quá cũ; bước tiếp theo là cập nhật `tlmgr` theo hướng dẫn chính thức rồi cài `sttools`. |
-| `LaTeX Error: File wrapfig.sty not found` tại `sn-jnl.cls:1503` | 3 | `sttools/cuted` đã được nạp thành công; dependency kế tiếp của class là package `wrapfig`, sẽ cài riêng và kiểm tra lại. |
-| `Missing \\endgroup inserted` tại bảng thống kê line 1092 | 4 | Reproduction tối giản xác nhận `\\resizebox` xung đột với `threeparttable` mà `sn-jnl.cls` tự bọc; thay bằng `tabular*` là thử nghiệm tối thiểu tiếp theo. |
-| `pdflatex` không tạo được font `tcrm0700` vì `/home/tuantb/.TinyTeX/texmf-var` read-only | 5 | Source đã qua lỗi bảng; chuyển `TEXMFVAR` sang `paper/build/texmf-var` writable để font cache nằm trong artifact build. |
+| Error                                                                                                | Attempt | Resolution                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------------------------- | ------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LaTeX Error: File cuted.sty not found` tại `sn-jnl.cls:774`                                    |       1 | Đã tái hiện; xác nhận `kpsewhich cuted.sty` không tìm thấy. Đang xác định package/provider trước khi cài dependency.                                              |
+| `tlmgr install sttools` bị từ chối vì `tlmgr itself needs to be updated`                     |       2 | Đã xác nhận repository hợp lệ nhưng manager local quá cũ; bước tiếp theo là cập nhật `tlmgr` theo hướng dẫn chính thức rồi cài `sttools`.                 |
+| `LaTeX Error: File wrapfig.sty not found` tại `sn-jnl.cls:1503`                                 |       3 | `sttools/cuted` đã được nạp thành công; dependency kế tiếp của class là package `wrapfig`, sẽ cài riêng và kiểm tra lại.                                      |
+| `Missing \\endgroup inserted` tại bảng thống kê line 1092                                      |       4 | Reproduction tối giản xác nhận `\\resizebox` xung đột với `threeparttable` mà `sn-jnl.cls` tự bọc; thay bằng `tabular*` là thử nghiệm tối thiểu tiếp theo. |
+| `pdflatex` không tạo được font `tcrm0700` vì `/home/tuantb/.TinyTeX/texmf-var` read-only |       5 | Source đã qua lỗi bảng; chuyển `TEXMFVAR` sang `paper/build/texmf-var` writable để font cache nằm trong artifact build.                                                 |
 
 ## Verification hiện tại
 
@@ -93,9 +93,9 @@ Xác định batch 4 repetition hiện tại và một lần chạy trước đ�
 
 ## Errors Encountered
 
-| Error | Attempt | Resolution |
-|---|---:|---|
-| `SyntaxError: unterminated string literal` tại header bảng Markdown | 1 | Tách chuỗi header và separator thành hai phần tử Python hợp lệ |
+| Error                                                                   | Attempt | Resolution                                                             |
+| ----------------------------------------------------------------------- | ------: | ---------------------------------------------------------------------- |
+| `SyntaxError: unterminated string literal` tại header bảng Markdown |       1 | Tách chuỗi header và separator thành hai phần tử Python hợp lệ |
 
 ## Verification
 
@@ -172,9 +172,9 @@ theo từng nhóm lỗi. Chỉ điều tra; chưa sửa code hoặc khởi độ
 
 ## Errors Encountered
 
-| Error | Attempt | Resolution |
-|-------|---------|------------|
-| Patch đầu tiên không áp dụng do anchor `## Findings audit` không tồn tại trong `findings.md` | 1 | Đọc phần cuối từng file và chuyển sang patch append theo anchor chắc chắn |
+| Error                                                                                                     | Attempt | Resolution                                                                         |
+| --------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| Patch đầu tiên không áp dụng do anchor `## Findings audit` không tồn tại trong `findings.md` | 1       | Đọc phần cuối từng file và chuyển sang patch append theo anchor chắc chắn |
 
 ## Kết luận điều tra
 
@@ -193,8 +193,7 @@ theo từng nhóm lỗi. Chỉ điều tra; chưa sửa code hoặc khởi độ
 ## Mục tiêu
 
 Đổi mặc định runner sang không giới hạn outer job timeout, vẫn giữ CLI opt-in để
-bật timeout khi cần; sau đó tạo run mới chỉ rerun các job có lỗi `outer job wall-time
-exceeded` từ run `20260827_144605`.
+bật timeout khi cần; sau đó tạo run mới chỉ rerun các job có lỗi `outer job wall-time exceeded` từ run `20260827_144605`.
 
 ## Các phase
 
@@ -210,3 +209,43 @@ exceeded` từ run `20260827_144605`.
 - Không hoàn tác các thay đổi chưa commit hiện có.
 - Không ghi đè run cũ; rerun dùng run directory mới.
 - Không dừng run cũ đang hoạt động.
+
+---
+
+# Kế hoạch tiếp tục sensitivity instance 57–58 sau batch 24 job (2026-10-05)
+
+Chi tiết và tiêu chí kiểm tra được lưu tại
+`AGVNS/experiments/agvns_parameter_sensitivity/plans/2026-10-05-followup-after-24-fixed-version-57-58.md`.
+
+## Trạng thái
+
+- [completed] Kiểm tra batch `20261005_014745`: runner đã dừng, 12/24 workspace chạy dở tới simulated time 00:40, không có kết quả cuối; 12 key chưa khởi chạy.
+- [in_progress] Chạy lại đủ 24 key bằng batch `20261006_090008` (12 worker, core 0–11; dưới giới hạn 15 core; tmux session `agvns_sensitivity_20261006`).
+- [pending] Kiểm tra 24 key qua trạng thái cuối, score hữu hạn, runtime stats, worker log và ledger.
+- [pending] Sau wave 24, sinh động danh sách key chưa SUCCESS hợp lệ trên cohort 60 key; chạy lại 7 success từ fingerprint cũ để đồng nhất hash mới.
+- [in_progress] Sequencer tmux `agvns_sensitivity_followup_20261006` đang chờ batch 24 xong; sau đó chạy wave tiếp theo (dự kiến 36 key nếu batch hiện tại đều thành công), vẫn 12 worker trên core 0–11 và không overlap.
+- [pending] Xác nhận đủ 60/60 key và cập nhật CSV/Markdown; giữ kết quả fingerprint cũ tách biệt.
+
+Không khởi chạy batch kế tiếp trước khi batch 24 job và 7 kết quả cũ được audit.
+
+---
+
+# MA runtime batch — 4 lượt × 64 instance
+
+## Mục tiêu
+
+Chạy MA cho toàn bộ 64 benchmark instance, 4 repetition mỗi instance, với tối đa
+12 worker; lưu kết quả trong run directory mới dưới `MA/algorithm/data_interaction_runs/`.
+
+## Kế hoạch
+
+- [completed] Kiểm tra CLI, benchmark, core affinity và interpreter worker.
+- [completed] Khởi chạy batch `20261114_192618` gồm 256 job trên core 0–11 bằng Conda Python, base seed 0.
+- [in_progress] Theo dõi ledger, summary, runtime và log; phân loại/retry riêng các job lỗi nếu cần.
+- [pending] Theo dõi ledger, summary, runtime và log; phân loại/retry riêng các job lỗi nếu cần.
+- [pending] Cập nhật runtime inventory/coverage sau khi batch hoàn tất.
+
+## Phạm vi
+
+- Không sửa code thuật toán hoặc thay đổi các artifact cũ.
+- Job lỗi không được tính vào 4 lượt runtime hợp lệ mỗi instance.
