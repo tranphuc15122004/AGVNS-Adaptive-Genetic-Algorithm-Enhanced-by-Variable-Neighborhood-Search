@@ -239,11 +239,33 @@ By combining a heuristic construction phase with a focused improvement process, 
 \subsection{Other algorithms}
 \label{sec:other_algo}
 
-In \cite{zhou2024memetic}, the authors focus on a variant of the \gls{dpdp} with multiple practical constraints. The authors propose a memetic algorithm that combines a genetic algorithm for exploring the search space and a local search procedure for refining solutions in promising regions. This hybrid design effectively balances exploration and exploitation, leading to high-quality solutions. However, in the recent study \cite{horvath2025recent}, the authors critically re-examined the work of Zhou et al. and pointed out that their algorithm did not actually address the original ICAPS 2021 DPDP problem introduced in the Huawei 2021 competition. Instead, it was applied to a relaxed variant of the problem that omitted some essential constraints of the original formulation. Their reproducible computational experiments revealed that the original and relaxed versions differ significantly in both complexity and solution characteristics. Consequently, the results reported by Zhou et al. may not accurately reflect performance on the true ICAPS-DPDP. In this study, we reimplement and adapt the memetic algorithm proposed in \cite{zhou2024memetic} to ensure full compatibility with the original ICAPS-DPDP formulation. Necessary modifications are introduced to strictly enforce all problem constraints defined in the competition setting, thereby addressing the limitations identified in prior work. The adapted version serves as a baseline algorithm for fair and consistent comparison with our proposed method. This allows us to rigorously evaluate the effectiveness of our approach in solving the real-world dynamic pickup and delivery problem under realistic and dynamic conditions. 
+% Reviewer 4, Comment 14: relate the DPDP survey to the choice of MA baseline.
+The survey by Cai et al.~\cite{cai2023survey} describes DPDP variants with different operational constraints and reviews the methods used to solve them.
+One example is the memetic algorithm of Zhou et al.~\cite{zhou2024memetic}, which uses a genetic algorithm to explore the search space and local search to refine promising solutions.
+This combination balances exploration and exploitation, and Zhou et al.\ reported favorable results on their test instances.
+Horv\'ath and Kis~\cite{horvath2025recent} subsequently re-examined those experiments and found that they used a relaxed variant of the ICAPS 2021 problem in which factories had unlimited docking capacity.
+By repeating experiments with and without the original dock limits, they showed that this relaxation can change route feasibility and objective values, which limits direct comparison with results from the original benchmark.
+For our comparison with \gls{aglisa}, we reimplement the memetic algorithm and adapt it to the original ICAPS formulation, including the limited number of docks.
+This allows both methods to be evaluated under the same routing and docking constraints.
+
 More recently, Cai et al.~\cite{cai2024decomposition} proposed MOEA/D-TS, a decomposition-based multiobjective evolutionary algorithm with tabu search for DPDPs with multiple operational constraints, including docks, time windows, vehicle capacity, and LIFO loading requirements. Instead of optimizing a single weighted objective function, MOEA/D-TS reformulates the DPDP as a multiobjective optimization problem and decomposes it into multiple subproblems that are solved simultaneously and collaboratively. Crossover is employed to maintain solution diversity, while tabu search is used to accelerate convergence and strengthen local exploitation. The method was evaluated on the 64 practical Huawei DPDP instances and further tested on 20 large-scale distribution problems from JD Logistics. Subsequently, Yang et al.~\cite{yang2026collaborative} proposed Evo-RL, an evolutionary reinforcement learning framework that integrates an RL agent with a population-based GA for large-scale DPDPs with LIFO constraints. 
 The RL agent captures spatiotemporal dependencies and generates feasible initial assignments, while the GA refines the resulting sequences and provides denser 
 feedback signals to alleviate reward sparsity. Evo-RL was evaluated on the large-scale real-world DPDP benchmark from the ICAPS 2021 competition, and the 
 reported results showed improvements over the heuristic and deep-RL baselines considered in that study in terms of solution quality and convergence speed. Together, these studies demonstrate the potential of combining evolutionary optimization with complementary search or learning mechanisms for addressing large-scale and highly constrained DPDPs.
+
+% Reviewer 4, Comment 14: additional studies on dispatching and cost approximation.
+Two further studies examine operational decisions relevant to the ICAPS setting. Du et al.~\cite{du2023hierarchical} use several dispatching strategies to assign incoming requests and block-based local search to improve routes under LIFO constraints. Horv\'ath et al.~\cite{horvath2025cost} combine variable neighborhood search with a cost approximation that accounts for waiting and tardiness on the ICAPS benchmark. These studies illustrate how dispatch rules and the evaluation of candidate routes can guide the search.
+
+% Reviewer 4, Comment 14: the three recommended studies and their relevance to AGVNS.
+Adaptive large neighborhood search for pickup and delivery with time windows selects removal and insertion heuristics based on past performance~\cite{ropke2006adaptive}.
+Outside routing, the Pi-MOEA of Palakonda et al.~\cite{palakonda2022adaptive} adapts neighborhoods of population members to identify pivot solutions for multiobjective selection.
+In \gls{aglisa}, VNS explores neighborhoods of feasible route plans generated by route moves.
+It orders those neighborhoods using each surviving solution's record of successful mutations.
+Palakonda et al.~\cite{palakonda2018stochastic} use stochastic selection in differential evolution to compare candidate solutions under uncertain inputs in smart grid optimization.
+In the ICAPS setting, \gls{aglisa} controls the probability of crossover using the observed number of unallocated orders at each decision epoch.
+Tursunboev et al.~\cite{tursunboev2024multiobjective} use evolutionary optimization to tune a hybrid deep learning model and its detection window for electricity theft.
+The two stages in \gls{aglisa} are linked through the route plans and mutation records passed from the evolutionary stage to VNS.
+The next section describes these mechanisms for the ICAPS problem.
 
 \section{Proposed methodology} \label{sec:proposed}
 

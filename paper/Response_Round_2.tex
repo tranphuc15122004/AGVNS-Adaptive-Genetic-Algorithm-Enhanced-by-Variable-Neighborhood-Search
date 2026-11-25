@@ -14,9 +14,6 @@
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{rotating}
-\usepackage{glossaries} % load gói glossaries
-\makeglossaries
-\input{gls}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.6em}
 \usepackage{xcolor}
@@ -25,6 +22,7 @@
 \newcommand{\answer}{\noindent\textbf{Answer:}\par}
 %\setlength{\parindent}{2em}   % Thụt đầu dòng
 \setlength{\parskip}{1em}   % Khoảng cách giữa các đoạn
+
 \begin{document}
 \title{
     {\bfseries Response to the Editor and Reviewers' Comments: ID 6b81018f-265c-42a3-8426-972a6621e2e9}\\\vspace*{2cm}
@@ -33,783 +31,71 @@
     %
    \vspace*{5cm} }
 
+\author{}
 
-% \author{XX,
-%    \ \ XX,
-%    \ \ TXX,
-%    \ \ XX,
-%        and XX\vspace*{1cm}}
-
-\date{August 2026}
+\date{November 2026}
 \maketitle\thispagestyle{empty}\newpage
 \setlength{\parskip}{2ex plus0.5ex minus0.2ex} % only for cover letter
 
-
 \thispagestyle{empty} \vspace{-10mm}
-%\vspace*{4\baselineskip}
-
-% \hfill \today\\[2\baselineskip]
-
-
 
 \noindent Dear Editor,
 
 \medskip
 
 \noindent
-Please find enclosed the revised version of our manuscript entitled
+Please find enclosed the further revised version of our manuscript entitled
 ``Adaptive Hybrid Evolutionary Search for Dynamic Pickup and Delivery Problems with Time Windows''
 (Manuscript ID: 6b81018f-265c-42a3-8426-972a6621e2e9).
 
 \medskip
 
 \noindent
-We would like to sincerely thank you for your time and effort in handling our manuscript and coordinating the review process. We are also very grateful to the reviewers for their careful evaluation and constructive comments, which have helped us improve the quality and clarity of the manuscript.
+We would like to sincerely thank you for your time and effort in handling our manuscript and coordinating the review process. We are also grateful to the reviewers for their careful evaluation and constructive comments.
 
 \medskip
 
 \noindent
-In preparing this revised version, we have carefully considered and addressed all comments and concerns raised by the reviewers. The manuscript has been revised accordingly, with the corresponding changes incorporated throughout the paper. Below, we provide a detailed point-by-point response to each comment and describe the revisions made in the manuscript.
+Our responses to the comments are provided below.
 
-
-\noindent We hope that the paper is now suitable for publication.
+\noindent The revised Related Work integrates the three studies suggested by Reviewer~4 and expands the discussion of methods relevant to the ICAPS benchmark.
 
 \noindent Yours sincerely,
 
 \noindent Tran Dinh Phuc, Nguyen Thi Tam, and Huynh Thi Thanh Binh\vspace{5mm}
 
-% \noindent \textbf{Note:} To help the readability of our
-% response letter, all the reviewers' comments and questions are
-% typeset in \emph{italic font}. Our responses and remarks are written
-% in plain font. In the PDF of the revised manuscript, newly added/modified text segments are shown in {\color{blue}{blue}}. Each such segment has a  tag: ${\color{red}{[R_nC_m]}}$ for the $m$-th comment of the $n$-th reviewer. We hope this will help the reviewers to rapidly identify the changes corresponding to their comments/concerns.  These tags will
-% be removed in the final version if the paper is accepted.
-
-\setlength{\parskip}{0pt} % remove excessive parksip again
+\setlength{\parskip}{0pt} % remove excessive parskip again
 
 \clearpage
-
-\begin{center}
-\textbf{\Large Authors' Response to the Editor}
-\end{center}
-We would like to sincerely thank you for handling our manuscript and for the constructive comments provided by the editors and reviewers. We greatly appreciate the detailed feedback, which has helped us significantly improve the quality, clarity, and rigor of the manuscript.
-
-In response to the comments, the manuscript has been substantially revised as follows:
-\begin{itemize}[leftmargin=2em]
-\item We have revised the Introduction and related sections to better clarify the problem formulation and to clearly position the contribution of this work.
-\item We have strengthened the experimental analysis by adding additional evaluations, including a sensitivity analysis of the crossover mechanism.
-\item We have carefully proofread the entire manuscript to improve grammar, clarity, and formatting consistency.
-\end{itemize}
-
-Below, we provide a detailed, point-by-point response to all reviewer comments.
-\newpage
 \begin{center}
 \textbf{\Large Authors' Response to Reviewer 1}
 \end{center}
 
-
-\question{1}{The paper states that each re-optimization epoch has a 10-minute budget, but no actual runtime measurements are reported for AGVNS vs. baselines.}
-
-\answer
-Thank you for this important observation. In the ICAPS 2021 DPDP benchmark, each problem instance is evaluated under a fixed computational budget of 10 minutes. Therefore, our experimental comparison focuses primarily on the solution quality achieved within this common computational budget rather than on termination time. To further clarify the computational requirements of AGVNS, we have added a dedicated computational complexity analysis in Section~4.4 of the revised manuscript.
-
-\question{2}{Table 4 shows ``how many instances AGVNS wins,'' but not by what margin or at what computational cost.}
+\begin{quote}\emph{I have no more comments.}\end{quote}
 
 \answer
-Thank you for this helpful comment. We have revised the experimental analysis to provide a more detailed interpretation of the performance differences rather than reporting only the number of winning instances. Regarding computational cost, all algorithms are evaluated under the same fixed 10-minute computational budget. In addition, we have added a dedicated computational complexity analysis of AGVNS in Section~4.4 to clarify the computational requirements of its main search components.
+We thank Reviewer~1 for confirming that there are no further comments. We appreciate the reviewer's helpful feedback during the previous round.
 
-\question{3}{If convergence curves are provided, the readability would be enhanced.}
-\answer
-% TODO: Add response.
-Thank you for this helpful suggestion. We agree that convergence curves are informative for evaluating search behavior on a fixed optimization problem. However, the DPDP considered in this study is addressed through a periodic re-optimization framework, in which the system state is updated every 10 minutes as new orders arrive and vehicle states change. Consequently, successive re-optimization epochs correspond to different subproblems with different numbers of active orders, vehicle states, and routing conditions. A conventional convergence curve across these epochs could therefore be misleading, since its variation would reflect changes in the underlying problem as well as the convergence behavior of the algorithm.
-
-Instead, we assess the effectiveness and computational behavior of the proposed algorithm from three complementary perspectives: final solution quality over the complete dynamic simulation, computational performance under the fixed re-optimization time budget, and statistical significance across the benchmark instances. In particular, the experiments are conducted on all 64 real-world benchmark instances with multiple independent runs, and the observed performance differences are further validated using non-parametric statistical tests. These evaluations directly measure whether an algorithm can obtain high-quality routing solutions within the limited computational time available at each dynamic decision stage.
-
-We believe that these measures provide a more representative evaluation of algorithm effectiveness in the considered dynamic optimization setting than a single conventional convergence curve. For this reason, we respectfully chose not to include convergence curves in the revised manuscript.
-
-\newpage
-\begin{center}
-\textbf{\Large Authors' Response to Reviewer 2}
-\end{center}
-
-\question{1}{The novelty of the proposed method have to be emphasized. It seems that a known algorithm is applied to a known problem.}
-\answer Thank you for this important comment. We agree that GA and VNS are established techniques; however, the novelty of our work lies in their adaptive integration specifically designed for the dynamic characteristics of the original ICAPS 2021 DPDP. In particular, AGVNS introduces (i) a hybrid initialization mechanism that exploits the previous solution while efficiently incorporating newly arrived orders, (ii) an adaptive evolutionary mechanism that dynamically balances exploration and exploitation, and (iii) a two-stage framework that separates evolutionary search from VNS-based local refinement. We have revised the manuscript to clarify and emphasize these contributions in the Introduction and Methodology sections.
-
-
-{\color{blue}
-The main contributions of this study are summarized as follows:
-\begin{itemize}
-\item Propose hybrid initialization exploiting historical routing information. A hybrid initialization mechanism is developed to construct a high-quality base solution by preserving still-valid routing decisions from the previous 
-planning period and efficiently incorporating newly arrived orders. Based on this base solution, a seed-and-perturbation strategy generates a diverse initial population by retaining the base solution as an elite seed while producing multiple feasible variants through perturbation of newly assigned 
-pickup--delivery pairs. This mechanism preserves useful historical information while maintaining sufficient population diversity for the subsequent search.
-\item Propose a problem-specific adaptive evolutionary search mechanism. The evolutionary stage incorporates several mechanisms specifically designed for the considered DPDP. A block-oriented crossover preserves meaningful pickup--delivery structures and maintains feasibility with respect to the associated operational constraints. In addition, an ERFC-based adaptive crossover mechanism adjusts the crossover probability according to the 
-number of currently unallocated requests, while the mutation strategy exploits historical operator-success information to guide the search. Together, these mechanisms allow the evolutionary process to adapt its search behavior to the changing problem state rather than relying on a fixed search strategy.
-\item Propose a two-stage evolutionary--VNS optimization framework. \gls{aglisa} organizes evolutionary search and variable neighborhood search as two complementary stages rather than simply embedding conventional local search within a genetic algorithm. The evolution stage performs population-level global exploration, after which the VNS stage intensively refines the evolved solutions using multiple neighborhood structures. This separation enables the two search components to play distinct and complementary roles in balancing exploration and local exploitation.
-\item Conduct comprehensive evaluation on the original ICAPS 2021 DPDP.The proposed framework is extensively evaluated on the 64 benchmark instances from the original ICAPS 2021 DPDP competition. The experiments compare \gls{aglisa} with the competition-winning solvers and other relevant DPDP approaches, and further investigate the contribution of its major algorithmic components through ablation experiments.
-\end{itemize}}
-
-\question{2}{Computational times are not compared in the experiments. Only the objective values are compared. Thus, the computational times should also be compared.}
-\answer
-We sincerely thank the reviewer for this helpful suggestion.
-
-In the official ICAPS 2021 DPDP benchmark, all competing algorithms are executed under an identical fixed wall-clock budget of 10 minutes for each re-optimization epoch, as enforced by the benchmark simulator. Rather than terminating once a satisfactory solution is found, every algorithm continuously improves its current solution until the allocated time budget is exhausted. Consequently, all algorithms, including AGVNS and the compared methods, consume essentially the same computational budget.
-
-For this reason, the official benchmark primarily evaluates algorithms based on the solution quality achieved within the common time limit rather than comparing execution times. To avoid ambiguity, we have clarified this evaluation protocol in the revised manuscript.
-
-\question{3}{Typo in Figure 2 should be corrected: hybrid}
-\answer
-We thank the reviewer for pointing out this typographical error. The typo in Figure 2 has been corrected in the revised manuscript.
-
-\newpage
-\begin{center}
-\textbf{\Large Authors' Response to Reviewer 3}
-\end{center}
-
-\question{1}{Novelty is unclear I mean hybrid GA+VNS approaches are already studied frequently}
-\answer
-Thank you for your comment. We agree with the reviewer that GA and VNS are well-established metaheuristics and that hybrid GA--VNS approaches have been extensively studied in the literature. Therefore, we have revised the manuscript to clarify that the novelty of this work 
-does not lie in simply combining GA and VNS. Instead, the methodological contributions of AGVNS lie in the problem-specific adaptive mechanisms developed for the dynamic characteristics and operational constraints of the original ICAPS 2021 DPDP, particularly the reuse of routing information across consecutive re-optimization epochs, the adaptive evolutionary search mechanisms, and the transfer of operator-performance information from the evolutionary stage to the subsequent VNS stage.
-
-To address the reviewer's concern, we have substantially revised the description of the main contributions in the Introduction to explicitly distinguish AGVNS from conventional hybrid GA--VNS approaches. The revised 
-text is as follows:
-
-{\color{blue}
-The main contributions of this study are summarized as follows:
-\begin{itemize}
-\item Propose hybrid initialization exploiting historical routing information. A hybrid initialization mechanism is developed to construct a high-quality base solution by preserving still-valid routing decisions from the previous 
-planning period and efficiently incorporating newly arrived orders. Based on this base solution, a seed-and-perturbation strategy generates a diverse initial population by retaining the base solution as an elite seed while producing multiple feasible variants through perturbation of newly assigned 
-pickup--delivery pairs. This mechanism preserves useful historical information while maintaining sufficient population diversity for the subsequent search.
-\item Propose a problem-specific adaptive evolutionary search mechanism. The evolutionary stage incorporates several mechanisms specifically designed for the considered DPDP. A block-oriented crossover preserves meaningful pickup--delivery structures and maintains feasibility with respect to the associated operational constraints. In addition, an ERFC-based adaptive crossover mechanism adjusts the crossover probability according to the 
-number of currently unallocated requests, while the mutation strategy exploits historical operator-success information to guide the search. Together, these mechanisms allow the evolutionary process to adapt its search behavior to the changing problem state rather than relying on a fixed search strategy.
-\item Propose a two-stage evolutionary--VNS optimization framework. \gls{aglisa} organizes evolutionary search and variable neighborhood search as two complementary stages rather than simply embedding conventional local search within a genetic algorithm. The evolution stage performs population-level global exploration, after which the VNS stage intensively refines the evolved solutions using multiple neighborhood structures. This separation enables the two search components to play distinct and complementary roles in balancing exploration and local exploitation.
-\item Conduct comprehensive evaluation on the original ICAPS 2021 DPDP.The proposed framework is extensively evaluated on the 64 benchmark instances from the original ICAPS 2021 DPDP competition. The experiments compare \gls{aglisa} with the competition-winning solvers and other relevant DPDP approaches, and further investigate the contribution of its major algorithmic components through ablation experiments.
-\end{itemize}}
-
-\question{2}{Contributions are strong and solid without strong theoretical or methodological novelties}
-\answer
-Thank you for this thoughtful comment. We appreciate the reviewer's positive assessment of the contributions of our work. We acknowledge that this study does not aim to introduce a new theoretical foundation for evolutionary computation or variable neighborhood search. Rather, its methodological novelty lies in the design and coordination of 
-problem-specific adaptive search mechanisms for the original ICAPS 2021 dynamic pickup and delivery problem.
-
-In particular, AGVNS goes beyond a conventional combination of GA and VNS through three main methodological developments: a dynamic warm-start and hybrid initialization mechanism that reuses useful routing information across consecutive re-optimization epochs; a problem-specific adaptive 
-evolutionary search incorporating block-oriented crossover, ERFC-based adaptive crossover control, and historical operator-success information; and an adaptive evolutionary--VNS framework in which operator-performance 
-information accumulated during the evolutionary stage is transferred to guide neighborhood ordering in the subsequent VNS stage. These mechanisms are designed to address the changing problem states, complex operational 
-constraints, and limited computational time of the original ICAPS 2021 DPDP.
-
-To address the reviewer's concern, we have revised the Introduction and the Proposed Methodology sections to more clearly articulate these methodological contributions and to avoid presenting the standard combination of GA and VNS itself as the novelty of the proposed approach. 
-The revised description of the main contributions in the Introduction is provided in our response to Question~1.
-\question{3}{Lacks formal complexity analysis or convergence guarantees}
-\answer
-% TODO: Add response.
-Thank you for this important comment. 
-
-\begin{itemize}
-    \item Regarding computational complexity, we have added an analysis of the major components of AGVNS, including the hybrid initialization, evolutionary operators, and VNS neighborhood search. The analysis clarifies how the computational cost scales with the population size, the number of active pickup-delivery requests, and the neighborhood operations. This discussion has been added to the revised Proposed Methodology section.
-{
-    \color{blue}
-    \subsection*{4.4 Computational Complexity Analysis}
-
-The computational complexity of \gls{aglisa} is analyzed with respect to the notation introduced in the problem formulation. Let $N$ denote the number of orders, $K$ the number of vehicles, and $l_k$ the number of unfinished 
-route nodes of vehicle $v^k$. For convenience, we define
-\[
-L=\max_{k=1,\ldots,K} l_k
-\]
-as the maximum route length at a re-optimization epoch. Furthermore, let $P$ denote the population size, $G$ the number of generations performed during the evolutionary stage, and $I$ the number of neighborhood-search 
-iterations performed during the VNS stage.
-
-The initialization phase consists of constructing the base solution and generating the initial population. For each newly arrived order, at most $K$ vehicle routes are examined. For a route containing at most $L$ unfinished nodes, evaluating all possible pickup--delivery insertion 
-positions requires at most $O(L^2)$ operations. The exhaustive enumeration used for short routes is bounded by the fixed threshold of eight nodes and therefore has constant asymptotic cost. Consequently, constructing the base solution requires at most $O(NKL^2)$ operations. Since $P$ perturbed individuals are subsequently generated from the base solution, the overall initialization complexity is bounded by
-\[
-O(PNKL^2).
-\]
-
-During the evolutionary stage, the computational cost is mainly determined by the population size, the number of generations, and the neighborhood-based evolutionary operators. Let $O(L^q)$ denote the worst-case complexity of the most expensive operator, where $q$ is determined by the corresponding neighborhood structure. The evolutionary stage therefore requires
-$O(GPL^q)$.
-The VNS stage employs a fixed number of neighborhood structures. Hence, its asymptotic complexity is dominated by the most expensive neighborhood operator. If $I$ neighborhood-search iterations are performed, the VNS stage 
-requires $O(IL^q)$.
-
-Combining these components, the overall worst-case computational complexity of \gls{aglisa} can be expressed as
-\[
-O\left(PNKL^2 + (GP+I)L^q\right).
-\]
-
-It should be noted that $G$ and $I$ are not unbounded in the considered dynamic setting. At each re-optimization epoch, both evolutionary search and VNS refinement are restricted by the fixed computational budget imposed by the ICAPS 2021 benchmark. Therefore, the above expression represents the 
-worst-case computational growth of the main search components, whereas the actual computation performed at each decision epoch is bounded by the available wall-clock time.
-}
-\item Regarding convergence, we acknowledge that \gls{aglisa}, as a stochastic metaheuristic, does not formally guarantee convergence to the global optimum within a finite computational budget. This issue is further complicated by the dynamic nature of the considered DPDP, where new orders arrive and vehicle states change between consecutive re-optimization epochs. Consequently, the algorithm does not optimize a single fixed problem throughout the simulation, but rather repeatedly solves a sequence of evolving subproblems.
-
-At each re-optimization epoch, \gls{aglisa} searches for improved solutions within a dynamically allocated time budget, adhering to an overall computational limit of 10 minutes per problem instance. Therefore, in this study, we assess the effectiveness of the search empirically by the quality and stability of the solutions obtained within this common time budget across multiple independent runs, rather than by claiming theoretical convergence to the global optimum. We have clarified this point in the revised manuscript.
-\end{itemize}
-\question{4}{Heavy reliance on benchmark-specific tuning limits generalizability}
-\answer
-Thank you for this important observation. We agree that the proposed AGVNS is specifically designed for the original ICAPS 2021 DPDP rather than intended as a general-purpose optimization framework. Its main components are deliberately designed to exploit the dynamic characteristics and operational constraints of this particular problem.
-
-We would also like to clarify that the same parameter configuration is used across all 64 benchmark instances, without instance-specific tuning. Therefore, the present study focuses on developing an effective problem-specific solution method rather than demonstrating generalizability across different routing problems. We have clarified this scope in the revised manuscript and avoided making broad claims regarding the general applicability of AGVNS. Extending and validating the proposed framework on other DPDP variants and dynamic routing problems is identified as an important direction for future work.
-
-\question{5}{No validation beyond ICAPS benchmark}
-\answer
-Thank you for this valuable feedback. The primary objective of this work is to address the exact operational challenges posed by the ICAPS 2021 DPDP challenge - a benchmark constructed from real-world industrial logistics data. Because the 64 official instances cover a broad spectrum of problem scales, dynamic request arrival speeds, and spatial features, they serve as a rigorous testbed for real-time optimization methods. While adapting AGVNS to other benchmark formulations falls beyond the immediate focus of this study, we agree that cross-benchmark validation is important and have noted the extension of AGVNS to other dynamic VRP variants as future work in the revised manuscript.
-
-\question{6}{Statistical comparison with the best competitor (Gold) is not significant}
-\answer Thank you for this important observation. We agree that the non-parametric statistical comparison between \gls{aglisa} and the Gold-winning solver does not indicate a statistically significant difference after Holm correction ($p = 0.1467 > 0.05$). Consequently, the experimental evidence does not claim overall statistical dominance of \gls{aglisa} over the Gold winner across the entire benchmark suite.Rather, these statistical results confirm that \gls{aglisa} achieves performance that is statistically comparable to the current state-of-the-art (Gold solver) under strict real-time budget constraints. A closer examination reveals complementary strengths across different scale categories: \gls{aglisa} yields favorable results on several small- to medium-scale instance sets, whereas the Gold solver maintains a competitive edge on the largest instances - a trade - off now explicitly discussed in the manuscript.In light of your comment, we have thoroughly revised the Abstract, Results, and Conclusion sections to ensure our claims strictly reflect the data. Specifically, we now frame \gls{aglisa} as a highly competitive alternative that achieves performance on par with the Gold-winning method, while explicitly citing the statistical testing results to maintain complete reporting transparency.
-% TODO: Add response.
-
-\question{7}{Performance degrades on largest instances, weakening claimed robustness.}
-\answer
-Thank you for this important observation. We agree that the performance of \gls{aglisa} relative to the competition solvers decreases as the problem reaches the largest scale. However, the experimental results show a more gradual pattern. Specifically, \gls{aglisa} performs favorably on Sets~1--6, remains competitive with the best competition solvers on Set~7, and shows a clear performance degradation only on Set~8, which contains the largest instances in the benchmark.
-
-This behavior can be attributed to the increasing computational requirements of both the evolutionary and VNS stages. As the number of requests increases, the search space and the cost of neighborhood exploration grow substantially. Under the same fixed 10-minute runtime budget, the algorithm has less opportunity to perform sufficient evolutionary exploration and VNS refinement, which becomes particularly restrictive for Set~8.
-
-We agree that this result limits a broad claim of robustness across all problem scales. Accordingly, we have revised the manuscript to clarify that \gls{aglisa} performs effectively across Sets~1--6 and remains competitive on Set~7, while its scalability becomes a limitation on Set~8. The corresponding claims in the Results and Conclusion have been tempered, and improving search efficiency for the largest-scale instances is identified as an important direction for future work.
-% TODO: Add response.
-
-\question{8}{Figures and explanations sometimes lack clarity or concise interpretation}
-\answer
-Thank you for this helpful comment. We have carefully revised the figures, captions, and corresponding explanations to improve clarity and readability. In particular, Figures 1 and 2 have been redrawn to improve their visual presentation and provide a clearer illustration of the simulation framework and the proposed \gls{aglisa} framework. The \gls{aglisa}  framework has also been refined to more clearly illustrate the initialization, evolutionary, and VNS stages and their interactions.
-
-\question{9}{Discussion of computational cost versus competing methods is highly recommended which is missing from their analysis}
-\answer
-Thank you for this valuable suggestion. To address this concern, we have added a dedicated computational complexity analysis in Section~4.4 of the revised manuscript. The analysis examines the computational costs of the main components of AGVNS, including initialization, evolutionary search, and VNS refinement, and discusses how the computational complexity scales with the problem size and algorithmic parameters.
-\newpage
+\clearpage
 \begin{center}
 \textbf{\Large Authors' Response to Reviewer 4}
 \end{center}
 
-This paper proposes AGVNS, an adaptive hybrid algorithm combining a genetic algorithm with variable neighborhood search for the dynamic pickup and delivery problem with time windows, evaluated on the 64-instance Huawei ICAPS 2021 DPDP benchmark. Although the paper is well-organized and the application is timely, several concerns regarding result interpretation, statistical reporting, experimental clarity, and presentation merit attention. The following comments detail the specific issues:
-
-\question{1}{The novelty of AGVNS is incremental. Two-stage GA+VNS hybrids, block-preserving crossover, and success-history-based adaptive operator selection are established memetic-algorithm techniques. The main new contribution is the erfc-based adaptive crossover probability, which is not differentiated from existing adaptive operator selection frameworks.}
-\answer
-We sincerely thank the reviewer for this insightful comment.
-
-We agree that the individual ingredients of AGVNS, including two-stage GA+VNS hybrids, block-preserving crossover, and adaptive operator selection based on historical success, are not entirely new and have been explored in the memetic algorithm literature. Our intention was not to claim these components as fundamentally novel optimization techniques.
-
-Instead, the novelty of this work lies in the problem-specific integration and adaptation of these mechanisms within a unified framework for the highly constrained ICAPS 2021 Dynamic Pickup and Delivery Problem. In particular, AGVNS incorporates (i) a warm-start periodic re-optimization framework, (ii) a hybrid initialization strategy that adapts to route complexity, (iii) a block-oriented crossover designed to preserve pickup-delivery feasibility under LIFO and dock constraints, (iv) an ERFC-based adaptive crossover schedule that dynamically allocates computational effort according to the current optimization workload, and (v) a VNS intensification stage whose neighborhood ordering is inherited from the evolutionary search.
-
-Regarding the ERFC-based adaptive crossover mechanism, we agree that adaptive operator control has been widely studied. Our contribution is therefore not the introduction of a new adaptive operator selection paradigm, but rather the design of a lightweight workload-aware crossover scheduling strategy that continuously adjusts the crossover probability according to the number of unallocated requests encountered during dynamic re-optimization. To avoid overstating the novelty, we have revised the manuscript to clarify this distinction and position the proposed mechanism as a problem-specific adaptive strategy instead of a fundamentally new adaptive framework.
-
-We have also revised the Introduction and the Related Work sections to better position our contribution with respect to existing memetic algorithms and adaptive evolutionary optimization approaches.
-
-\question{2}{The abstract claims AGVNS ``consistently outperforms three state-of-the-art algorithms,'' but Tables 5--6 show AGVNS losing to Gold on Set 7 (4/8) and Set 8 (7/8). The Holm-corrected comparison against Gold ($p = 0.1467$) also fails to reject the null. The abstract should be tempered to match the conclusion's framing}
-\answer
-We sincerely thank the reviewer for this careful observation. We agree that the original statement in the Abstract overstated the overall performance of AGVNS.
-
-The experimental results show that AGVNS performs favorably on Sets~1--6, covering instances with up to 2,000 customer requests, and remains competitive with the Gold-winning method on Set~7. However, its relative performance decreases on Set~8, which contains the largest instances with 4,000 requests. Moreover, the Holm post-hoc test indicates that the overall difference between AGVNS and the Gold-winning method is not statistically significant ($p=0.1467>0.05$). Therefore, the results do not support a claim of overall statistical superiority over Gold.
-
-Accordingly, we have revised the Abstract, Results, and Conclusion to remove the claim that AGVNS ``outperforms'' the state-of-the-art methods. The revised manuscript now states that AGVNS achieves competitive performance across a wide range of problem scales, performs favorably on Sets~1--6, remains competitive on Set~7, and shows reduced relative performance on Set~8. We have also explicitly acknowledged this limitation and identified improving scalability for the largest instances as an important direction for future work.
-
-\question{3}{The Friedman test in Table 7 reports $\chi^2 = 7.000$ with $p = 4.91 \times 10^{-12}$, but for $k = 6$, $df = 5$, $\chi^2 = 7.000$ corresponds to $p \approx 0.22$. The same value also appears as GA's Holm-adjusted $p$ in Table 8, suggesting a copy-paste error.}
-\answer
-Thank you for identifying this inconsistency. We carefully rechecked the statistical analysis and confirmed that the original Tables 7 and 8 contained reporting errors, which resulted in the inconsistency noted by the reviewer.
-
-To address this issue, we recomputed the Friedman test and all subsequent pairwise comparisons with Holm correction using the original experimental data. Tables 7 and 8 have been updated with the corrected test statistics, raw $p$-values, and Holm-adjusted $p$-values. We also carefully rechecked the corresponding discussion to ensure that all statistical results and conclusions are consistent with the corrected values. We sincerely thank the reviewer for bringing this error to our attention.
-% TODO: Add response.
-
-\question{4}{The number of independent runs per instance is not specified. Tables 5 and 6 list single values while Table 3 reports averages, creating ambiguity. Standard deviations should be reported given the stochastic nature of the algorithm.}
-\answer
-Thank you for pointing out this ambiguity.
-
-In the revised manuscript, we now explicitly state that each stochastic algorithm was independently executed 10 times on each benchmark instance. The corresponding results are reported as mean $\pm$ standard deviation.
-
-Tables~5 and~6 have therefore been revised to include the standard deviations for all methods for which repeated-run results are available. For benchmark or reference methods for which only a single result is available from the original competition results or published sources, we report only that value and do not assign an artificial standard deviation.
-
-We have also revised the description of Table~3 and the experimental settings to ensure a  distinction between repeated-run averages and single reference values. These changes improve the reproducibility of the experiments and provide a clearer assessment of the robustness and stability of AGVNS.
-{\color{blue}
-\begin{sidewaystable}[p]
-\centering
-\caption*{Table 5: Objective values obtained by different algorithms on Sets~5--8.
-Results with available variability information are reported as mean $\pm$ standard deviation.
-The best mean objective value for each instance is highlighted in bold.
-All objective values are reported in scientific notation.}
-\label{tab:results_set5_8}
-
-\setlength{\tabcolsep}{2.5pt}
-\scriptsize
-
-\begin{tabular}{l|r|r|r|r|r|r|r|r}
-\hline
-\textbf{Set}
-& \textbf{Instance}
-& \textbf{Gold}
-& \textbf{Silver}
-& \textbf{Bronze}
-& \textbf{MA}
-& \textbf{GA}
-& \textbf{Evo-RL}
-& \textbf{AGVNS} \\
-\hline
-
-\multirow{8}{*}{\textbf{Set 5}}
-& HW33 & $3.67e3 \pm 1.22e3$ & $7.03e3$ & $9.50e4$
-& $9.99e4 \pm 8.29e4$ & $3.15e6 \pm 5.17e5$
-& $3.00e7 \pm 9.06e5$ & $\mathbf{7.40e1 \pm 1.42e0}$ \\
-
-& HW34 & $1.11e4 \pm 2.07e3$ & $1.05e4$ & $5.44e4$
-& $3.51e4 \pm 2.70e4$ & $2.80e6 \pm 5.47e5$
-& $3.24e7 \pm 6.18e5$ & $\mathbf{5.91e3 \pm 3.78e3}$ \\
-
-& HW35 & $3.48e3 \pm 1.39e3$ & $1.58e4$ & $1.04e5$
-& $7.25e4 \pm 5.53e4$ & $3.30e6 \pm 2.56e5$
-& $3.64e7 \pm 8.83e5$ & $\mathbf{2.66e3 \pm 1.72e3}$ \\
-
-& HW36 & $1.75e4 \pm 4.64e2$ & $2.32e4$ & $1.13e5$
-& $1.41e5 \pm 1.48e4$ & $3.13e6 \pm 3.02e5$
-& $3.75e7 \pm 5.12e5$ & $\mathbf{1.68e4 \pm 1.49e3}$ \\
-
-& HW37 & $1.12e4 \pm 1.31e3$ & $\mathbf{5.14e3}$ & $9.57e4$
-& $2.40e5 \pm 1.04e5$ & $4.29e6 \pm 2.02e6$
-& $3.58e7 \pm 8.01e5$ & $1.16e4 \pm 1.13e3$ \\
-
-& HW38 & $1.65e4 \pm 4.60e3$ & $3.01e4$ & $9.42e4$
-& $5.38e4 \pm 3.09e4$ & $3.20e6 \pm 5.05e5$
-& $3.57e7 \pm 9.13e5$ & $\mathbf{1.49e4 \pm 3.14e3}$ \\
-
-& HW39 & $\mathbf{2.03e4 \pm 5.24e2}$ & $2.23e4$ & $8.52e4$
-& $1.69e5 \pm 1.06e5$ & $2.69e6 \pm 4.30e5$
-& $3.55e7 \pm 1.04e6$ & $2.04e4 \pm 5.95e2$ \\
-
-& HW40 & $1.34e4 \pm 2.99e2$ & $2.43e4$ & $1.17e5$
-& $6.44e5 \pm 4.24e5$ & $3.25e6 \pm 5.95e5$
-& $3.14e7 \pm 6.36e5$ & $\mathbf{1.13e4 \pm 1.27e3}$ \\
-\hline
-
-\multirow{8}{*}{\textbf{Set 6}}
-& HW41 & $3.61e4 \pm 3.39e3$ & $1.24e5$ & $5.49e5$
-& $3.16e8 \pm 2.47e7$ & $2.16e8 \pm 4.99e6$
-& $4.22e8 \pm 5.54e6$ & $\mathbf{2.77e4 \pm 5.96e3}$ \\
-
-& HW42 & $\mathbf{5.29e4 \pm 1.26e4}$ & $1.64e5$ & $6.01e5$
-& $3.55e8 \pm 3.74e7$ & $2.13e8 \pm 4.95e6$
-& $4.17e8 \pm 2.80e6$ & $6.18e4 \pm 2.82e4$ \\
-
-& HW43 & $6.98e4 \pm 2.95e4$ & $1.67e5$ & $5.51e5$
-& $3.69e8 \pm 2.12e7$ & $2.26e8 \pm 1.79e7$
-& $4.14e8 \pm 7.69e6$ & $\mathbf{5.41e4 \pm 1.53e4}$ \\
-
-& HW44 & $7.78e4 \pm 1.60e4$ & $1.91e5$ & $7.15e5$
-& $3.29e8 \pm 2.05e7$ & $2.18e8 \pm 1.37e7$
-& $4.08e8 \pm 2.16e6$ & $\mathbf{7.26e4 \pm 2.08e4}$ \\
-
-& HW45 & $\mathbf{4.74e4 \pm 3.15e4}$ & $1.81e5$ & $6.16e5$
-& $3.46e8 \pm 3.03e7$ & $2.09e8 \pm 6.26e6$
-& $4.14e8 \pm 5.60e6$ & $5.11e4 \pm 2.26e4$ \\
-
-& HW46 & $3.09e4 \pm 7.10e3$ & $1.76e5$ & $7.98e5$
-& $3.67e8 \pm 2.69e7$ & $2.29e8 \pm 1.91e7$
-& $4.24e8 \pm 4.50e6$ & $\mathbf{2.92e4 \pm 1.20e4}$ \\
-
-& HW47 & $2.68e4 \pm 3.57e3$ & $1.04e5$ & $6.03e5$
-& $2.92e8 \pm 1.74e7$ & $2.10e8 \pm 1.14e7$
-& $4.17e8 \pm 3.52e6$ & $\mathbf{2.38e4 \pm 2.02e3}$ \\
-
-& HW48 & $1.82e4 \pm 5.06e3$ & $1.24e5$ & $5.49e5$
-& $2.95e8 \pm 2.41e7$ & $2.35e8 \pm 1.51e7$
-& $4.16e8 \pm 4.08e6$ & $\mathbf{1.47e4 \pm 1.44e3}$ \\
-\hline
-
-\multirow{8}{*}{\textbf{Set 7}}
-& HW49 & $1.58e6 \pm 3.40e5$ & $\mathbf{1.18e6}$ & $1.59e6$
-& $7.02e8 \pm 6.48e7$ & $5.84e8 \pm 1.14e7$
-& $9.15e8 \pm 5.10e6$ & $1.65e6 \pm 4.22e4$ \\
-
-& HW50 & $9.31e5 \pm 3.10e5$ & $\mathbf{5.72e5}$ & $2.51e6$
-& $7.17e8 \pm 6.56e7$ & $5.82e8 \pm 1.01e7$
-& $8.86e8 \pm 1.16e7$ & $1.37e6 \pm 1.65e5$ \\
-
-& HW51 & $2.84e5 \pm 1.26e5$ & $5.15e5$ & $1.34e6$
-& $6.58e8 \pm 6.08e7$ & $5.55e8 \pm 1.17e7$
-& $8.92e8 \pm 5.38e6$ & $\mathbf{2.64e5 \pm 8.16e4}$ \\
-
-& HW52 & $7.61e5 \pm 2.22e5$ & $\mathbf{4.48e5}$ & $2.03e6$
-& $6.95e8 \pm 6.05e7$ & $5.84e8 \pm 9.10e6$
-& $9.19e8 \pm 1.52e6$ & $1.45e6 \pm 1.29e5$ \\
-
-& HW53 & $\mathbf{1.34e5 \pm 2.10e5}$ & $3.17e5$ & $1.93e6$
-& $6.92e8 \pm 6.08e7$ & $6.00e8 \pm 8.34e6$
-& $9.55e8 \pm 6.26e6$ & $2.79e5 \pm 1.07e5$ \\
-
-& HW54 & $2.07e6 \pm 1.40e5$ & $\mathbf{1.63e6}$ & $2.00e6$
-& $7.02e8 \pm 4.09e7$ & $5.58e8 \pm 1.68e7$
-& $8.97e8 \pm 7.42e6$ & $1.80e6 \pm 2.52e5$ \\
-
-& HW55 & $5.19e5 \pm 1.31e5$ & $7.30e5$ & $1.98e6$
-& $6.10e8 \pm 3.25e7$ & $5.53e8 \pm 6.38e6$
-& $8.74e8 \pm 2.13e6$ & $\mathbf{5.01e5 \pm 6.45e4}$ \\
-
-& HW56 & $2.08e6 \pm 2.07e5$ & $\mathbf{1.84e6}$ & $2.16e6$
-& $6.22e8 \pm 3.02e7$ & $5.82e8 \pm 1.37e7$
-& $9.47e8 \pm 1.14e6$ & $1.85e6 \pm 1.32e5$ \\
-\hline
-
-\multirow{8}{*}{\textbf{Set 8}}
-& HW57 & $\mathbf{1.07e7 \pm 5.09e5}$ & $2.24e7$ & $1.65e7$
-& $1.55e9 \pm 8.32e7$ & $1.37e9 \pm 2.33e7$
-& $1.80e9 \pm 1.41e7$ & $1.67e7 \pm 8.64e5$ \\
-
-& HW58 & $\mathbf{1.03e7 \pm 2.06e6}$ & $1.32e7$ & $1.12e7$
-& $1.42e9 \pm 9.95e7$ & $1.37e9 \pm 1.00e7$
-& $1.80e9 \pm 8.52e6$ & $1.42e7 \pm 3.30e5$ \\
-
-& HW59 & $\mathbf{9.32e6 \pm 6.39e5}$ & $1.24e7$ & $9.54e6$
-& $1.50e9 \pm 2.86e7$ & $1.39e9 \pm 1.23e7$
-& $1.84e9 \pm 9.95e6$ & $1.26e7 \pm 7.45e5$ \\
-
-& HW60 & $\mathbf{1.07e7 \pm 5.03e5}$ & $2.15e7$ & $1.32e7$
-& $1.47e9 \pm 4.89e7$ & $1.40e9 \pm 1.66e7$
-& $1.83e9 \pm 1.64e7$ & $1.74e7 \pm 5.63e5$ \\
-
-& HW61 & $\mathbf{6.33e6 \pm 1.44e6}$ & $9.10e6$ & $7.21e6$
-& $1.43e9 \pm 1.26e8$ & $1.33e9 \pm 5.66e6$
-& $1.79e9 \pm 6.63e6$ & $9.80e6 \pm 1.00e6$ \\
-
-& HW62 & $1.13e7 \pm 6.16e5$ & $1.45e7$ & $\mathbf{1.09e7}$
-& $1.52e9 \pm 1.35e8$ & $1.37e9 \pm 2.03e7$
-& $1.82e9 \pm 5.67e6$ & $1.88e7 \pm 1.98e6$ \\
-
-& HW63 & $\mathbf{1.78e7 \pm 2.96e6}$ & $3.09e7$ & $2.50e7$
-& $1.49e9 \pm 1.56e8$ & $1.42e9 \pm 2.84e7$
-& $1.88e9 \pm 1.12e7$ & $2.17e7 \pm 9.25e5$ \\
-
-& HW64 & $1.68e7 \pm 1.55e6$ & $2.54e7$ & $2.74e7$
-& $1.45e9 \pm 8.52e7$ & $1.43e9 \pm 1.33e7$
-& $1.91e9 \pm 1.47e7$ & $\mathbf{1.52e7 \pm 7.52e5}$ \\
-\hline
-\end{tabular}
-\end{sidewaystable}
-
-\begin{sidewaystable}
-\centering
-\caption*{Table 6: Objective values obtained by different algorithms on Sets~5--8. Results with available variability information are reported as mean $\pm$ standard deviation. The best mean objective value for each instance is highlighted in bold. All objective values are reported in scientific notation.}
-\label{tab:results_set5_8}
-
-\setlength{\tabcolsep}{2.5pt}
-\scriptsize
-
-\begin{tabular}{l|r|r|r|r|r|r|r|r}
-\hline
-\textbf{Set}
-& \textbf{Instance}
-& \textbf{Gold}
-& \textbf{Silver}
-& \textbf{Bronze}
-& \textbf{MA}
-& \textbf{GA}
-& \textbf{Evo-RL}
-& \textbf{AGVNS} \\
-\hline
-
-\multirow{8}{*}{\textbf{Set 5}}
-& HW33 & $3.67e3 \pm 1.22e3$ & $7.03e3$ & $9.50e4$
-& $9.99e4 \pm 8.29e4$
-& $3.15e6 \pm 5.17e5$
-& $3.00e7 \pm 9.06e5$
-& $\mathbf{7.40e1 \pm 1.42e0}$ \\
-
-& HW34 & $1.11e4 \pm 2.07e3$ & $1.05e4$ & $5.44e4$
-& $3.51e4 \pm 2.70e4$
-& $2.80e6 \pm 5.47e5$
-& $3.24e7 \pm 6.18e5$
-& $\mathbf{5.91e3 \pm 3.78e3}$ \\
-
-& HW35 & $3.48e3 \pm 1.39e3$ & $1.58e4$ & $1.04e5$
-& $7.25e4 \pm 5.53e4$
-& $3.30e6 \pm 2.56e5$
-& $3.64e7 \pm 8.83e5$
-& $\mathbf{2.66e3 \pm 1.72e3}$ \\
-
-& HW36 & $1.75e4 \pm 4.64e2$ & $2.32e4$ & $1.13e5$
-& $1.41e5 \pm 1.48e4$
-& $3.13e6 \pm 3.02e5$
-& $3.75e7 \pm 5.12e5$
-& $\mathbf{1.68e4 \pm 1.49e3}$ \\
-
-& HW37 & $1.12e4 \pm 1.31e3$ & $\mathbf{5.14e3}$ & $9.57e4$
-& $2.40e5 \pm 1.04e5$
-& $4.29e6 \pm 2.02e6$
-& $3.58e7 \pm 8.01e5$
-& $1.16e4 \pm 1.13e3$ \\
-
-& HW38 & $1.65e4 \pm 4.60e3$ & $3.01e4$ & $9.42e4$
-& $5.38e4 \pm 3.09e4$
-& $3.20e6 \pm 5.05e5$
-& $3.57e7 \pm 9.13e5$
-& $\mathbf{1.49e4 \pm 3.14e3}$ \\
-
-& HW39 & $\mathbf{2.03e4 \pm 5.24e2}$ & $2.23e4$ & $8.52e4$
-& $1.69e5 \pm 1.06e5$
-& $2.69e6 \pm 4.30e5$
-& $3.55e7 \pm 1.04e6$
-& $2.04e4 \pm 5.95e2$ \\
-
-& HW40 & $1.34e4 \pm 2.99e2$ & $2.43e4$ & $1.17e5$
-& $6.44e5 \pm 4.24e5$
-& $3.25e6 \pm 5.95e5$
-& $3.14e7 \pm 6.36e5$
-& $\mathbf{1.13e4 \pm 1.27e3}$ \\
-\hline
-
-\multirow{8}{*}{\textbf{Set 6}}
-& HW41 & $3.61e4 \pm 3.39e3$ & $1.24e5$ & $5.49e5$
-& $3.16e8 \pm 2.47e7$
-& $2.16e8 \pm 4.99e6$
-& $4.22e8 \pm 5.54e6$
-& $\mathbf{2.77e4 \pm 5.96e3}$ \\
-
-& HW42 & $\mathbf{5.29e4 \pm 1.26e4}$ & $1.64e5$ & $6.01e5$
-& $3.55e8 \pm 3.74e7$
-& $2.13e8 \pm 4.95e6$
-& $4.17e8 \pm 2.80e6$
-& $6.18e4 \pm 2.82e4$ \\
-
-& HW43 & $6.98e4 \pm 2.95e4$ & $1.67e5$ & $5.51e5$
-& $3.69e8 \pm 2.12e7$
-& $2.26e8 \pm 1.79e7$
-& $4.14e8 \pm 7.69e6$
-& $\mathbf{5.41e4 \pm 1.53e4}$ \\
-
-& HW44 & $7.78e4 \pm 1.60e4$ & $1.91e5$ & $7.15e5$
-& $3.29e8 \pm 2.05e7$
-& $2.18e8 \pm 1.37e7$
-& $4.08e8 \pm 2.16e6$
-& $\mathbf{7.26e4 \pm 2.08e4}$ \\
-
-& HW45 & $\mathbf{4.74e4 \pm 3.15e4}$ & $1.81e5$ & $6.16e5$
-& $3.46e8 \pm 3.03e7$
-& $2.09e8 \pm 6.26e6$
-& $4.14e8 \pm 5.60e6$
-& $5.11e4 \pm 2.26e4$ \\
-
-& HW46 & $3.09e4 \pm 7.10e3$ & $1.76e5$ & $7.98e5$
-& $3.67e8 \pm 2.69e7$
-& $2.29e8 \pm 1.91e7$
-& $4.24e8 \pm 4.50e6$
-& $\mathbf{2.92e4 \pm 1.20e4}$ \\
-
-& HW47 & $2.68e4 \pm 3.57e3$ & $1.04e5$ & $6.03e5$
-& $2.92e8 \pm 1.74e7$
-& $2.10e8 \pm 1.14e7$
-& $4.17e8 \pm 3.52e6$
-& $\mathbf{2.38e4 \pm 2.02e3}$ \\
-
-& HW48 & $1.82e4 \pm 5.06e3$ & $1.24e5$ & $5.49e5$
-& $2.95e8 \pm 2.41e7$
-& $2.35e8 \pm 1.51e7$
-& $4.16e8 \pm 4.08e6$
-& $\mathbf{1.47e4 \pm 1.44e3}$ \\
-\hline
-
-\multirow{8}{*}{\textbf{Set 7}}
-& HW49 & $1.58e6 \pm 3.40e5$ & $\mathbf{1.18e6}$ & $1.59e6$
-& $7.02e8 \pm 6.48e7$
-& $5.84e8 \pm 1.14e7$
-& $9.15e8 \pm 5.10e6$
-& $1.65e6 \pm 4.22e4$ \\
-
-& HW50 & $9.31e5 \pm 3.10e5$ & $\mathbf{5.72e5}$ & $2.51e6$
-& $7.17e8 \pm 6.56e7$
-& $5.82e8 \pm 1.01e7$
-& $8.86e8 \pm 1.16e7$
-& $1.37e6 \pm 1.65e5$ \\
-
-& HW51 & $2.84e5 \pm 1.26e5$ & $5.15e5$ & $1.34e6$
-& $6.58e8 \pm 6.08e7$
-& $5.55e8 \pm 1.17e7$
-& $8.92e8 \pm 5.38e6$
-& $\mathbf{2.64e5 \pm 8.16e4}$ \\
-
-& HW52 & $7.61e5 \pm 2.22e5$ & $\mathbf{4.48e5}$ & $2.03e6$
-& $6.95e8 \pm 6.05e7$
-& $5.84e8 \pm 9.10e6$
-& $9.19e8 \pm 1.52e6$
-& $1.45e6 \pm 1.29e5$ \\
-
-& HW53 & $\mathbf{1.34e5 \pm 2.10e5}$ & $3.17e5$ & $1.93e6$
-& $6.92e8 \pm 6.08e7$
-& $6.00e8 \pm 8.34e6$
-& $9.55e8 \pm 6.26e6$
-& $2.79e5 \pm 1.07e5$ \\
-
-& HW54 & $2.07e6 \pm 1.40e5$ & $\mathbf{1.63e6}$ & $2.00e6$
-& $7.02e8 \pm 4.09e7$
-& $5.58e8 \pm 1.68e7$
-& $8.97e8 \pm 7.42e6$
-& $1.80e6 \pm 2.52e5$ \\
-
-& HW55 & $5.19e5 \pm 1.31e5$ & $7.30e5$ & $1.98e6$
-& $6.10e8 \pm 3.25e7$
-& $5.53e8 \pm 6.38e6$
-& $8.74e8 \pm 2.13e6$
-& $\mathbf{5.01e5 \pm 6.45e4}$ \\
-
-& HW56 & $2.08e6 \pm 2.07e5$ & $\mathbf{1.84e6}$ & $2.16e6$
-& $6.22e8 \pm 3.02e7$
-& $5.82e8 \pm 1.37e7$
-& $9.47e8 \pm 1.14e6$
-& $1.85e6 \pm 1.32e5$ \\
-\hline
-
-\multirow{8}{*}{\textbf{Set 8}}
-& HW57 & $\mathbf{1.07e7 \pm 5.09e5}$ & $2.24e7$ & $1.65e7$
-& $1.55e9 \pm 8.32e7$
-& $1.37e9 \pm 2.33e7$
-& $1.80e9 \pm 1.41e7$
-& $1.67e7 \pm 8.64e5$ \\
-
-& HW58 & $\mathbf{1.03e7 \pm 2.06e6}$ & $1.32e7$ & $1.12e7$
-& $1.42e9 \pm 9.95e7$
-& $1.37e9 \pm 1.00e7$
-& $1.80e9 \pm 8.52e6$
-& $1.42e7 \pm 3.30e5$ \\
-
-& HW59 & $\mathbf{9.32e6 \pm 6.39e5}$ & $1.24e7$ & $9.54e6$
-& $1.50e9 \pm 2.86e7$
-& $1.39e9 \pm 1.23e7$
-& $1.84e9 \pm 9.95e6$
-& $1.26e7 \pm 7.45e5$ \\
-
-& HW60 & $\mathbf{1.07e7 \pm 5.03e5}$ & $2.15e7$ & $1.32e7$
-& $1.47e9 \pm 4.89e7$
-& $1.40e9 \pm 1.66e7$
-& $1.83e9 \pm 1.64e7$
-& $1.74e7 \pm 5.63e5$ \\
-
-& HW61 & $\mathbf{6.33e6 \pm 1.44e6}$ & $9.10e6$ & $7.21e6$
-& $1.43e9 \pm 1.26e8$
-& $1.33e9 \pm 5.66e6$
-& $1.79e9 \pm 6.63e6$
-& $9.80e6 \pm 1.00e6$ \\
-
-& HW62 & $1.13e7 \pm 6.16e5$ & $1.45e7$ & $\mathbf{1.09e7}$
-& $1.52e9 \pm 1.35e8$
-& $1.37e9 \pm 2.03e7$
-& $1.82e9 \pm 5.67e6$
-& $1.88e7 \pm 1.98e6$ \\
-
-& HW63 & $\mathbf{1.78e7 \pm 2.96e6}$ & $3.09e7$ & $2.50e7$
-& $1.49e9 \pm 1.56e8$
-& $1.42e9 \pm 2.84e7$
-& $1.88e9 \pm 1.12e7$
-& $2.17e7 \pm 9.25e5$ \\
-
-& HW64 & $1.68e7 \pm 1.55e6$ & $2.54e7$ & $2.74e7$
-& $1.45e9 \pm 8.52e7$
-& $1.43e9 \pm 1.33e7$
-& $1.91e9 \pm 1.47e7$
-& $\mathbf{1.52e7 \pm 7.52e5}$ \\
-\hline
-
-\end{tabular}
-\end{sidewaystable}
-}
-\question{5}{Section 5.2 states that ``computational time'' is part of the evaluation, but no runtime table is presented. Runtime must be reported given the 10-minute re-optimization window.}
-\answer
-Thank you for this important observation. We would like to clarify that the 10-minute limit in our experimental setting refers to the computational budget for each problem instance, rather than to each individual re-optimization epoch. Since the algorithms are evaluated under this fixed computational budget, our comparison primarily focuses on the solution quality obtained within the same time constraint. We have revised Section~5.2 to clarify this point and have also added a dedicated computational complexity analysis in Section~4.4 to characterize the computational requirements of AGVNS.
-% TODO: Add response.
-
-\question{6}{Recent relevant DPDP solvers are cited but not compared, including the decomposition-based multi-objective evolutionary approach with tabu search [2], the deep reinforcement learning method [13], and the ALNS family [10]. At least one modern DPDP-specific solver beyond the 2021 winners should be included.}
+\question{14}{Comment 14 (references) is not adequately addressed. The reference list still contains only 16 entries, essentially unchanged from the original version. The recommended literature was not incorporated, and the coverage remains insufficient for a submission of this scope. The related work should be substantively expanded to reflect the current state of the art, including the previously suggested references.}
 
 \answer
-Thank you for this important suggestion. We agree that comparison with a more recent DPDP-specific solver beyond the ICAPS 2021 competition winners would provide a stronger evaluation of the proposed method.
+Thank you for pointing out that the recommended studies were missing from the manuscript. Section~3.2 (\emph{Other algorithms}) now cites and discusses all three papers in the text. Each also appears in the reference list.
 
-To address this concern, we have implemented Evo-RL [14], a recent evolutionary reinforcement learning approach specifically developed for large-scale dynamic pickup and delivery problems, and included it as an additional baseline in the revised experiments. Evo-RL represents one of the most recent DPDP-specific optimization frameworks and combines evolutionary search with reinforcement learning to address large-scale dynamic routing scenarios.
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{Palakonda et al. (2022), \href{https://doi.org/10.1016/j.ins.2022.05.119}{Pi-MOEA}.} The manuscript explains how Pi-MOEA adapts neighborhoods of population members to identify pivot solutions. It then specifies what AGVNS adapts in the routing problem: the order in which VNS explores route moves, using the record of successful mutations.
+    \item \textbf{Palakonda et al. (2018), \href{https://doi.org/10.1109/CEC.2018.8477809}{Differential evolution with stochastic selection}.} We added the bibliography entry and discuss how stochastic selection compares candidate solutions under uncertain inputs in smart grid optimization. The revised text identifies the observed number of unallocated orders as the signal used to control crossover in AGVNS at each decision epoch.
+    \item \textbf{Tursunboev et al. (2024), \href{https://doi.org/10.1016/j.apenergy.2024.122847}{Evolutionary hybrid deep learning}.} We explain how evolutionary optimization tunes a model and its detection window in that study. The manuscript then specifies how AGVNS links its own stages by passing route plans and mutation records from evolution to VNS.
+\end{enumerate}
 
-We evaluated Evo-RL on the same eight benchmark sets used for AGVNS. The corresponding results have been added to the revised experimental tables and discussion. For completeness, the average objective values obtained by Evo-RL and AGVNS are summarized below.
+The revised section also cites the DPDP survey by Cai et al.\ (2023), hierarchical dispatching under LIFO constraints by Du et al.\ (2023), and cost approximation on the ICAPS benchmark by Horv\'ath et al.\ (2025). The adaptive large neighborhood search of Ropke and Pisinger (2006) provides routing context for using past operator performance. The new discussion follows the original review of DPDP methods and leads into the AGVNS methodology.
 
-\noindent
-{\color{blue}
-   [14] Xiaoying Yang, Yiran Li, Tianxiang Cui, and Ruibin Bai. A collaborativeevolutionary reinforcement learning approach to dynamic pickup and deliverychallenges. Transportation Research Part E: Logistics and Transportation Review, 212:104885, 2026.
-}
+\question{5}{Comment 5 (runtime reporting) is only partially addressed. The clarification that the 10-minute budget is per-instance, and the added complexity analysis in Section 4.4, are useful, but the requested runtime results are still not reported. Given the fixed-budget dynamic setting, an actual runtime or time-to-solution comparison across methods should be provided rather than a complexity analysis alone.}
 
-\begin{table}[htp]
-\centering
-\caption{Comparison of average objective values between Evo-RL[14] and AGVNS across the eight benchmark sets.}
-\label{tab:evorl_agvns_response}
-\begin{tabular}{c r r r r}
-\toprule
-\textbf{Set} & \textbf{Vehicles} & \textbf{Orders} &
-\multicolumn{1}{c}{\textbf{Evo-RL}} &
-\multicolumn{1}{c}{\textbf{AGVNS}} \\
-\midrule
-Set 1 & 5   & 50    & \textbf{1,240}     & 1,248 \\
-Set 2 & 5   & 100   & 85,345             & \textbf{21,075} \\
-Set 3 & 20  & 300   & 11,772             & \textbf{704} \\
-Set 4 & 20  & 500   & 108,615            & \textbf{6,104} \\
-Set 5 & 50  & 1,000 & 98,633             & \textbf{10,457} \\
-Set 6 & 50  & 2,000 & 215,547            & \textbf{41,878} \\
-Set 7 & 100 & 3,000 & 1,355,420          & \textbf{1,145,531} \\
-Set 8 & 100 & 4,000 & \textbf{1,764,734} & 15,802,161 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The results show that AGVNS achieves lower average objective values than Evo-RL on Sets~2--7, while Evo-RL performs slightly better on Set~1 and substantially better on the largest Set~8. These results provide a more comprehensive assessment of AGVNS against a recent DPDP-specific solver and further reveal its strengths as well as its scalability limitation on extremely large instances.
-
-To facilitate reproducibility, the implementation of Evo-RL used in our experiments has also been made available at the following link:
-\href{https://github.com/tranphuc15122004/AGVNS-Adaptive-Genetic-Algorithm-Enhanced-by-Variable-Neighborhood-Search}{AGVNS Reproducibility Repository}.
-
-
-\question{7}{Several key parameters are unspecified, including $\lambda$ in Eq. 4, $\epsilon$ in Eq. 11, the success-history vector update rule, the per-operator time budget, and the VNS operator ordering in Section 4.3.}
-
-\answer
-
-Thank you for this important observation. We agree that several parameters and implementation details were not sufficiently specified in the original manuscript. We have revised the corresponding sections to explicitly define these settings and clarify their roles in AGVNS.
-
-\begin{itemize}
-    \item First, the value and role of $\lambda$ in Eq.~(4) have been explicitly specified. Similarly, the value of $\epsilon$ used in Eq.~(11) and its role in the adaptive mechanism have now been provided.
-    \item Second, we have clarified the update rule for the mutation-operator success history. At the beginning of the evolutionary stage, the four mutation operators are initialized with equal priority. During evolution, an operator is selected using roulette-wheel selection according to its accumulated success information. When the selected operator successfully improves the current solution, its success record is updated, thereby increasing its probability of being selected in subsequent mutation operations.
-    \item Third, the per-operator computational budget used during the evolutionary search has been explicitly reported in the revised manuscript.
-    \item Finally, we have substantially clarified the VNS operator ordering in Section~4.3. The evolutionary and VNS stages are executed sequentially and are completely separated. The four operators are first used as mutation operators during the evolutionary stage, where their success information is accumulated. Only after the evolutionary stage has terminated is this information transferred to the VNS stage. For each solution selected for VNS refinement, the same four operators are ordered according to their success history accumulated during evolution, with the more successful operators receiving higher priority. Therefore, the VNS ordering is determined entirely from information learned in the preceding evolutionary stage and does not affect mutation-operator selection during that stage.
-
-These parameter values, update rules, and implementation details have now been added to Table 2 in the revised manuscript. 
-\end{itemize}
-% TODO: Add response.
-
-\question{8}{Section 4.2.4 mentions ``$O(m^3)$ for LS2,'' but no operator named LS2 is defined, and the same paragraph mixes ``n'' and ``m'' for the active request count.}
-\answer
-Thank you for identifying these inconsistencies. We agree that the reference to ``LS2'' was not clearly defined and that the inconsistent use of $n$ and $m$ for the number of active requests could cause confusion.
-
-In the revised manuscript, we have corrected and standardized the notation throughout the methodology section and replaced the ambiguous ``LS2'' reference with the corresponding operator name. More importantly, rather than providing isolated complexity statements within the operator descriptions, we have added a dedicated computational complexity analysis that systematically evaluates the major components of AGVNS, including initialization, crossover, mutation, and VNS (\textcolor{blue}{see Section 4.4}). The notation used in this analysis is defined and aligned with the problem formulation.
-% TODO: Add response.
-
-\question{9}{The acronym AGVNS is expanded as ``adaptive genetic and local search algorithm'' in the abstract but as ``adaptive genetic and variable neighborhood search algorithm'' in the body. The latter should be used throughout.}
-\answer Thank you for identifying this inconsistency. We have corrected the expansion of AGVNS in the Abstract and carefully checked the entire manuscript. The term ``adaptive genetic and variable neighborhood search algorithm'' is now used throughout the revised manuscript.
-% TODO: Add response.
-
-\question{10}{Section 4.3 derives VNS operator ordering from ``self-improvement history during the evolutionary stage,'' but the same operators are used for mutation in that stage, creating a circular dependency. The first-generation initialization is not specified.}
-
-\answer
-Thank you for this important observation. We apologize that the original description was not sufficiently clear. There is no circular dependency between the mutation mechanism in the evolutionary stage and the operator ordering in the subsequent VNS stage.
-
-In the beginning of the evolutionary stage, the four mutation operators are initialized with equal priority because no historical performance information is available. During evolution, a mutation operator is selected using a roulette-wheel mechanism, where the selection probability of each operator is determined by its accumulated success history. Initially, all operators therefore have the same probability of being selected. When an operator successfully improves a solution, its success information is updated, increasing its probability of being selected in subsequent mutation operations. In this way, the mutation mechanism progressively learns which operators are more effective during the evolutionary search.
-
-Only after the evolutionary stage is completed is the accumulated success history used to determine the ordering of the same neighborhood operators in the VNS stage. Thus, the information flow is sequential: the evolutionary stage collects and updates operator-performance information, and the VNS stage subsequently exploits this information to prioritize promising neighborhood operators. No information from the VNS stage is fed back to the evolutionary stage.
-
-We have revised Section 4.2.4 to explicitly describe the equal initialization, roulette-wheel-based mutation selection, success-history update, and subsequent transfer of this information to the VNS stage.
-% TODO: Add response.
-
-\question{11}{Figures 5 and 6 illustrate mutation operators and are reused in Section 4.3 for the VNS operators. Whether these are identical operator sets should be made explicit.}
-\answer
-Thank you for this helpful observation. We confirm that the four operators illustrated in Figures~5 and~6 are the same operator set used in both the evolutionary and VNS stages. However, their roles and application mechanisms differ between the two stages.
-
-During the evolutionary stage, these operators serve as mutation operators. For each mutation operation, one operator is selected using the adaptive roulette-wheel mechanism based on its accumulated success history. After the evolutionary stage has completely terminated, the same four operators are reused as neighborhood operators in the subsequent VNS stage. In this stage, they are applied according to an ordering determined by the operator-success information accumulated during the evolutionary stage.
-
-We have revised Sections~4.2 and~4.3, as well as the captions and corresponding descriptions of Figures~5 and~6, to explicitly clarify that the same four operators are shared by the two stages but are employed through different search mechanisms.
-% TODO: Add response.
-
-\question{12}{Section 4.2.4 contains a duplicated paragraph on selective mutation. The text also misspells ``Silver'' as ``Sliver'' in Table 4 and Section 5.2.3, and contains ``transfered'' (Section 4.1).}
-\answer
-Thank you for pointing out these issues. We have carefully corrected all of them in the revised manuscript. Specifically, the duplicated paragraph on selective mutation in Section 4.2.4 has been removed. The misspelling ``Sliver'' has been corrected to ``Silver'' in Table 4 and Section 5.2.3, and ``transfered'' has been corrected to ``transferred'' in Section 4.1. We have also carefully proofread the manuscript to identify and correct similar typographical and presentation issues.
-
-
-\question{13}{The \%imp metric description in Section 5.2.1 conflicts with Table 3, which shows negative values where ablated variants outperform the full algorithm. The interpretation in Section 5.2.2 (``Set 1 leads to only minor degradation'') is also inaccurate, since Set 1 actually improves by 1.21\% without the evolutionary stage.}
-\answer
-Thank you for identifying these inconsistencies. We agree that the original description of the \%imp metric and the interpretation of the Set~1 result were inaccurate.
-
-We have revised Section~5.2.1 to explicitly clarify the sign convention of the \%imp metric. A positive \%imp value indicates that the full AGVNS achieves a better objective value than the corresponding ablated variant, whereas a negative value indicates that the ablated variant performs better than the full algorithm.
-
-Accordingly, we have also corrected the discussion in Section~5.2.2. In particular, removing the evolutionary stage on Set~1 results in a 1.21\% improvement rather than a degradation. The revised discussion now accurately reflects this result and avoids claiming that every component improves performance on every individual instance set. We have carefully rechecked the remaining ablation results to ensure consistency between Table~3 and their corresponding interpretations.
-
-
-\question{14}{The reference list contains only 15 entries, which is sparse for the claims made. Recent work on adaptive evolutionary frameworks should be incorporated, such as ``An adaptive neighborhood based evolutionary algorithm with pivot-solution based selection,'' ``Differential evolution with stochastic selection for uncertain environments: A smart grid application,'' and ``Multi-objective evolutionary hybrid deep learning for energy theft detection.''}
-\answer
-Thank you for this valuable suggestion. We agree that the original reference list was relatively limited. In the revised manuscript, we have expanded the Related Work section and incorporated additional recent studies on adaptive and hybrid evolutionary optimization, including the three works specifically suggested by the reviewer. These studies have been discussed in relation to adaptive operator selection, neighborhood adaptation, and hybrid evolutionary search. We have also revised the corresponding discussion to better position AGVNS within the recent literature and to clarify its problem-specific contribution to the original ICAPS 2021 DPDP. The reference list has been updated accordingly.
-% TODO: Add response.
+% TODO: Add the response to Comment 5 when the runtime revision is ready.
 
 \end{document}

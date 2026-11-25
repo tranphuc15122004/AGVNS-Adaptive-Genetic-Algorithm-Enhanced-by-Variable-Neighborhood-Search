@@ -4,6 +4,7 @@ Build the Master Runtime Comparison Table across all 64 benchmark instances (HW1
 with BOTH mean and std for all algorithms, and export CSV, XLSX, and Markdown reports.
 """
 
+import json
 import os
 import pandas as pd
 import numpy as np
@@ -157,6 +158,69 @@ def load_ma() -> tuple[pd.DataFrame, dict]:
     return agg, stats_meta
 
 
+def load_ga() -> pd.DataFrame:
+    """Load completed GA runs from the current systematic batches."""
+    files = [
+        (
+            os.path.join(ROOT, "GA/algorithm/data_interaction_runs/20261119_115717/results.csv"),
+            "20261119_115717",
+        ),
+        (
+            os.path.join(ROOT, "GA/algorithm/data_interaction_runs/20261121_050952/results.csv"),
+            "20261121_050952",
+        ),
+    ]
+    dfs = []
+    planned_instances: dict[int, str] = {}
+    for path, batch_id in files:
+        manifest_path = os.path.join(os.path.dirname(path), "manifest.json")
+        if os.path.exists(manifest_path):
+            with open(manifest_path, "r", encoding="utf-8") as manifest_file:
+                manifest = json.load(manifest_file)
+            for instance_id in manifest.get("instances", []):
+                planned_instances[int(instance_id)] = batch_id
+        if not os.path.exists(path):
+            continue
+        df = pd.read_csv(path)
+        df = df[(df["status"] == "SUCCESS") & (df["wall_time_seconds"].notna())].copy()
+        if df.empty:
+            continue
+        df["GA_batch"] = batch_id
+        dfs.append(df)
+
+    if dfs:
+        all_ga = pd.concat(dfs, ignore_index=True)
+        agg = all_ga.groupby("instance_id").agg(
+            GA_sec=("wall_time_seconds", "mean"),
+            GA_std_sec=("wall_time_seconds", "std"),
+            GA_n=("wall_time_seconds", "count"),
+            GA_batch=("GA_batch", "first"),
+        ).reset_index()
+        agg["GA_source"] = agg.apply(
+            lambda r: f"empirical_local (batch {r['GA_batch']}, n={int(r['GA_n'])})",
+            axis=1,
+        )
+        agg = agg.drop(columns=["GA_batch"])
+    else:
+        agg = pd.DataFrame(columns=["instance_id", "GA_sec", "GA_std_sec", "GA_n", "GA_source"])
+
+    completed_instances = set(agg["instance_id"].astype(int))
+    pending_rows = [
+        {
+            "instance_id": instance_id,
+            "GA_sec": np.nan,
+            "GA_std_sec": np.nan,
+            "GA_n": 0,
+            "GA_source": f"pending (batch {batch_id}; no completed result)",
+        }
+        for instance_id, batch_id in planned_instances.items()
+        if instance_id not in completed_instances
+    ]
+    if pending_rows:
+        agg = pd.concat([agg, pd.DataFrame(pending_rows)], ignore_index=True)
+    return agg
+
+
 def load_inventory_alg(inv: pd.DataFrame, alg_name: str, col_prefix: str) -> pd.DataFrame:
     sub = inv[
         (inv["algorithm"] == alg_name)
@@ -289,6 +353,15 @@ def fmt_mean_std(mean_val, std_val):
     return f"{mean_val:.2f} ± {std_val:.2f}"
 
 
+def fmt_ga_mean_std(mean_val, std_val):
+    """Keep GA's mean ± std presentation explicit when only one run exists."""
+    if pd.isna(mean_val):
+        return "—"
+    if pd.isna(std_val):
+        return f"{mean_val:.2f} ± —"
+    return f"{mean_val:.2f} ± {std_val:.2f}"
+
+
 def main():
     inv = pd.read_csv(os.path.join(REPORTS_DIR, "runtime_inventory.csv"))
     cov = pd.read_csv(os.path.join(REPORTS_DIR, "runtime_coverage_by_instance.csv"))
@@ -302,6 +375,7 @@ def main():
 
     agvns = load_agvns(inv)
     ma, _ = load_ma()
+    ga = load_ga()
     gold = load_gold(cov)
     silver, bronze = load_silver_and_bronze()
     evorl = load_inventory_alg(inv, "EvoRL", "EvoRL")
@@ -315,9 +389,12 @@ def main():
         .merge(bronze, on="instance_id", how="left")
         .merge(evorl, on="instance_id", how="left")
         .merge(ts, on="instance_id", how="left")
+        .merge(ga, on="instance_id", how="left")
     )
 
     master["AGVNS_n"] = master["AGVNS_n"].fillna(0).astype(int)
+    master["GA_n"] = master["GA_n"].fillna(0).astype(int)
+    master["GA_source"] = master["GA_source"].fillna("no completed result in selected GA batches")
 
     # Load historical OUR (AGVNS) mean & std from Kết quả DPDP.xlsx for instance-specific CV modulation
     dp_our_m = pd.read_excel(os.path.join(ROOT, "Kết quả DPDP.xlsx"), sheet_name="main").iloc[:64][["HW", "OUR"]].rename(columns={"OUR": "dp_mean"})
@@ -398,6 +475,7 @@ def main():
         "Bronze (s)": [fmt_mean_std(r["Bronze_sec"], r["Bronze_std_sec"]) for _, r in master.iterrows()],
         "EvoRL (s)": [fmt_mean_std(r["EvoRL_sec"], r["EvoRL_std_sec"]) for _, r in master.iterrows()],
         "TS (s)": [fmt_mean_std(r["TS_sec"], r["TS_std_sec"]) for _, r in master.iterrows()],
+        "GA (s)": [fmt_ga_mean_std(r["GA_sec"], r["GA_std_sec"]) for _, r in master.iterrows()],
     })
 
     # Numeric side-by-side table for Excel
@@ -410,11 +488,12 @@ def main():
         "Bronze_sec", "Bronze_std_sec",
         "EvoRL_sec", "EvoRL_std_sec",
         "TS_sec", "TS_std_sec",
+        "GA_sec", "GA_std_sec", "GA_n",
     ]
     numeric_df = master[numeric_cols].copy()
 
     # Set summary
-    algs = ["AGVNS", "MA", "Gold", "Silver", "Bronze", "EvoRL", "TS"]
+    algs = ["AGVNS", "MA", "Gold", "Silver", "Bronze", "EvoRL", "TS", "GA"]
     set_summary_rows = []
     for set_num, g in master.groupby("set_num"):
         row = {
@@ -429,7 +508,8 @@ def main():
             valid_s = g[s_col].dropna()
             mean_m = valid_m.mean() if len(valid_m) > 0 else np.nan
             mean_s = valid_s.mean() if len(valid_s) > 0 else np.nan
-            row[f"{alg} (mean ± avg_std, s)"] = fmt_mean_std(mean_m, mean_s)
+            formatter = fmt_ga_mean_std if alg == "GA" else fmt_mean_std
+            row[f"{alg} (mean ± avg_std, s)"] = formatter(mean_m, mean_s)
             row[f"{alg}_coverage"] = f"{len(valid_m)}/8"
         set_summary_rows.append(row)
     set_summary_df = pd.DataFrame(set_summary_rows)
